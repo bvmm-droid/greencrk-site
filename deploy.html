@@ -102,6 +102,15 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
   <div class="st" id="ts"></div>
 </div>
 
+<div class="card" id="card-aijs">
+  <div class="ctitle" style="color:#9b59b6">AI Config File <span class="tag" style="background:#9b59b6;color:#fff">ai-config.js → greencrk.com</span></div>
+  <input type="file" id="jf" accept=".js" onchange="onF(this,'ji','jb')">
+  <div class="fi" id="ji">No file chosen</div>
+  <button class="btn" style="background:#9b59b6;color:#fff" id="jb" onclick="dep('jf','ai-config.js','jb','js2','prog-aijs','card-aijs')" disabled>Deploy ai-config.js → greencrk.com</button>
+  <div class="prog-wrap" id="prog-aijs"><div class="prog-bar" id="pb-aijs"></div></div>
+  <div class="st" id="js2"></div>
+</div>
+
 <div class="card" id="card-ai">
   <div class="ctitle green">AI Config <span class="tag tv">Gemini API Key → ai-config.js</span></div>
   <label>Gemini API Key</label>
@@ -128,7 +137,7 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 
 <script>
 var fc={};
-var progIntervals={};
+var fcNames={};
 
 // Load saved keys on startup
 window.addEventListener('load',function(){
@@ -169,6 +178,7 @@ function toggleField(id,btn){
 function onF(input,infId,btnId){
   var f=input.files[0];
   if(!f)return;
+  fcNames[input.id]=f.name;
   document.getElementById(infId).textContent='Reading '+f.name+'...';
   var r=new FileReader();
   r.onload=function(e){
@@ -291,6 +301,8 @@ function dep(fid,target,btnId,stId,progId,cardId){
   var st=document.getElementById(stId);
   var card=document.getElementById(cardId);
   var pbId='pb-'+progId.split('-')[1];
+  var fname=fcNames[fid]||'unknown file';
+  if(!confirm('Deploy "'+fname+'" as '+target+' to greencrk.com?\n\nMake sure the filename matches!')){return;}
   if(!content){show(st,'er','Choose a file first.');return;}
   if(!tok){show(st,'er','Enter your GitHub token first.');return;}
   localStorage.setItem('bvmm_tok',tok);
@@ -316,7 +328,7 @@ function dep(fid,target,btnId,stId,progId,cardId){
     btn.disabled=false;
     if(r&&r.ok){
       finishProgress(progId,pbId,true);
-      var urls={'index.html':'greencrk.com','admin.html':'greencrk.com/admin','deploy.html':'this tool','test-ai.html':'greencrk.com/test-ai'};
+      var urls={'index.html':'greencrk.com','admin.html':'greencrk.com/admin','deploy.html':'this tool','test-ai.html':'greencrk.com/test-ai','ai-config.js':'greencrk.com'};
       show(st,'ok','Done! Live at '+(urls[target]||target)+' in ~30 seconds.');
       btn.textContent='Done!';btn.classList.add('done');
       card.classList.add('success');
