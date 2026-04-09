@@ -3,180 +3,350 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BVMM AI Test</title>
+<title>BVMM Deploy</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,sans-serif;background:#0e0c0b;color:#fff;padding:20px}
-h2{font-size:1.2rem;margin-bottom:4px}
+h2{font-size:1.4rem;margin-bottom:4px}
 h2 span{color:#c9a84c}
-.sub{font-size:.78rem;color:rgba(255,255,255,.4);margin-bottom:20px}
-.card{background:#201c1a;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:18px;margin-bottom:12px}
-.ctitle{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;color:#c9a84c}
-.step{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem}
-.step:last-child{border:none}
-.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.dot.wait{background:rgba(255,255,255,.2)}
-.dot.ok{background:#2ecc71}
-.dot.fail{background:#e74c3c}
-.dot.running{background:#c9a84c;animation:pulse .8s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.step-label{flex:1;color:rgba(255,255,255,.7)}
-.step-result{font-size:.7rem;color:rgba(255,255,255,.4);text-align:right;max-width:180px;word-break:break-all}
-.step-result.ok{color:#2ecc71}
-.step-result.fail{color:#e74c3c}
-.btn{width:100%;padding:14px;font-size:.95rem;font-weight:700;border:none;border-radius:100px;cursor:pointer;margin-top:6px;background:#c0392b;color:#fff;transition:all .3s}
+.sub{font-size:.82rem;color:rgba(255,255,255,.4);margin-bottom:24px}
+.card{background:#201c1a;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:18px;margin-bottom:14px;transition:border-color .3s}
+.card.success{border-color:#2ecc71;background:#0d1f12}
+.ctitle{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gold{color:#c9a84c} .red{color:#c0392b} .blue{color:#5b9bd5} .green{color:#2ecc71}
+.tag{border-radius:100px;padding:3px 10px;font-size:.55rem;font-weight:700}
+.tg{background:#c9a84c;color:#0e0c0b} .tr{background:#c0392b;color:#fff} .tb{background:#5b9bd5;color:#fff} .tv{background:#2ecc71;color:#0e0c0b}
+label{font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,242,236,.4);margin-bottom:6px;display:block}
+input[type=text],input[type=password]{width:100%;background:#141110;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:.88rem;color:#fff;outline:none;margin-bottom:12px;-webkit-appearance:none;display:block}
+input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
+.fi{font-size:.72rem;color:#c9a84c;min-height:18px;margin-bottom:4px}
+.btn{width:100%;padding:14px;font-size:.95rem;font-weight:700;border:none;border-radius:100px;cursor:pointer;margin-top:6px;transition:all .3s}
 .btn:disabled{opacity:.35}
-.response-box{background:#141110;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px;margin-top:12px;font-size:.8rem;line-height:1.7;color:rgba(255,255,255,.8);display:none;white-space:pre-wrap;word-break:break-word}
-.response-box.show{display:block}
-.response-box.ok{border-color:#2ecc71}
-.response-box.fail{border-color:#e74c3c;color:#e74c3c}
-.tag{font-size:.55rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px}
-.tag-ok{background:#2ecc71;color:#000}
-.tag-fail{background:#e74c3c;color:#fff}
-.tag-wait{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5)}
+.bg{background:#c9a84c;color:#0e0c0b}
+.br{background:#c0392b;color:#fff}
+.bb{background:#5b9bd5;color:#fff}
+.bv{background:#2ecc71;color:#0e0c0b}
+.btn.done{background:#2ecc71!important;color:#fff!important}
+.st{font-size:.82rem;padding:12px 14px;border-radius:10px;margin-top:10px;display:none;line-height:1.6}
+.sv{display:block}
+.ok{background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.25)}
+.er{background:rgba(192,57,43,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.25)}
+.ld{background:rgba(201,168,76,.12);color:#c9a84c;border:1px solid rgba(201,168,76,.25)}
+.prog-wrap{background:rgba(255,255,255,.08);border-radius:100px;height:6px;margin-top:10px;display:none;overflow:hidden}
+.prog-wrap.sv{display:block}
+.prog-bar{height:6px;border-radius:100px;background:#c9a84c;width:0%;transition:width .4s}
+.prog-bar.done{background:#2ecc71}
+#popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:999;padding:20px}
+#popup.show{display:flex}
+.popup-box{background:#141110;border:2px solid #2ecc71;border-radius:18px;padding:28px 24px;text-align:center;max-width:320px;width:100%}
+.popup-check{font-size:3rem;margin-bottom:12px}
+.popup-title{font-size:1.3rem;font-weight:700;color:#2ecc71;margin-bottom:8px}
+.popup-msg{font-size:.85rem;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:20px}
+.popup-close{background:#2ecc71;color:#000;border:none;border-radius:100px;padding:12px 32px;font-size:.9rem;font-weight:700;cursor:pointer;width:100%}
+.key-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.key-row input{flex:1;margin-bottom:0}
+.key-btn{border:none;border-radius:8px;padding:10px 14px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.saved-badge{font-size:.6rem;color:#2ecc71;margin-top:-8px;margin-bottom:8px;display:none}
+.saved-badge.show{display:block}
 </style>
 </head>
 <body>
 
-<h2>BVMM <span>AI Test</span></h2>
-<p class="sub">Simulates exactly what the chat widget does — catches errors before deploying</p>
+<h2>BVMM <span>Deploy</span></h2>
+<p class="sub">One tool — deploy everything to greencrk.com</p>
 
 <div class="card">
-  <div class="ctitle">Test Steps</div>
-  <div class="step" id="s1">
-    <div class="dot wait" id="d1"></div>
-    <div class="step-label">1. Load ai-config.js from greencrk.com</div>
-    <div class="step-result tag tag-wait" id="r1">waiting</div>
+  <label>GitHub Token</label>
+  <div class="key-row">
+    <input type="password" id="tok" placeholder="ghp_...">
+    <button class="key-btn" style="background:#5b9bd5;color:#fff" onclick="toggleField('tok',this)">Show</button>
   </div>
-  <div class="step" id="s2">
-    <div class="dot wait" id="d2"></div>
-    <div class="step-label">2. Check fetch intercept installed</div>
-    <div class="step-result tag tag-wait" id="r2">waiting</div>
+  <div class="saved-badge" id="tok-saved">✓ Saved on this device</div>
+  <label>Repo</label>
+  <input type="text" id="repo" value="bvmm-droid/greencrk-site" style="margin-bottom:0">
+</div>
+
+<div class="card" id="card-site">
+  <div class="ctitle gold">Main website <span class="tag tg">index.html → greencrk.com</span></div>
+  <input type="file" id="sf" accept=".html" onchange="onF(this,'si','sb')">
+  <div class="fi" id="si">No file chosen</div>
+  <button class="btn bg" id="sb" onclick="dep('sf','index.html','sb','ss','prog-site','card-site')" disabled>Deploy Site → greencrk.com</button>
+  <div class="prog-wrap" id="prog-site"><div class="prog-bar" id="pb-site"></div></div>
+  <div class="st" id="ss"></div>
+</div>
+
+<div class="card" id="card-admin">
+  <div class="ctitle red">Admin panel <span class="tag tr">admin.html → greencrk.com/admin</span></div>
+  <input type="file" id="af" accept=".html" onchange="onF(this,'ai','ab')">
+  <div class="fi" id="ai">No file chosen</div>
+  <button class="btn br" id="ab" onclick="dep('af','admin.html','ab','as','prog-admin','card-admin')" disabled>Deploy Admin → greencrk.com/admin</button>
+  <div class="prog-wrap" id="prog-admin"><div class="prog-bar" id="pb-admin"></div></div>
+  <div class="st" id="as"></div>
+</div>
+
+<div class="card" id="card-tool">
+  <div class="ctitle blue">Update this tool <span class="tag tb">deploy.html</span></div>
+  <input type="file" id="df" accept=".html" onchange="onF(this,'di','db')">
+  <div class="fi" id="di">No file chosen</div>
+  <button class="btn bb" id="db" onclick="dep('df','deploy.html','db','ds','prog-tool','card-tool')" disabled>Update Deploy Tool</button>
+  <div class="prog-wrap" id="prog-tool"><div class="prog-bar" id="pb-tool"></div></div>
+  <div class="st" id="ds"></div>
+</div>
+
+<div class="card" id="card-test">
+  <div class="ctitle" style="color:#e67e22">AI Test Page <span class="tag" style="background:#e67e22;color:#fff">test-ai.html → greencrk.com/test-ai</span></div>
+  <input type="file" id="tf" accept=".html" onchange="onF(this,'ti','tb')">
+  <div class="fi" id="ti">No file chosen</div>
+  <button class="btn" style="background:#e67e22;color:#fff" id="tb" onclick="dep('tf','test-ai.html','tb','ts','prog-test','card-test')" disabled>Deploy Test Page → greencrk.com/test-ai</button>
+  <div class="prog-wrap" id="prog-test"><div class="prog-bar" id="pb-test"></div></div>
+  <div class="st" id="ts"></div>
+</div>
+
+<div class="card" id="card-ai">
+  <div class="ctitle green">AI Config <span class="tag tv">Gemini API Key → ai-config.js</span></div>
+  <label>Gemini API Key</label>
+  <div class="key-row">
+    <input type="password" id="geminiKey" placeholder="AIzaSy...">
+    <button class="key-btn" style="background:#2ecc71;color:#0e0c0b" onclick="toggleField('geminiKey',this)">Show</button>
   </div>
-  <div class="step" id="s3">
-    <div class="dot wait" id="d3"></div>
-    <div class="step-label">3. Check ANTHROPIC_PROXY_URL value</div>
-    <div class="step-result tag tag-wait" id="r3">waiting</div>
-  </div>
-  <div class="step" id="s4">
-    <div class="dot wait" id="d4"></div>
-    <div class="step-label">4. Send test message to AI</div>
-    <div class="step-result tag tag-wait" id="r4">waiting</div>
-  </div>
-  <div class="step" id="s5">
-    <div class="dot wait" id="d5"></div>
-    <div class="step-label">5. Parse AI response</div>
-    <div class="step-result tag tag-wait" id="r5">waiting</div>
+  <div class="saved-badge" id="gemini-saved">✓ Saved on this device</div>
+  <button class="btn bv" id="aib" onclick="deployAIKey()">Save AI Key → greencrk.com</button>
+  <div class="prog-wrap" id="prog-ai"><div class="prog-bar" id="pb-ai"></div></div>
+  <div class="st" id="ais"></div>
+</div>
+
+<div style="height:30px"></div>
+
+<div id="popup">
+  <div class="popup-box">
+    <div class="popup-check">✅</div>
+    <div class="popup-title" id="popup-title">Deployed!</div>
+    <div class="popup-msg" id="popup-msg">Your site is live. Changes appear in about 30 seconds.</div>
+    <button class="popup-close" onclick="document.getElementById('popup').classList.remove('show')">Done</button>
   </div>
 </div>
 
-<button class="btn" id="runBtn" onclick="runTest()">Run Full Test</button>
-
-<div class="response-box" id="responseBox"></div>
-
 <script>
-function setStep(n, status, label){
-  var dot = document.getElementById('d'+n);
-  var res = document.getElementById('r'+n);
-  dot.className = 'dot ' + status;
-  res.className = 'step-result tag tag-' + (status==='ok'?'ok':status==='fail'?'fail':'wait');
-  res.textContent = label;
+var fc={};
+var progIntervals={};
+
+// Load saved keys on startup
+window.addEventListener('load',function(){
+  var savedTok=localStorage.getItem('bvmm_tok');
+  var savedGemini=localStorage.getItem('bvmm_gemini');
+  if(savedTok){
+    document.getElementById('tok').value=savedTok;
+    document.getElementById('tok-saved').classList.add('show');
+  }
+  if(savedGemini){
+    document.getElementById('geminiKey').value=savedGemini;
+    document.getElementById('gemini-saved').classList.add('show');
+  }
+});
+
+// Save keys whenever they change
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('tok').addEventListener('change',function(){
+    if(this.value.trim()){
+      localStorage.setItem('bvmm_tok',this.value.trim());
+      document.getElementById('tok-saved').classList.add('show');
+    }
+  });
+  document.getElementById('geminiKey').addEventListener('change',function(){
+    if(this.value.trim()){
+      localStorage.setItem('bvmm_gemini',this.value.trim());
+      document.getElementById('gemini-saved').classList.add('show');
+    }
+  });
+});
+
+function toggleField(id,btn){
+  var inp=document.getElementById(id);
+  if(inp.type==='password'){inp.type='text';btn.textContent='Hide';}
+  else{inp.type='password';btn.textContent='Show';}
 }
 
-async function runTest(){
-  var btn = document.getElementById('runBtn');
-  var box = document.getElementById('responseBox');
-  btn.disabled = true;
-  box.className = 'response-box';
-  box.textContent = '';
+function onF(input,infId,btnId){
+  var f=input.files[0];
+  if(!f)return;
+  document.getElementById(infId).textContent='Reading '+f.name+'...';
+  var r=new FileReader();
+  r.onload=function(e){
+    fc[input.id]=e.target.result;
+    document.getElementById(infId).textContent=f.name+' ('+Math.round(f.size/1024)+' KB) — ready';
+    document.getElementById(btnId).disabled=false;
+  };
+  r.onerror=function(){document.getElementById(infId).textContent='Read error — try again';};
+  r.readAsText(f);
+}
 
-  // Reset all steps
-  for(var i=1;i<=5;i++) setStep(i,'wait','waiting');
+function startProgress(progId,pbId){
+  var wrap=document.getElementById(progId);
+  var bar=document.getElementById(pbId);
+  wrap.classList.add('sv');
+  bar.style.width='0%';
+  var pct=0;
+  progIntervals[progId]=setInterval(function(){
+    if(pct<85){pct+=Math.random()*8;bar.style.width=Math.min(pct,85)+'%';}
+  },600);
+}
 
-  // Step 1: Load ai-config.js
-  setStep(1,'running','loading...');
-  try {
-    var origFetch = window.fetch;
-    var script = document.createElement('script');
-    script.src = 'https://greencrk.com/ai-config.js?t='+Date.now();
-    script.crossOrigin = 'anonymous';
-    await new Promise(function(resolve, reject){
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-    setStep(1,'ok','loaded ✓');
-  } catch(e) {
-    setStep(1,'fail','failed: '+e.message);
-    box.className='response-box show fail';
-    box.textContent='Cannot load ai-config.js from greencrk.com.\nError: '+e.message+'\n\nMake sure the file exists and the site is live.';
-    btn.disabled=false;
-    return;
-  }
+function finishProgress(progId,pbId,success){
+  clearInterval(progIntervals[progId]);
+  var bar=document.getElementById(pbId);
+  bar.style.width='100%';
+  if(success)bar.classList.add('done');
+}
 
-  // Step 2: Check fetch intercept
-  setStep(2,'running','checking...');
-  var fetchChanged = window.fetch !== origFetch;
-  if(fetchChanged){
-    setStep(2,'ok','intercept active ✓');
-  } else {
-    setStep(2,'fail','NOT intercepted ✗');
-    box.className='response-box show fail';
-    box.textContent='ai-config.js loaded but did NOT replace window.fetch.\nThe Gemini proxy intercept is broken in ai-config.js.';
-    btn.disabled=false;
-    return;
-  }
-
-  // Step 3: Check ANTHROPIC_PROXY_URL
-  setStep(3,'running','checking...');
-  var proxyUrl = typeof ANTHROPIC_PROXY_URL !== 'undefined' ? ANTHROPIC_PROXY_URL : 'NOT SET';
-  var proxyOk = proxyUrl && proxyUrl !== 'YOUR_WORKER_URL' && proxyUrl !== 'NOT SET';
-  if(proxyOk){
-    setStep(3,'ok', proxyUrl.length > 30 ? proxyUrl.substring(0,30)+'...' : proxyUrl);
-  } else {
-    setStep(3,'fail','value: '+proxyUrl);
-    box.className='response-box show fail';
-    box.textContent='ANTHROPIC_PROXY_URL = "'+proxyUrl+'"\n\nThis is a placeholder — it needs to be set to a real URL.\nThe fetch call will fail because of this.';
-    btn.disabled=false;
-    return;
-  }
-
-  // Step 4: Send test message
-  setStep(4,'running','sending...');
-  var BVMM_SYS = 'You are the friendly expert AI butcher for Babylon Village Meat Market (BVMM). Be warm, expert, and concise.';
-  try {
-    var res = await fetch(ANTHROPIC_PROXY_URL, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 200,
-        system: BVMM_SYS,
-        messages: [{role:'user', content:'What temp for medium-rare steak? One sentence answer.'}]
-      })
-    });
-    setStep(4,'ok','got response ✓');
-
-    // Step 5: Parse response
-    setStep(5,'running','parsing...');
-    var data = await res.json();
-    var reply = data.content && data.content[0] && data.content[0].text;
-    if(reply){
-      setStep(5,'ok','success ✓');
-      box.className='response-box show ok';
-      box.textContent='✅ AI IS WORKING!\n\nTest question: "What temp for medium-rare steak?"\n\nAI replied:\n"'+reply+'"';
-    } else {
-      setStep(5,'fail','no text in response');
-      box.className='response-box show fail';
-      box.textContent='Got a response but no text content.\nRaw response:\n'+JSON.stringify(data,null,2);
+function deployAIKey(){
+  var tok=document.getElementById('tok').value.trim();
+  var repo=document.getElementById('repo').value.trim();
+  var key=document.getElementById('geminiKey').value.trim();
+  var st=document.getElementById('ais');
+  var btn=document.getElementById('aib');
+  var card=document.getElementById('card-ai');
+  if(!key){show(st,'er','Please paste your Gemini API key first.');return;}
+  if(!tok){show(st,'er','Please enter your GitHub token first.');return;}
+  localStorage.setItem('bvmm_tok',tok);
+  localStorage.setItem('bvmm_gemini',key);
+  var content='var ANTHROPIC_PROXY_URL=\'gemini\';var GEMINI_API_KEY=\''+key+'\';(function(){var orig=window.fetch;window.fetch=function(u,o){if(typeof u===\'string\'&&u.indexOf(\'anthropic\')>-1){try{var b=JSON.parse(o.body);var msgs=(b.messages||[]).map(function(m){return{role:m.role===\'assistant\'?\'model\':\'user\',parts:[{text:typeof m.content===\'string\'?m.content:(m.content||[]).map(function(c){return c.text||\'\'}).join(\' \')}]};});if(b.system){msgs.unshift({role:\'user\',parts:[{text:b.system}]});msgs.splice(1,0,{role:\'model\',parts:[{text:\'Understood.\'}]});}return orig(\'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\'+GEMINI_API_KEY,{method:\'POST\',headers:{\'Content-Type\':\'application/json\'},body:JSON.stringify({contents:msgs})}).then(function(r){return r.json();}).then(function(d){var t=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||\'Sorry, no response.\';return new Response(JSON.stringify({content:[{type:\'text\',text:t}]}),{status:200,headers:{\'Content-Type\':\'application/json\'}});});}catch(e){return Promise.reject(e);}}return orig.apply(this,arguments);};})();';
+  btn.disabled=true;
+  startProgress('prog-ai','pb-ai');
+  show(st,'ld','Step 1/3: Saving AI config...');
+  var swContent='self.addEventListener(\'install\',function(e){self.skipWaiting();});self.addEventListener(\'activate\',function(e){e.waitUntil(clients.claim());});self.addEventListener(\'fetch\',function(e){if(e.request.url.indexOf(\'anthropic\')>-1){e.respondWith(fetch(\'ai-config.js\').then(function(r){return r.text();}).then(function(code){var m=code.match(/GEMINI_API_KEY=\'([^\']+)\'/);if(!m)return fetch(e.request);var gkey=m[1];return e.request.json().then(function(b){var msgs=(b.messages||[]).map(function(msg){return{role:msg.role===\'assistant\'?\'model\':\'user\',parts:[{text:typeof msg.content===\'string\'?msg.content:(msg.content||[]).map(function(c){return c.text||\'\'}).join(\' \')}]};});if(b.system){msgs.unshift({role:\'user\',parts:[{text:b.system}]});msgs.splice(1,0,{role:\'model\',parts:[{text:\'Understood.\'}]});}return fetch(\'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\'+gkey,{method:\'POST\',headers:{\'Content-Type\':\'application/json\'},body:JSON.stringify({contents:msgs})}).then(function(r){return r.json();}).then(function(d){var t=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||\'No response.\';return new Response(JSON.stringify({content:[{type:\'text\',text:t}]}),{status:200,headers:{\'Content-Type\':\'application/json\'}});});});}));}});';
+  var aiSha=null,swSha=null,indexSha=null,indexContent=null;
+  fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}})
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+    if(d&&d.sha)aiSha=d.sha;
+    var enc=btoa(unescape(encodeURIComponent(content)));
+    var body={message:'Update AI config',content:enc,branch:'main'};
+    if(aiSha)body.sha=aiSha;
+    return fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{method:'PUT',headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  })
+  .then(function(r){
+    if(!r.ok)throw new Error('Failed to save ai-config.js');
+    show(st,'ld','Step 2/3: Saving service worker...');
+    return fetch('https://api.github.com/repos/'+repo+'/contents/sw.js',{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
+  })
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+    if(d&&d.sha)swSha=d.sha;
+    var enc=btoa(unescape(encodeURIComponent(swContent)));
+    var body={message:'Update service worker',content:enc,branch:'main'};
+    if(swSha)body.sha=swSha;
+    return fetch('https://api.github.com/repos/'+repo+'/contents/sw.js',{method:'PUT',headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  })
+  .then(function(r){
+    if(!r.ok)throw new Error('Failed to save sw.js');
+    show(st,'ld','Step 3/3: Linking to index.html...');
+    return fetch('https://api.github.com/repos/'+repo+'/contents/index.html',{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    indexSha=d.sha;
+    indexContent=atob(d.content.replace(/\n/g,''));
+    var swScript='<script>if(\'serviceWorker\'in navigator){navigator.serviceWorker.register(\'/sw.js\');}<\/script>';
+    var aiScript='<script src="/ai-config.js"><\/script>';
+    var inject='';
+    if(indexContent.indexOf('src="/sw.js"')===-1)inject+=swScript+'\n';
+    if(indexContent.indexOf('src="/ai-config.js"')===-1)inject+=aiScript+'\n';
+    if(!inject){
+      show(st,'ok','AI key saved! Already linked. Live in ~30 seconds.');
+      btn.disabled=false;btn.textContent='Done!';btn.classList.add('done');
+      card.classList.add('success');finishProgress('prog-ai','pb-ai',true);
+      showPopup('ai-config.js','greencrk.com');return null;
     }
-  } catch(e) {
-    setStep(4,'fail','error: '+e.message);
-    box.className='response-box show fail';
-    box.textContent='Fetch failed: '+e.message+'\n\nThis usually means:\n- CORS error (browser blocked the request)\n- Network error\n- ai-config.js intercept not working\n\nFull error: '+e.toString();
-  }
+    var newContent=indexContent.replace('</body>',inject+'</body>');
+    var enc=btoa(unescape(encodeURIComponent(newContent)));
+    var body={message:'Add AI scripts to index.html',content:enc,branch:'main',sha:indexSha};
+    return fetch('https://api.github.com/repos/'+repo+'/contents/index.html',{method:'PUT',headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  })
+  .then(function(r){
+    if(!r)return;
+    btn.disabled=false;
+    if(r.ok){
+      finishProgress('prog-ai','pb-ai',true);
+      show(st,'ok','Done! AI is now live on greencrk.com in ~30 seconds.');
+      btn.textContent='Done!';btn.classList.add('done');
+      card.classList.add('success');
+      showPopup('ai-config.js','greencrk.com');
+    } else {
+      finishProgress('prog-ai','pb-ai',false);
+      r.json().then(function(e){btn.disabled=false;show(st,'er','GitHub error: '+(e.message||r.status));});
+    }
+  })
+  .catch(function(e){
+    btn.disabled=false;
+    finishProgress('prog-ai','pb-ai',false);
+    show(st,'er','Failed: '+e.message);
+  });
+}
 
-  btn.disabled = false;
+function dep(fid,target,btnId,stId,progId,cardId){
+  var tok=document.getElementById('tok').value.trim();
+  var repo=document.getElementById('repo').value.trim();
+  var content=fc[fid];
+  var btn=document.getElementById(btnId);
+  var st=document.getElementById(stId);
+  var card=document.getElementById(cardId);
+  var pbId='pb-'+progId.split('-')[1];
+  if(!content){show(st,'er','Choose a file first.');return;}
+  if(!tok){show(st,'er','Enter your GitHub token first.');return;}
+  localStorage.setItem('bvmm_tok',tok);
+  btn.disabled=true;
+  startProgress(progId,pbId);
+  show(st,'ld','Connecting to GitHub...');
+  fetch('https://api.github.com/repos/'+repo+'/contents/'+target,{
+    headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}
+  })
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+    show(st,'ld','Uploading '+target+' — keep screen on...');
+    var enc=btoa(unescape(encodeURIComponent(content)));
+    var body={message:'Update '+target+' via BVMM deploy tool',content:enc,branch:'main'};
+    if(d&&d.sha)body.sha=d.sha;
+    return fetch('https://api.github.com/repos/'+repo+'/contents/'+target,{
+      method:'PUT',
+      headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+  })
+  .then(function(r){
+    btn.disabled=false;
+    if(r&&r.ok){
+      finishProgress(progId,pbId,true);
+      var urls={'index.html':'greencrk.com','admin.html':'greencrk.com/admin','deploy.html':'this tool','test-ai.html':'greencrk.com/test-ai'};
+      show(st,'ok','Done! Live at '+(urls[target]||target)+' in ~30 seconds.');
+      btn.textContent='Done!';btn.classList.add('done');
+      card.classList.add('success');
+      showPopup(target,urls[target]||target);
+    } else {
+      finishProgress(progId,pbId,false);
+      r.json().then(function(e){
+        btn.disabled=false;
+        show(st,'er','GitHub error: '+(e.message||r.status));
+      });
+    }
+  })
+  .catch(function(e){
+    btn.disabled=false;
+    finishProgress(progId,pbId,false);
+    show(st,'er','Failed: '+e.message+' — Keep screen on and try again.');
+  });
+}
+
+function showPopup(target,url){
+  var titles={'index.html':'Site Deployed!','admin.html':'Admin Deployed!','deploy.html':'Tool Updated!','ai-config.js':'AI Key Saved!','test-ai.html':'Test Page Live!'};
+  document.getElementById('popup-title').textContent=titles[target]||'Deployed!';
+  document.getElementById('popup-msg').textContent='Live at '+url+' in about 30 seconds.';
+  document.getElementById('popup').classList.add('show');
+}
+
+function show(el,type,msg){
+  el.className='st sv';
+  el.classList.add(type);
+  el.textContent=msg;
 }
 </script>
 </body>
