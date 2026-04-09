@@ -162,40 +162,60 @@ function deployAIKey(){
   var card=document.getElementById('card-ai');
   if(!key){show(st,'er','Please paste your Gemini API key first.');return;}
   if(!tok){show(st,'er','Please enter your GitHub token first.');return;}
-  var content='var ANTHROPIC_PROXY_URL=\'gemini\';var GEMINI_API_KEY=\''+key+'\';(function(){var _fetch=window.fetch;window.fetch=function(url,opts){if(typeof url===\'string\'&&url.indexOf(\'anthropic\')>-1){var body=JSON.parse(opts.body);var msgs=body.messages||[];var gemUrl=\'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\'+GEMINI_API_KEY;var gemBody={contents:msgs.map(function(m){return{role:m.role===\'assistant\'?\'model\':\'user\',parts:[{text:typeof m.content===\'string\'?m.content:m.content.map(function(c){return c.text||\'\'}).join(\' \')}]}})};if(body.system){gemBody.contents.unshift({role:\'user\',parts:[{text:body.system}]});gemBody.contents.splice(1,0,{role:\'model\',parts:[{text:\'Understood.\'}]});}return _fetch(gemUrl,{method:\'POST\',headers:{\'Content-Type\':\'application/json\'},body:JSON.stringify(gemBody)}).then(function(r){return r.json()}).then(function(d){var text=d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]?d.candidates[0].content.parts[0].text:\'Sorry, I could not get a response.\';var resp={content:[{type:\'text\',text:text}]};return new Response(JSON.stringify(resp),{status:200,headers:{\'Content-Type\':\'application/json\'}});});}return _fetch.apply(this,arguments);};})();';
+  var content='var ANTHROPIC_PROXY_URL=\'gemini\';var GEMINI_API_KEY=\''+key+'\';(function(){var orig=window.fetch;window.fetch=function(u,o){if(typeof u===\'string\'&&u.indexOf(\'anthropic\')>-1){try{var b=JSON.parse(o.body);var msgs=(b.messages||[]).map(function(m){return{role:m.role===\'assistant\'?\'model\':\'user\',parts:[{text:typeof m.content===\'string\'?m.content:(m.content||[]).map(function(c){return c.text||\'\'}).join(\' \')}]};});if(b.system){msgs.unshift({role:\'user\',parts:[{text:b.system}]});msgs.splice(1,0,{role:\'model\',parts:[{text:\'Understood.\'}]});}return orig(\'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\'+GEMINI_API_KEY,{method:\'POST\',headers:{\'Content-Type\':\'application/json\'},body:JSON.stringify({contents:msgs})}).then(function(r){return r.json();}).then(function(d){var t=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||\'Sorry, no response.\';return new Response(JSON.stringify({content:[{type:\'text\',text:t}]}),{status:200,headers:{\'Content-Type\':\'application/json\'}});});}catch(e){return Promise.reject(e);}}return orig.apply(this,arguments);};})();';
   btn.disabled=true;
   startProgress('prog-ai','pb-ai');
-  show(st,'ld','Connecting to GitHub...');
-  fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{
-    headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}
-  })
+  show(st,'ld','Step 1/3: Saving AI config...');
+  var aiSha=null;
+  var indexSha=null;
+  var indexContent=null;
+  fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}})
   .then(function(r){return r.ok?r.json():null;})
   .then(function(d){
-    show(st,'ld','Saving AI config...');
+    if(d&&d.sha)aiSha=d.sha;
     var enc=btoa(unescape(encodeURIComponent(content)));
     var body={message:'Update AI config',content:enc,branch:'main'};
-    if(d&&d.sha)body.sha=d.sha;
-    return fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{
-      method:'PUT',
-      headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    });
+    if(aiSha)body.sha=aiSha;
+    return fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{method:'PUT',headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
   })
   .then(function(r){
-    btn.disabled=false;
-    if(r&&r.ok){
+    if(!r.ok)throw new Error('Failed to save ai-config.js');
+    show(st,'ld','Step 2/3: Loading index.html...');
+    return fetch('https://api.github.com/repos/'+repo+'/contents/index.html',{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}});
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    indexSha=d.sha;
+    indexContent=atob(d.content.replace(/\n/g,''));
+    if(indexContent.indexOf('ai-config.js')>-1){
+      show(st,'ok','AI key saved! Already linked. Live in ~30 seconds.');
+      btn.disabled=false;
+      btn.textContent='Done!';
+      btn.classList.add('done');
+      card.classList.add('success');
       finishProgress('prog-ai','pb-ai',true);
-      show(st,'ok','AI key saved! Live in ~30 seconds.');
+      showPopup('ai-config.js','greencrk.com');
+      return null;
+    }
+    show(st,'ld','Step 3/3: Linking to index.html...');
+    var newContent=indexContent.replace('</body>','<script src="ai-config.js"><\/script>\n</body>');
+    var enc=btoa(unescape(encodeURIComponent(newContent)));
+    var body={message:'Add ai-config.js to index.html',content:enc,branch:'main',sha:indexSha};
+    return fetch('https://api.github.com/repos/'+repo+'/contents/index.html',{method:'PUT',headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  })
+  .then(function(r){
+    if(!r)return;
+    btn.disabled=false;
+    if(r.ok){
+      finishProgress('prog-ai','pb-ai',true);
+      show(st,'ok','Done! AI is now live on greencrk.com in ~30 seconds.');
       btn.textContent='Done!';
       btn.classList.add('done');
       card.classList.add('success');
       showPopup('ai-config.js','greencrk.com');
     } else {
       finishProgress('prog-ai','pb-ai',false);
-      r.json().then(function(e){
-        btn.disabled=false;
-        show(st,'er','GitHub error: '+(e.message||r.status));
-      });
+      r.json().then(function(e){btn.disabled=false;show(st,'er','GitHub error: '+(e.message||r.status));});
     }
   })
   .catch(function(e){
