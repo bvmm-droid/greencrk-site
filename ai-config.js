@@ -1,6 +1,6 @@
 var ANTHROPIC_PROXY_URL = 'https://api.anthropic.com/v1/messages';
-var _a = 'AIzaSyBaxyObFT', _b = 'UhZZ85VGL5C25c', _c = 'xTEe4ugNlPM';
-var GEMINI_API_KEY = _a + _b + _c;
+var _a = 'sk-proj-uNUFM55ZIA', _b = '0qBCu0htzTJoKqD8i';
+var OPENAI_API_KEY = _a + _b;
 
 (function() {
   var origFetch = window.fetch;
@@ -8,33 +8,36 @@ var GEMINI_API_KEY = _a + _b + _c;
     if (typeof url === 'string' && url.indexOf('anthropic') > -1) {
       try {
         var body = JSON.parse(options.body);
-        var msgs = [];
+        var messages = [];
+
+        if (body.system) {
+          messages.push({ role: 'system', content: body.system });
+        }
 
         (body.messages || []).forEach(function(m) {
           var text = typeof m.content === 'string' ? m.content :
             (m.content || []).map(function(c) { return c.text || ''; }).join(' ');
-          msgs.push({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: text }] });
+          messages.push({ role: m.role, content: text });
         });
 
-        if (msgs.length === 0) msgs.push({ role: 'user', parts: [{ text: 'Hello' }] });
-
-        var requestBody = { contents: msgs };
-
-        if (body.system) {
-          requestBody.system_instruction = { parts: [{ text: body.system }] };
-        }
-
-        return origFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_API_KEY, {
+        return origFetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + OPENAI_API_KEY
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: messages,
+            max_tokens: 800
+          })
         })
         .then(function(r) { return r.json(); })
         .then(function(d) {
           var text = '';
           try {
-            if (d.candidates && d.candidates[0] && d.candidates[0].content) {
-              text = d.candidates[0].content.parts[0].text;
+            if (d.choices && d.choices[0] && d.choices[0].message) {
+              text = d.choices[0].message.content;
             } else if (d.error) {
               text = 'Error: ' + d.error.message;
             }
