@@ -93,6 +93,15 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
   <div class="st" id="ds"></div>
 </div>
 
+<div class="card" id="card-test">
+  <div class="ctitle" style="color:#e67e22">AI Test Page <span class="tag" style="background:#e67e22;color:#fff">test-ai.html → greencrk.com/test-ai</span></div>
+  <input type="file" id="tf" accept=".html" onchange="onF(this,'ti','tb')">
+  <div class="fi" id="ti">No file chosen</div>
+  <button class="btn" style="background:#e67e22;color:#fff" id="tb" onclick="dep('tf','test-ai.html','tb','ts','prog-test','card-test')" disabled>Deploy Test Page → greencrk.com/test-ai</button>
+  <div class="prog-wrap" id="prog-test"><div class="prog-bar" id="pb-test"></div></div>
+  <div class="st" id="ts"></div>
+</div>
+
 <div class="card" id="card-ai">
   <div class="ctitle green">AI Config <span class="tag tv">Gemini API Key → ai-config.js</span></div>
   <label>Gemini API Key</label>
@@ -307,7 +316,7 @@ function dep(fid,target,btnId,stId,progId,cardId){
     btn.disabled=false;
     if(r&&r.ok){
       finishProgress(progId,pbId,true);
-      var urls={'index.html':'greencrk.com','admin.html':'greencrk.com/admin','deploy.html':'this tool'};
+      var urls={'index.html':'greencrk.com','admin.html':'greencrk.com/admin','deploy.html':'this tool','test-ai.html':'greencrk.com/test-ai'};
       show(st,'ok','Done! Live at '+(urls[target]||target)+' in ~30 seconds.');
       btn.textContent='Done!';btn.classList.add('done');
       card.classList.add('success');
@@ -328,7 +337,7 @@ function dep(fid,target,btnId,stId,progId,cardId){
 }
 
 function showPopup(target,url){
-  var titles={'index.html':'Site Deployed!','admin.html':'Admin Deployed!','deploy.html':'Tool Updated!','ai-config.js':'AI Key Saved!'};
+  var titles={'index.html':'Site Deployed!','admin.html':'Admin Deployed!','deploy.html':'Tool Updated!','ai-config.js':'AI Key Saved!','test-ai.html':'Test Page Live!'};
   document.getElementById('popup-title').textContent=titles[target]||'Deployed!';
   document.getElementById('popup-msg').textContent='Live at '+url+' in about 30 seconds.';
   document.getElementById('popup').classList.add('show');
