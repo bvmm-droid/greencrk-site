@@ -1,0 +1,1 @@
+var ANTHROPIC_PROXY_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCIxoR3GVkjijzlFWdUORAsdnAYtq319bk';
