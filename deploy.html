@@ -13,9 +13,9 @@ h2 span{color:#c9a84c}
 .card{background:#201c1a;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:18px;margin-bottom:14px;transition:border-color .3s}
 .card.success{border-color:#2ecc71;background:#0d1f12}
 .ctitle{font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.gold{color:#c9a84c} .red{color:#c0392b} .blue{color:#5b9bd5}
+.gold{color:#c9a84c} .red{color:#c0392b} .blue{color:#5b9bd5} .green{color:#2ecc71}
 .tag{border-radius:100px;padding:3px 10px;font-size:.55rem;font-weight:700}
-.tg{background:#c9a84c;color:#0e0c0b} .tr{background:#c0392b;color:#fff} .tb{background:#5b9bd5;color:#fff}
+.tg{background:#c9a84c;color:#0e0c0b} .tr{background:#c0392b;color:#fff} .tb{background:#5b9bd5;color:#fff} .tv{background:#2ecc71;color:#0e0c0b}
 label{font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,242,236,.4);margin-bottom:6px;display:block}
 input[type=text],input[type=password]{width:100%;background:#141110;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:.88rem;color:#fff;outline:none;margin-bottom:12px;-webkit-appearance:none;display:block}
 input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
@@ -25,18 +25,17 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 .bg{background:#c9a84c;color:#0e0c0b}
 .br{background:#c0392b;color:#fff}
 .bb{background:#5b9bd5;color:#fff}
+.bv{background:#2ecc71;color:#0e0c0b}
 .btn.done{background:#2ecc71!important;color:#fff!important}
 .st{font-size:.82rem;padding:12px 14px;border-radius:10px;margin-top:10px;display:none;line-height:1.6}
 .sv{display:block}
 .ok{background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.25)}
 .er{background:rgba(192,57,43,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.25)}
 .ld{background:rgba(201,168,76,.12);color:#c9a84c;border:1px solid rgba(201,168,76,.25)}
-/* PROGRESS BAR */
 .prog-wrap{background:rgba(255,255,255,.08);border-radius:100px;height:6px;margin-top:10px;display:none;overflow:hidden}
 .prog-wrap.sv{display:block}
 .prog-bar{height:6px;border-radius:100px;background:#c9a84c;width:0%;transition:width .4s}
 .prog-bar.done{background:#2ecc71}
-/* SUCCESS POPUP */
 #popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:999;padding:20px}
 #popup.show{display:flex}
 .popup-box{background:#141110;border:2px solid #2ecc71;border-radius:18px;padding:28px 24px;text-align:center;max-width:320px;width:100%}
@@ -44,6 +43,9 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 .popup-title{font-size:1.3rem;font-weight:700;color:#2ecc71;margin-bottom:8px}
 .popup-msg{font-size:.85rem;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:20px}
 .popup-close{background:#2ecc71;color:#000;border:none;border-radius:100px;padding:12px 32px;font-size:.9rem;font-weight:700;cursor:pointer;width:100%}
+.ai-key-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.ai-key-row input{flex:1;margin-bottom:0}
+.ai-key-btn{background:#2ecc71;color:#0e0c0b;border:none;border-radius:8px;padding:10px 14px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -53,7 +55,7 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 
 <div class="card">
   <label>GitHub Token</label>
-  <input type="password" id="tok" value="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">
+  <input type="password" id="tok" placeholder="Paste your GitHub token here">
   <label>Repo</label>
   <input type="text" id="repo" value="bvmm-droid/greencrk-site" style="margin-bottom:0">
 </div>
@@ -85,9 +87,20 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
   <div class="st" id="ds"></div>
 </div>
 
+<div class="card" id="card-ai">
+  <div class="ctitle green">AI Config <span class="tag tv">Gemini API Key → ai-config.js</span></div>
+  <label>Paste your Gemini API Key</label>
+  <div class="ai-key-row">
+    <input type="password" id="geminiKey" placeholder="AIzaSy...">
+    <button class="ai-key-btn" onclick="toggleShowKey()">Show</button>
+  </div>
+  <button class="btn bv" id="aib" onclick="deployAIKey()">Save AI Key → greencrk.com</button>
+  <div class="prog-wrap" id="prog-ai"><div class="prog-bar" id="pb-ai"></div></div>
+  <div class="st" id="ais"></div>
+</div>
+
 <div style="height:30px"></div>
 
-<!-- SUCCESS POPUP -->
 <div id="popup">
   <div class="popup-box">
     <div class="popup-check">✅</div>
@@ -100,6 +113,13 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 <script>
 var fc={};
 var progIntervals={};
+
+function toggleShowKey(){
+  var inp=document.getElementById('geminiKey');
+  var btn=event.target;
+  if(inp.type==='password'){inp.type='text';btn.textContent='Hide';}
+  else{inp.type='password';btn.textContent='Show';}
+}
 
 function onF(input,infId,btnId){
   var f=input.files[0];
@@ -131,6 +151,58 @@ function finishProgress(progId,pbId,success){
   var bar=document.getElementById(pbId);
   bar.style.width='100%';
   if(success)bar.classList.add('done');
+}
+
+function deployAIKey(){
+  var tok=document.getElementById('tok').value.trim();
+  var repo=document.getElementById('repo').value.trim();
+  var key=document.getElementById('geminiKey').value.trim();
+  var st=document.getElementById('ais');
+  var btn=document.getElementById('aib');
+  var card=document.getElementById('card-ai');
+  if(!key){show(st,'er','Please paste your Gemini API key first.');return;}
+  if(!tok){show(st,'er','Please enter your GitHub token first.');return;}
+  var content='var ANTHROPIC_PROXY_URL=\'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key='+key+'\';';
+  btn.disabled=true;
+  startProgress('prog-ai','pb-ai');
+  show(st,'ld','Connecting to GitHub...');
+  fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{
+    headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}
+  })
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+    show(st,'ld','Saving AI config...');
+    var enc=btoa(unescape(encodeURIComponent(content)));
+    var body={message:'Update AI config',content:enc,branch:'main'};
+    if(d&&d.sha)body.sha=d.sha;
+    return fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{
+      method:'PUT',
+      headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+  })
+  .then(function(r){
+    btn.disabled=false;
+    if(r&&r.ok){
+      finishProgress('prog-ai','pb-ai',true);
+      show(st,'ok','AI key saved! Live in ~30 seconds.');
+      btn.textContent='Done!';
+      btn.classList.add('done');
+      card.classList.add('success');
+      showPopup('ai-config.js','greencrk.com');
+    } else {
+      finishProgress('prog-ai','pb-ai',false);
+      r.json().then(function(e){
+        btn.disabled=false;
+        show(st,'er','GitHub error: '+(e.message||r.status));
+      });
+    }
+  })
+  .catch(function(e){
+    btn.disabled=false;
+    finishProgress('prog-ai','pb-ai',false);
+    show(st,'er','Failed: '+e.message);
+  });
 }
 
 function dep(fid,target,btnId,stId,progId,cardId){
@@ -186,9 +258,9 @@ function dep(fid,target,btnId,stId,progId,cardId){
 }
 
 function showPopup(target,url){
-  var titles={'index.html':'Site Deployed!','admin.html':'Admin Deployed!','deploy.html':'Tool Updated!'};
+  var titles={'index.html':'Site Deployed!','admin.html':'Admin Deployed!','deploy.html':'Tool Updated!','ai-config.js':'AI Key Saved!'};
   document.getElementById('popup-title').textContent=titles[target]||'Deployed!';
-  document.getElementById('popup-msg').textContent='Live at '+url+' in about 30 seconds. GitHub Pages is building now.';
+  document.getElementById('popup-msg').textContent='Live at '+url+' in about 30 seconds.';
   document.getElementById('popup').classList.add('show');
 }
 
