@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BVMM Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0e0c0b;--bg2:#141110;--card:#201c1a;--gold:#c9a84c;--red:#c0392b;--white:#f5f2ec;--mid:rgba(245,242,236,.55);--muted:rgba(245,242,236,.28);--border:rgba(255,255,255,.09);--green:#2ecc71}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--white);min-height:100vh}
+#login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+#login.hide{display:none}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:40px 32px;max-width:380px;width:100%;text-align:center}
+.login-logo{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gold);margin-bottom:6px}
+.login-sub{font-size:.75rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:32px}
+.login-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-family:'Inter',sans-serif;font-size:.95rem;color:var(--white);outline:none;margin-bottom:12px;-webkit-appearance:none;text-align:center;letter-spacing:.12em}
+.login-input:focus{border-color:var(--gold)}
+.login-btn{width:100%;padding:14px;background:var(--gold);color:#0e0c0b;border:none;border-radius:100px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.login-err{color:var(--red);font-size:.75rem;margin-top:10px;display:none}
+#main{display:none;min-height:100vh}
+#main.show{display:block}
+.admin-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px clamp(16px,4vw,48px);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.admin-brand{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold)}
+.admin-brand span{font-style:italic;color:var(--mid);font-size:.85rem;margin-left:8px}
+.logout-btn{background:none;border:1px solid var(--border);border-radius:100px;padding:7px 16px;font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+.admin-tabs{display:flex;gap:0;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 clamp(16px,4vw,48px);overflow-x:auto;scrollbar-width:none}
+.admin-tabs::-webkit-scrollbar{display:none}
+.atab{background:none;border:none;border-bottom:2px solid transparent;padding:14px 20px;font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;margin-bottom:-1px}
+.atab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.admin-panel{display:none;padding:clamp(20px,4vw,48px)}
+.admin-panel.active{display:block}
+.panel-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:400;color:var(--white);margin-bottom:6px}
+.panel-sub{font-size:.75rem;color:var(--muted);margin-bottom:28px}
+.acard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px}
+.acard-title{font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.ainput{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Inter',sans-serif;font-size:.85rem;color:var(--white);outline:none;margin-bottom:10px;-webkit-appearance:none}
+.ainput:focus{border-color:var(--gold)}
+.ainput::placeholder{color:var(--muted)}
+.arow{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.arow .ainput{margin-bottom:0;flex:1;min-width:120px}
+.abtn{padding:10px 20px;border:none;border-radius:100px;font-family:'Inter',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.abtn-gold{background:var(--gold);color:#0e0c0b}
+.abtn-red{background:var(--red);color:#fff}
+.abtn-green{background:var(--green);color:#000}
+.abtn-outline{background:none;border:1px solid var(--border);color:var(--mid)}
+.abtn:disabled{opacity:.4;cursor:not-allowed}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:16px}
+.photo-item{position:relative;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;aspect-ratio:1;background:var(--bg2)}
+.photo-item.selected{border-color:var(--green)}
+.photo-item img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-item-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);padding:6px;font-size:.6rem;text-align:center;color:#fff;opacity:0;transition:opacity .2s}
+.photo-item:hover .photo-item-label{opacity:1}
+.menu-select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Inter',sans-serif;font-size:.82rem;color:var(--white);outline:none;margin-bottom:10px;cursor:pointer}
+.menu-select option,.menu-select optgroup{background:var(--bg2)}
+.price-table{width:100%;border-collapse:collapse;margin-top:10px}
+.price-table th{font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.price-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.8rem}
+.price-input{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-family:'Inter',sans-serif;font-size:.78rem;color:var(--white);outline:none;width:120px}
+.price-input:focus{border-color:var(--gold)}
+.weekly-editor{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.weekly-num{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.status-msg{padding:10px 14px;border-radius:8px;font-size:.78rem;margin-top:10px;display:none}
+.status-msg.show{display:block}
+.s-ok{background:rgba(46,204,113,.12);color:var(--green);border:1px solid rgba(46,204,113,.25)}
+.s-err{background:rgba(192,57,43,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.25)}
+.s-ld{background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.25)}
+.quick-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.qtag{padding:5px 12px;border:1px solid var(--border);border-radius:100px;font-size:.62rem;font-weight:600;color:var(--muted);cursor:pointer;background:none;font-family:'Inter',sans-serif}
+.qtag:hover{border-color:var(--gold);color:var(--gold)}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo">BVMM</div>
+    <div class="login-sub">Admin · Babylon Village Meat Market</div>
+    <input type="password" class="login-input" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Enter Admin</button>
+    <div class="login-err" id="loginErr">Wrong password. Try again.</div>
+  </div>
+</div>
+
+<div id="main">
+  <div class="admin-header">
+    <div class="admin-brand">BVMM <span>Admin Panel</span></div>
+    <button class="logout-btn" onclick="logout()">Log Out</button>
+  </div>
+  <div class="admin-tabs">
+    <button class="atab active" onclick="showTab('photos',this)">Photos</button>
+    <button class="atab" onclick="showTab('prices',this)">Prices</button>
+    <button class="atab" onclick="showTab('weekly',this)">Weekly</button>
+    <button class="atab" onclick="showTab('csv',this)">CSV</button>
+    <button class="atab" onclick="showTab('deploy',this)">Deploy</button>
+  </div>
+
+  <!-- PHOTOS -->
+  <div class="admin-panel active" id="panel-photos">
+    <div class="panel-title">Photo Search</div>
+    <div class="panel-sub">Search the web for food photos and assign them to menu items</div>
+    <div class="acard">
+      <div class="acard-title">Search</div>
+      <div class="arow">
+        <input type="text" class="ainput" id="photoQ" placeholder="e.g. dry aged ribeye steak" onkeydown="if(event.key==='Enter')searchPhotos()">
+        <button class="abtn abtn-gold" onclick="searchPhotos()">Search</button>
+      </div>
+      <div class="quick-tags">
+        <button class="qtag" onclick="qs('dry aged ribeye')">Ribeye</button>
+        <button class="qtag" onclick="qs('prime filet mignon')">Filet</button>
+        <button class="qtag" onclick="qs('new york strip steak')">NY Strip</button>
+        <button class="qtag" onclick="qs('deli sandwich roast beef')">Sandwich</button>
+        <button class="qtag" onclick="qs('fresh salmon fillet')">Salmon</button>
+        <button class="qtag" onclick="qs('lamb chops grill')">Lamb</button>
+        <button class="qtag" onclick="qs('berkshire pork chop')">Pork</button>
+        <button class="qtag" onclick="qs('jumbo shrimp seafood')">Shrimp</button>
+        <button class="qtag" onclick="qs('chicken cutlet parmesan')">Chicken</button>
+        <button class="qtag" onclick="qs('corned beef pastrami deli')">Pastrami</button>
+        <button class="qtag" onclick="qs('beef brisket smoked')">Brisket</button>
+        <button class="qtag" onclick="qs('veal cutlets')">Veal</button>
+      </div>
+      <div id="photoGrid" class="photo-grid"></div>
+      <div id="photoMsg" style="font-size:.7rem;color:var(--muted);margin-top:8px"></div>
+    </div>
+    <div class="acard">
+      <div class="acard-title">Assign Selected Photo</div>
+      <select class="menu-select" id="menuItem">
+        <option value="">-- Pick a menu item --</option>
+        <optgroup label="BEEF"><option>Dry-Aged Ribeye</option><option>Prime Filet Mignon</option><option>NY Strip Steak</option><option>T-Bone Steak</option><option>Short Rib Flanken Cut</option><option>Prime Brisket Flat</option></optgroup>
+        <optgroup label="SANDWICHES"><option>The Abe Lincoln</option><option>Rustic London</option><option>Reubenville</option><option>Dave's Philly Cheesesteak</option><option>Don Corleone</option><option>Jerry Lewis</option><option>French Dip</option><option>The Liotta</option><option>King Kong</option><option>Honey Bee</option><option>Roast Beef Delight</option><option>Tuna Avocado</option><option>Chicken Chipotle</option><option>Crab Trap</option></optgroup>
+        <optgroup label="POULTRY"><option>Airline Chicken Breast</option><option>Whole Chicken</option></optgroup>
+        <optgroup label="SEAFOOD"><option>Wild Colossal Shrimp</option><option>Salmon Fillet</option><option>Sea Scallops</option><option>Swordfish Steak</option><option>Jumbo Shrimp</option></optgroup>
+        <optgroup label="LAMB"><option>Lamb Chops – Rib</option><option>Bone-In Leg of Lamb</option></optgroup>
+        <optgroup label="PORK"><option>Berkshire Pork Chop</option><option>Double Smoked Bacon</option><option>Baby Back Ribs</option><option>Pork Tenderloin</option></optgroup>
+        <optgroup label="VEAL"><option>Veal Cutlets</option><option>Osso Bucco</option></optgroup>
+        <optgroup label="PREPARED"><option>Stuffed Peppers</option><option>House Meat Sauce</option></optgroup>
+      </select>
+      <div id="selPreview" style="display:none;margin-bottom:12px">
+        <img id="selImg" style="width:100px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+        <div id="selUrl" style="font-size:.65rem;color:var(--muted);margin-top:4px;word-break:break-all"></div>
+      </div>
+      <button class="abtn abtn-green" id="assignBtn" onclick="assignPhoto()" disabled>Assign Photo</button>
+      <div class="status-msg" id="photoStatus"></div>
+    </div>
+    <div class="acard">
+      <div class="acard-title">Current Assignments (saved on this device)</div>
+      <div id="assignmentList" style="font-size:.75rem;color:var(--mid);line-height:2"></div>
+    </div>
+  </div>
+
+  <!-- PRICES -->
+  <div class="admin-panel" id="panel-prices">
+    <div class="panel-title">Price Editor</div>
+    <div class="panel-sub">Set prices for cold cuts and cheese (currently showing Market Price)</div>
+    <div class="acard">
+      <div class="acard-title">Cold Cuts — Per Pound</div>
+      <table class="price-table"><thead><tr><th>Item</th><th>Price /lb</th></tr></thead><tbody id="ccBody"></tbody></table>
+    </div>
+    <div class="acard">
+      <div class="acard-title">Cheese — Per Pound</div>
+      <table class="price-table"><thead><tr><th>Item</th><th>Price /lb</th></tr></thead><tbody id="chBody"></tbody></table>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+      <button class="abtn abtn-gold" onclick="savePrices()">Save Prices</button>
+      <button class="abtn abtn-outline" onclick="exportPricesCSV()">Export CSV</button>
+    </div>
+    <div class="status-msg" id="priceStatus"></div>
+  </div>
+
+  <!-- WEEKLY -->
+  <div class="admin-panel" id="panel-weekly">
+    <div class="panel-title">Weekly Specials</div>
+    <div class="panel-sub">Edit the 7 items in the "At the Counter" strip</div>
+    <div id="weeklyList"></div>
+    <button class="abtn abtn-gold" onclick="saveWeekly()">Save Weekly Specials</button>
+    <div class="status-msg" id="weeklyStatus"></div>
+  </div>
+
+  <!-- CSV -->
+  <div class="admin-panel" id="panel-csv">
+    <div class="panel-title">CSV Tools</div>
+    <div class="panel-sub">Export your menu or import price updates</div>
+    <div class="acard">
+      <div class="acard-title">Export Full Menu</div>
+      <p style="font-size:.78rem;color:var(--mid);margin-bottom:14px;line-height:1.7">Downloads everything — all items, prices, categories — as a CSV you can open in Excel or Google Sheets.</p>
+      <button class="abtn abtn-gold" onclick="exportCSV()">Download Menu CSV</button>
+    </div>
+    <div class="acard">
+      <div class="acard-title">Import Price Updates</div>
+      <p style="font-size:.78rem;color:var(--mid);margin-bottom:14px;line-height:1.7">Upload a CSV with two columns: Item Name, Price. Updates matching items automatically.</p>
+      <input type="file" accept=".csv" onchange="importCSV(this)" style="color:var(--mid);font-size:.78rem">
+      <div class="status-msg" id="csvStatus"></div>
+    </div>
+  </div>
+
+  <!-- DEPLOY -->
+  <div class="admin-panel" id="panel-deploy">
+    <div class="panel-title">Deploy to greencrk.com</div>
+    <div class="panel-sub">Push your changes live</div>
+    <div class="acard">
+      <div class="acard-title">GitHub Token</div>
+      <div class="arow">
+        <input type="password" class="ainput" id="dTok" placeholder="ghp_..." style="margin-bottom:0">
+        <button class="abtn abtn-outline" onclick="toggleTok()">Show</button>
+      </div>
+      <div style="font-size:.65rem;color:var(--green);margin-top:2px;display:none" id="tokSaved">✓ Saved on this device</div>
+    </div>
+    <div class="acard">
+      <div class="acard-title">Quick Links</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="https://greencrk.com/deploy.html" target="_blank" style="color:var(--gold);font-size:.8rem">→ Open Deploy Tool (greencrk.com/deploy.html)</a>
+        <a href="https://github.com/bvmm-droid/greencrk-site/upload/main" target="_blank" style="color:var(--gold);font-size:.8rem">→ Upload files directly to GitHub</a>
+        <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--gold);font-size:.8rem">→ Cloudflare Dashboard (Workers)</a>
+        <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);font-size:.8rem">→ Gemini API Keys</a>
+        <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--gold);font-size:.8rem">→ OpenAI API Keys</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var PASS='bvmm1983';
+var selectedPhotoUrl=null;
+var photoAssignments=JSON.parse(localStorage.getItem('bvmm_photos')||'{}');
+var coldCuts=['Prime Roast Beef','Swedish Ham','All Natural Turkey Breast','Pastrami','Corned Beef','Genoa Salami','Prosciutto','Ham Cappy','Pepperoni'];
+var cheeses=['Imported Provolone','Swiss','American','Reggiano Parmesan','Imported Auricchio','Brie','Aged Gouda','Smoked Aged Cheddar','Italian Piave','Fresh Mozzarella','Pepperjack'];
+var weeklyItems=JSON.parse(localStorage.getItem('bvmm_weekly')||'null')||[
+  {tag:'BEEF',name:'Dry-Aged Ribeye',price:'$28.99/lb'},
+  {tag:'SPECIAL',name:'Prime Brisket Flat',price:'$14.99/lb'},
+  {tag:'POULTRY',name:'Airline Chicken Breast',price:'$9.99/lb'},
+  {tag:'PREPARED',name:'Stuffed Peppers',price:'$12.99/ea'},
+  {tag:'SEAFOOD',name:'Wild Colossal Shrimp',price:'$18.99/lb'},
+  {tag:'BEEF',name:'Short Rib Flanken Cut',price:'$16.99/lb'},
+  {tag:'KITCHEN',name:'House Meat Sauce',price:'$10.99/qt'}
+];
+var savedPrices=JSON.parse(localStorage.getItem('bvmm_prices')||'{}');
+
+function doLogin(){
+  if(document.getElementById('pwInput').value===PASS){
+    document.getElementById('login').classList.add('hide');
+    document.getElementById('main').classList.add('show');
+    init();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('pwInput').value='';
+  }
+}
+function logout(){document.getElementById('login').classList.remove('hide');document.getElementById('main').classList.remove('show');}
+function showTab(id,btn){document.querySelectorAll('.admin-panel').forEach(function(p){p.classList.remove('active');});document.querySelectorAll('.atab').forEach(function(b){b.classList.remove('active');});document.getElementById('panel-'+id).classList.add('active');btn.classList.add('active');}
+
+function init(){
+  buildPrices();buildWeekly();loadTok();renderAssignments();
+}
+
+// PHOTOS
+function qs(q){document.getElementById('photoQ').value=q;searchPhotos();}
+function searchPhotos(){
+  var q=document.getElementById('photoQ').value.trim();
+  if(!q)return;
+  var grid=document.getElementById('photoGrid');
+  grid.innerHTML='<div style="color:var(--muted);font-size:.78rem;padding:20px;grid-column:1/-1">Loading photos...</div>';
+  document.getElementById('photoMsg').textContent='';
+  var results=[];
+  for(var i=0;i<12;i++){
+    results.push('https://source.unsplash.com/300x300/?'+encodeURIComponent(q+' food photography')+'&sig='+(Date.now()+i*7));
+  }
+  grid.innerHTML='';
+  results.forEach(function(url,i){
+    var d=document.createElement('div');
+    d.className='photo-item';
+    d.innerHTML='<img src="'+url+'" loading="lazy"><div class="photo-item-label">Select</div>';
+    d.onclick=function(){
+      document.querySelectorAll('.photo-item').forEach(function(p){p.classList.remove('selected');});
+      d.classList.add('selected');
+      selectedPhotoUrl=url;
+      document.getElementById('selPreview').style.display='block';
+      document.getElementById('selImg').src=url;
+      document.getElementById('selUrl').textContent=url;
+      document.getElementById('assignBtn').disabled=false;
+    };
+    grid.appendChild(d);
+  });
+  document.getElementById('photoMsg').textContent='Photos from Unsplash — free to use commercially';
+}
+function assignPhoto(){
+  var item=document.getElementById('menuItem').value;
+  if(!item){showS('photoStatus','err','Select a menu item first.');return;}
+  if(!selectedPhotoUrl){showS('photoStatus','err','Select a photo first.');return;}
+  photoAssignments[item]=selectedPhotoUrl;
+  localStorage.setItem('bvmm_photos',JSON.stringify(photoAssignments));
+  renderAssignments();
+  showS('photoStatus','ok','Assigned to "'+item+'" — go to Deploy tab to push live!');
+}
+function renderAssignments(){
+  var list=document.getElementById('assignmentList');
+  var keys=Object.keys(photoAssignments);
+  if(keys.length===0){list.textContent='No photos assigned yet.';return;}
+  list.innerHTML=keys.map(function(k){return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border)"><img src="'+photoAssignments[k]+'" style="width:36px;height:36px;object-fit:cover;border-radius:4px"><span style="flex:1">'+k+'</span><button onclick="deleteAssignment(\''+k+'\')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.7rem">Remove</button></div>';}).join('');
+}
+function deleteAssignment(k){delete photoAssignments[k];localStorage.setItem('bvmm_photos',JSON.stringify(photoAssignments));renderAssignments();}
+
+// PRICES
+function buildPrices(){
+  var ccBody=document.getElementById('ccBody');ccBody.innerHTML='';
+  coldCuts.forEach(function(name,i){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="color:var(--white)">'+name+'</td><td><input class="price-input" type="text" placeholder="Market Price" value="'+(savedPrices[name]||'')+'" oninput="savedPrices[\''+name+'\']=this.value"></td>';
+    ccBody.appendChild(tr);
+  });
+  var chBody=document.getElementById('chBody');chBody.innerHTML='';
+  cheeses.forEach(function(name,i){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="color:var(--white)">'+name+'</td><td><input class="price-input" type="text" placeholder="Market Price" value="'+(savedPrices[name]||'')+'" oninput="savedPrices[\''+name+'\']=this.value"></td>';
+    chBody.appendChild(tr);
+  });
+}
+function savePrices(){localStorage.setItem('bvmm_prices',JSON.stringify(savedPrices));showS('priceStatus','ok','Prices saved! Go to Deploy tab to push live.');}
+function exportPricesCSV(){
+  var rows=[['Item','Price','Category']];
+  coldCuts.forEach(function(n){rows.push([n,savedPrices[n]||'Market Price','Cold Cut']);});
+  cheeses.forEach(function(n){rows.push([n,savedPrices[n]||'Market Price','Cheese']);});
+  dlCSV(rows,'BVMM_Prices');
+}
+
+// WEEKLY
+function buildWeekly(){
+  var list=document.getElementById('weeklyList');list.innerHTML='';
+  weeklyItems.forEach(function(item,i){
+    var d=document.createElement('div');d.className='weekly-editor';
+    d.innerHTML='<div class="weekly-num">Item '+(i+1)+'</div><div class="arow"><input type="text" class="ainput" placeholder="Tag (BEEF)" value="'+item.tag+'" oninput="weeklyItems['+i+'].tag=this.value" style="max-width:140px;margin-bottom:0"><input type="text" class="ainput" placeholder="Name" value="'+item.name+'" oninput="weeklyItems['+i+'].name=this.value" style="margin-bottom:0;flex:1"></div><input type="text" class="ainput" placeholder="Price" value="'+item.price+'" oninput="weeklyItems['+i+'].price=this.value">';
+    list.appendChild(d);
+  });
+}
+function saveWeekly(){localStorage.setItem('bvmm_weekly',JSON.stringify(weeklyItems));showS('weeklyStatus','ok','Saved! Go to Deploy tab to push live.');}
+
+// CSV
+function exportCSV(){
+  var rows=[['Category','Item','Price','Type']];
+  coldCuts.forEach(function(n){rows.push(['Cold Cuts',n,savedPrices[n]||'Market Price','Deli']);});
+  cheeses.forEach(function(n){rows.push(['Cheese',n,savedPrices[n]||'Market Price','Deli']);});
+  weeklyItems.forEach(function(w){rows.push(['Weekly Special',w.name,w.price,w.tag]);});
+  var sandwiches=[['The Abe Lincoln','$16'],['Rustic London','$16'],['Reubenville','$18'],["Dave's Philly Cheesesteak",'$18'],['Don Corleone','$16'],['Jerry Lewis','$18'],['French Dip','$18'],['King Kong','$15'],['Honey Bee','$14']];
+  sandwiches.forEach(function(s){rows.push(['Sandwiches',s[0],s[1],'Deli']);});
+  dlCSV(rows,'BVMM_Menu_'+new Date().toISOString().slice(0,10));
+}
+function importCSV(input){
+  var f=input.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(e){
+    var lines=e.target.result.split('\n').slice(1);var n=0;
+    lines.forEach(function(line){
+      var p=line.split(',').map(function(x){return x.replace(/"/g,'').trim();});
+      if(p[0]&&p[1]){savedPrices[p[0]]=p[1];n++;}
+    });
+    buildPrices();showS('csvStatus','ok','Imported '+n+' prices. Save and Deploy when ready!');
+  };r.readAsText(f);
+}
+function dlCSV(rows,name){
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name+'.csv';a.click();
+}
+
+// DEPLOY
+function loadTok(){var t=localStorage.getItem('bvmm_tok');if(t){document.getElementById('dTok').value=t;document.getElementById('tokSaved').style.display='block';}}
+function toggleTok(){var i=document.getElementById('dTok');i.type=i.type==='password'?'text':'password';}
+
+// UTILS
+function showS(id,type,msg){var el=document.getElementById(id);el.className='status-msg show s-'+type;el.textContent=msg;if(type==='ok')setTimeout(function(){el.classList.remove('show');},4000);}
+</script>
+</body>
+</html>
