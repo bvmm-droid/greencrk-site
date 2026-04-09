@@ -43,9 +43,11 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 .popup-title{font-size:1.3rem;font-weight:700;color:#2ecc71;margin-bottom:8px}
 .popup-msg{font-size:.85rem;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:20px}
 .popup-close{background:#2ecc71;color:#000;border:none;border-radius:100px;padding:12px 32px;font-size:.9rem;font-weight:700;cursor:pointer;width:100%}
-.ai-key-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-.ai-key-row input{flex:1;margin-bottom:0}
-.ai-key-btn{background:#2ecc71;color:#0e0c0b;border:none;border-radius:8px;padding:10px 14px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.key-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.key-row input{flex:1;margin-bottom:0}
+.key-btn{border:none;border-radius:8px;padding:10px 14px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.saved-badge{font-size:.6rem;color:#2ecc71;margin-top:-8px;margin-bottom:8px;display:none}
+.saved-badge.show{display:block}
 </style>
 </head>
 <body>
@@ -55,7 +57,11 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 
 <div class="card">
   <label>GitHub Token</label>
-  <input type="password" id="tok" placeholder="Paste your GitHub token here">
+  <div class="key-row">
+    <input type="password" id="tok" placeholder="ghp_...">
+    <button class="key-btn" style="background:#5b9bd5;color:#fff" onclick="toggleField('tok',this)">Show</button>
+  </div>
+  <div class="saved-badge" id="tok-saved">✓ Saved on this device</div>
   <label>Repo</label>
   <input type="text" id="repo" value="bvmm-droid/greencrk-site" style="margin-bottom:0">
 </div>
@@ -89,11 +95,12 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 
 <div class="card" id="card-ai">
   <div class="ctitle green">AI Config <span class="tag tv">Gemini API Key → ai-config.js</span></div>
-  <label>Paste your Gemini API Key</label>
-  <div class="ai-key-row">
+  <label>Gemini API Key</label>
+  <div class="key-row">
     <input type="password" id="geminiKey" placeholder="AIzaSy...">
-    <button class="ai-key-btn" onclick="toggleShowKey()">Show</button>
+    <button class="key-btn" style="background:#2ecc71;color:#0e0c0b" onclick="toggleField('geminiKey',this)">Show</button>
   </div>
+  <div class="saved-badge" id="gemini-saved">✓ Saved on this device</div>
   <button class="btn bv" id="aib" onclick="deployAIKey()">Save AI Key → greencrk.com</button>
   <div class="prog-wrap" id="prog-ai"><div class="prog-bar" id="pb-ai"></div></div>
   <div class="st" id="ais"></div>
@@ -114,9 +121,38 @@ input[type=file]{width:100%;margin-bottom:6px;color:rgba(255,255,255,.5)}
 var fc={};
 var progIntervals={};
 
-function toggleShowKey(){
-  var inp=document.getElementById('geminiKey');
-  var btn=event.target;
+// Load saved keys on startup
+window.addEventListener('load',function(){
+  var savedTok=localStorage.getItem('bvmm_tok');
+  var savedGemini=localStorage.getItem('bvmm_gemini');
+  if(savedTok){
+    document.getElementById('tok').value=savedTok;
+    document.getElementById('tok-saved').classList.add('show');
+  }
+  if(savedGemini){
+    document.getElementById('geminiKey').value=savedGemini;
+    document.getElementById('gemini-saved').classList.add('show');
+  }
+});
+
+// Save keys whenever they change
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('tok').addEventListener('change',function(){
+    if(this.value.trim()){
+      localStorage.setItem('bvmm_tok',this.value.trim());
+      document.getElementById('tok-saved').classList.add('show');
+    }
+  });
+  document.getElementById('geminiKey').addEventListener('change',function(){
+    if(this.value.trim()){
+      localStorage.setItem('bvmm_gemini',this.value.trim());
+      document.getElementById('gemini-saved').classList.add('show');
+    }
+  });
+});
+
+function toggleField(id,btn){
+  var inp=document.getElementById(id);
   if(inp.type==='password'){inp.type='text';btn.textContent='Hide';}
   else{inp.type='password';btn.textContent='Show';}
 }
@@ -153,7 +189,7 @@ function finishProgress(progId,pbId,success){
   if(success)bar.classList.add('done');
 }
 
-async function deployAIKey(){
+function deployAIKey(){
   var tok=document.getElementById('tok').value.trim();
   var repo=document.getElementById('repo').value.trim();
   var key=document.getElementById('geminiKey').value.trim();
@@ -162,17 +198,14 @@ async function deployAIKey(){
   var card=document.getElementById('card-ai');
   if(!key){show(st,'er','Please paste your Gemini API key first.');return;}
   if(!tok){show(st,'er','Please enter your GitHub token first.');return;}
+  localStorage.setItem('bvmm_tok',tok);
+  localStorage.setItem('bvmm_gemini',key);
   var content='var ANTHROPIC_PROXY_URL=\'gemini\';var GEMINI_API_KEY=\''+key+'\';(function(){var orig=window.fetch;window.fetch=function(u,o){if(typeof u===\'string\'&&u.indexOf(\'anthropic\')>-1){try{var b=JSON.parse(o.body);var msgs=(b.messages||[]).map(function(m){return{role:m.role===\'assistant\'?\'model\':\'user\',parts:[{text:typeof m.content===\'string\'?m.content:(m.content||[]).map(function(c){return c.text||\'\'}).join(\' \')}]};});if(b.system){msgs.unshift({role:\'user\',parts:[{text:b.system}]});msgs.splice(1,0,{role:\'model\',parts:[{text:\'Understood.\'}]});}return orig(\'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\'+GEMINI_API_KEY,{method:\'POST\',headers:{\'Content-Type\':\'application/json\'},body:JSON.stringify({contents:msgs})}).then(function(r){return r.json();}).then(function(d){var t=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||\'Sorry, no response.\';return new Response(JSON.stringify({content:[{type:\'text\',text:t}]}),{status:200,headers:{\'Content-Type\':\'application/json\'}});});}catch(e){return Promise.reject(e);}}return orig.apply(this,arguments);};})();';
   btn.disabled=true;
   startProgress('prog-ai','pb-ai');
   show(st,'ld','Step 1/3: Saving AI config...');
-
   var swContent='self.addEventListener(\'install\',function(e){self.skipWaiting();});self.addEventListener(\'activate\',function(e){e.waitUntil(clients.claim());});self.addEventListener(\'fetch\',function(e){if(e.request.url.indexOf(\'anthropic\')>-1){e.respondWith(fetch(\'ai-config.js\').then(function(r){return r.text();}).then(function(code){var m=code.match(/GEMINI_API_KEY=\'([^\']+)\'/);if(!m)return fetch(e.request);var gkey=m[1];return e.request.json().then(function(b){var msgs=(b.messages||[]).map(function(msg){return{role:msg.role===\'assistant\'?\'model\':\'user\',parts:[{text:typeof msg.content===\'string\'?msg.content:(msg.content||[]).map(function(c){return c.text||\'\'}).join(\' \')}]};});if(b.system){msgs.unshift({role:\'user\',parts:[{text:b.system}]});msgs.splice(1,0,{role:\'model\',parts:[{text:\'Understood.\'}]});}return fetch(\'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=\'+gkey,{method:\'POST\',headers:{\'Content-Type\':\'application/json\'},body:JSON.stringify({contents:msgs})}).then(function(r){return r.json();}).then(function(d){var t=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||\'No response.\';return new Response(JSON.stringify({content:[{type:\'text\',text:t}]}),{status:200,headers:{\'Content-Type\':\'application/json\'}});});});}));}});';
-
-  var aiSha=null;
-  var swSha=null;
-  var indexSha=null;
-  var indexContent=null;
+  var aiSha=null,swSha=null,indexSha=null,indexContent=null;
   fetch('https://api.github.com/repos/'+repo+'/contents/ai-config.js',{headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json'}})
   .then(function(r){return r.ok?r.json():null;})
   .then(function(d){
@@ -204,12 +237,6 @@ async function deployAIKey(){
   .then(function(d){
     indexSha=d.sha;
     indexContent=atob(d.content.replace(/\n/g,''));
-    if(indexContent.indexOf('src="/sw.js"')>-1&&indexContent.indexOf('src="/ai-config.js"')>-1){
-      show(st,'ok','AI key saved! Already linked. Live in ~30 seconds.');
-      btn.disabled=false;btn.textContent='Done!';btn.classList.add('done');
-      card.classList.add('success');finishProgress('prog-ai','pb-ai',true);
-      showPopup('ai-config.js','greencrk.com');return null;
-    }
     var swScript='<script>if(\'serviceWorker\'in navigator){navigator.serviceWorker.register(\'/sw.js\');}<\/script>';
     var aiScript='<script src="/ai-config.js"><\/script>';
     var inject='';
@@ -223,7 +250,7 @@ async function deployAIKey(){
     }
     var newContent=indexContent.replace('</body>',inject+'</body>');
     var enc=btoa(unescape(encodeURIComponent(newContent)));
-    var body={message:'Add AI service worker to index.html',content:enc,branch:'main',sha:indexSha};
+    var body={message:'Add AI scripts to index.html',content:enc,branch:'main',sha:indexSha};
     return fetch('https://api.github.com/repos/'+repo+'/contents/index.html',{method:'PUT',headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
   })
   .then(function(r){
@@ -232,8 +259,7 @@ async function deployAIKey(){
     if(r.ok){
       finishProgress('prog-ai','pb-ai',true);
       show(st,'ok','Done! AI is now live on greencrk.com in ~30 seconds.');
-      btn.textContent='Done!';
-      btn.classList.add('done');
+      btn.textContent='Done!';btn.classList.add('done');
       card.classList.add('success');
       showPopup('ai-config.js','greencrk.com');
     } else {
@@ -257,6 +283,8 @@ function dep(fid,target,btnId,stId,progId,cardId){
   var card=document.getElementById(cardId);
   var pbId='pb-'+progId.split('-')[1];
   if(!content){show(st,'er','Choose a file first.');return;}
+  if(!tok){show(st,'er','Enter your GitHub token first.');return;}
+  localStorage.setItem('bvmm_tok',tok);
   btn.disabled=true;
   startProgress(progId,pbId);
   show(st,'ld','Connecting to GitHub...');
@@ -281,8 +309,7 @@ function dep(fid,target,btnId,stId,progId,cardId){
       finishProgress(progId,pbId,true);
       var urls={'index.html':'greencrk.com','admin.html':'greencrk.com/admin','deploy.html':'this tool'};
       show(st,'ok','Done! Live at '+(urls[target]||target)+' in ~30 seconds.');
-      btn.textContent='Done!';
-      btn.classList.add('done');
+      btn.textContent='Done!';btn.classList.add('done');
       card.classList.add('success');
       showPopup(target,urls[target]||target);
     } else {
