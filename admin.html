@@ -253,34 +253,46 @@ function init(){
 }
 
 // PHOTOS
+var PEXELS_KEY='lDyldjTgF3eEjynSS2KVtEanq6G6CkKmhWJvXwgxCzLr9RBc9bXWhI0m';
 function qs(q){document.getElementById('photoQ').value=q;searchPhotos();}
 function searchPhotos(){
   var q=document.getElementById('photoQ').value.trim();
   if(!q)return;
   var grid=document.getElementById('photoGrid');
-  grid.innerHTML='<div style="color:var(--muted);font-size:.78rem;padding:20px;grid-column:1/-1">Loading photos...</div>';
+  grid.innerHTML='<div style="color:var(--muted);font-size:.78rem;padding:20px;grid-column:1/-1">Searching Pexels...</div>';
   document.getElementById('photoMsg').textContent='';
-  var results=[];
-  for(var i=0;i<12;i++){
-    results.push('https://source.unsplash.com/300x300/?'+encodeURIComponent(q+' food photography')+'&sig='+(Date.now()+i*7));
-  }
-  grid.innerHTML='';
-  results.forEach(function(url,i){
-    var d=document.createElement('div');
-    d.className='photo-item';
-    d.innerHTML='<img src="'+url+'" loading="lazy"><div class="photo-item-label">Select</div>';
-    d.onclick=function(){
-      document.querySelectorAll('.photo-item').forEach(function(p){p.classList.remove('selected');});
-      d.classList.add('selected');
-      selectedPhotoUrl=url;
-      document.getElementById('selPreview').style.display='block';
-      document.getElementById('selImg').src=url;
-      document.getElementById('selUrl').textContent=url;
-      document.getElementById('assignBtn').disabled=false;
-    };
-    grid.appendChild(d);
+  fetch('https://api.pexels.com/v1/search?query='+encodeURIComponent(q+' food')+'&per_page=12&orientation=square',{
+    headers:{'Authorization':PEXELS_KEY}
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    grid.innerHTML='';
+    if(!data.photos||data.photos.length===0){
+      grid.innerHTML='<div style="color:var(--muted);font-size:.78rem;padding:20px;grid-column:1/-1">No photos found. Try a different search.</div>';
+      return;
+    }
+    data.photos.forEach(function(photo){
+      var url=photo.src.medium;
+      var large=photo.src.large;
+      var d=document.createElement('div');
+      d.className='photo-item';
+      d.innerHTML='<img src="'+url+'" loading="lazy"><div class="photo-item-label">Select</div>';
+      d.onclick=function(){
+        document.querySelectorAll('.photo-item').forEach(function(p){p.classList.remove('selected');});
+        d.classList.add('selected');
+        selectedPhotoUrl=large;
+        document.getElementById('selPreview').style.display='block';
+        document.getElementById('selImg').src=url;
+        document.getElementById('selUrl').textContent=large;
+        document.getElementById('assignBtn').disabled=false;
+      };
+      grid.appendChild(d);
+    });
+    document.getElementById('photoMsg').textContent='Photos from Pexels — free to use. Photo by '+data.photos.map(function(p){return p.photographer;}).slice(0,3).join(', ');
+  })
+  .catch(function(e){
+    grid.innerHTML='<div style="color:var(--red);font-size:.78rem;padding:20px;grid-column:1/-1">Search failed: '+e.message+'</div>';
   });
-  document.getElementById('photoMsg').textContent='Photos from Unsplash — free to use commercially';
 }
 function assignPhoto(){
   var item=document.getElementById('menuItem').value;
