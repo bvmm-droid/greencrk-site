@@ -204,7 +204,7 @@ async function deployAIKey(){
   .then(function(d){
     indexSha=d.sha;
     indexContent=atob(d.content.replace(/\n/g,''));
-    if(indexContent.indexOf('sw.js')>-1&&indexContent.indexOf('ai-config.js')>-1){
+    if(indexContent.indexOf('src="/sw.js"')>-1&&indexContent.indexOf('src="/ai-config.js"')>-1){
       show(st,'ok','AI key saved! Already linked. Live in ~30 seconds.');
       btn.disabled=false;btn.textContent='Done!';btn.classList.add('done');
       card.classList.add('success');finishProgress('prog-ai','pb-ai',true);
@@ -213,8 +213,8 @@ async function deployAIKey(){
     var swScript='<script>if(\'serviceWorker\'in navigator){navigator.serviceWorker.register(\'/sw.js\');}<\/script>';
     var aiScript='<script src="/ai-config.js"><\/script>';
     var inject='';
-    if(indexContent.indexOf('sw.js')===-1)inject+=swScript+'\n';
-    if(indexContent.indexOf('ai-config.js')===-1)inject+=aiScript+'\n';
+    if(indexContent.indexOf('src="/sw.js"')===-1)inject+=swScript+'\n';
+    if(indexContent.indexOf('src="/ai-config.js"')===-1)inject+=aiScript+'\n';
     if(!inject){
       show(st,'ok','AI key saved! Already linked. Live in ~30 seconds.');
       btn.disabled=false;btn.textContent='Done!';btn.classList.add('done');
