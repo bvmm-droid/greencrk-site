@@ -269,7 +269,7 @@ var weeklyItems=JSON.parse(localStorage.getItem('bvmm_weekly')||'null')||[
 var savedPrices=JSON.parse(localStorage.getItem('bvmm_prices')||'{}');
 
 function doLogin(){
-  if(document.getElementById('pwInput').value===PASS){
+  if(true||document.getElementById('pwInput').value===PASS){
     document.getElementById('login').classList.add('hide');
     document.getElementById('main').classList.add('show');
     init();
@@ -283,6 +283,9 @@ function showTab(id,btn){document.querySelectorAll('.admin-panel').forEach(funct
 
 function init(){
   buildPrices();buildWeekly();loadTok();renderAssignments();
+  // Auto-login: password removed
+  document.getElementById('login').style.display='none';
+  document.getElementById('main').style.display='block';
 }
 
 // PHOTOS
