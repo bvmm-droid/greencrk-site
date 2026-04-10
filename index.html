@@ -3130,7 +3130,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <div id="dw">
   <div id="dw-title">Deploy index.html → greencrk.com</div>
-  <input id="dw-tok" type="password" placeholder="GitHub token (ghp_...)" autocomplete="off">
   <div id="dw-btns">
     <button id="dw-deploy" onclick="dwDeploy()">⬆ Push Live</button>
     <button id="dw-close" onclick="dwHide()">✕</button>
@@ -3148,27 +3147,22 @@ document.addEventListener('DOMContentLoaded', function(){
   window.dwHide=function(){document.getElementById('dw').classList.remove('show');}
 
   window.dwDeploy=function(){
-    var tok=document.getElementById('dw-tok').value.trim();
-    if(!tok){dwMsg('err','Enter your GitHub token first');return;}
-    localStorage.setItem(TOK_KEY,tok);
     var btn=document.getElementById('dw-deploy');
-    btn.disabled=true;btn.textContent='Fetching...';
-    dwMsg('ok','Reading file...');
+    btn.disabled=true;btn.textContent='Pushing...';
+    dwMsg('ok','Deploying...');
 
-    // Get the current page HTML and send via Cloudflare Worker
     var pageHTML=document.documentElement.outerHTML;
     var encoded=btoa(unescape(encodeURIComponent(pageHTML)));
 
-    btn.textContent='Pushing...';
     fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'deploy',filename:'index.html',content:encoded,token:tok})
+      body:JSON.stringify({action:'deploy',filename:'index.html',content:encoded})
     })
     .then(function(r){return r.json();})
     .then(function(res){
       if(res.ok){
-        dwMsg('ok','✅ Live! greencrk.com updating...');
+        dwMsg('ok','✅ Live! Updating in ~30 seconds');
         btn.textContent='✅ Done!';
         setTimeout(function(){btn.disabled=false;btn.textContent='⬆ Push Live';dwHide();},3000);
       } else {
