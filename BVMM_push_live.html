@@ -53,6 +53,11 @@ h2 span{color:#A9B7A0}
 </style>
 </head>
 <body>
+<script>
+if(window.location.protocol==='file:'){
+  document.write('<div style="background:#8B3A2D;color:#fff;padding:16px 20px;font-size:.82rem;font-weight:600;text-align:center;line-height:1.8">⚠️ You opened this from your Downloads folder.<br>You need to <strong>upload it to GitHub first</strong>, then open from <strong>greencrk.com/BVMM_push_live.html</strong></div>');
+}
+</script>
 
 <div class="tabs">
   <button class="tab active" id="tab-deploy" onclick="showTab('deploy')">🚀 Deploy</button>
@@ -302,6 +307,10 @@ function applyChanges(html) {
 }
 
 function deployAll() {
+  if (window.location.protocol === 'file:') {
+    alert('This tool must be uploaded to GitHub and opened from greencrk.com — not from your Downloads folder.\n\nUpload to: github.com/bvmm-droid/greencrk-site/upload/main\nThen open: greencrk.com/BVMM_push_live.html');
+    return;
+  }
   var btn = document.getElementById('deployBtn');
   btn.disabled = true;
   btn.textContent = 'Fetching site...';
