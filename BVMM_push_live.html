@@ -73,7 +73,7 @@ if(window.location.protocol==='file:'){
     <div class="tip">📌 <strong>Bookmark this page</strong> — tap Share then <strong>Add to Home Screen</strong></div>
     <button class="btn" id="deployBtn" onclick="deployAll()" disabled="">Pushing...</button>
     <div id="s1" class="step show ok">Site fetched!</div>
-    <div id="s2" class="step show ok">Pushed! 1aea68a</div>
+    <div id="s2" class="step show ok">Pushed! 2269ad8</div>
     <div id="s3" class="step show info">Updating tool...</div>
     <button class="btn-out" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
     <div style="margin-top:14px;border-top:1px solid rgba(92,58,45,.1);padding-top:14px;text-align:left">
@@ -109,12 +109,12 @@ if(window.location.protocol==='file:'){
     <label class="sw"><input type="checkbox" id="bannerOn" onchange="updatePreview()"><span class="sl"></span></label>
   </div>
   <input class="b-inp" id="bannerTxt" type="text" placeholder="e.g. Closed Christmas week" oninput="updatePreview()" maxlength="120">
-  <div class="b-preview" id="bPreview"></div>
+  <div class="b-preview" id="bPreview" style="display: none;"></div>
   <p style="font-size:.68rem;color:rgba(92,58,45,.4);text-align:center">Hit Deploy to push live</p>
 </div>
 
 <div class="chg-bar" id="chgBar">
-  <span id="chgCount">0 changes</span>
+  <span id="chgCount">0 changes ready to push</span>
   <button class="chg-btn" onclick="showTab('deploy')">→ Deploy</button>
 </div>
 
