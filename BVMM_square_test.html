@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BVMM Square Test</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F4F1EB;color:#2C1810;font-family:Inter,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#FDFAF6;border:1px solid rgba(92,58,45,.15);border-radius:20px;padding:32px 24px;width:100%;max-width:400px;text-align:center}
+h2{font-size:1.1rem;margin-bottom:6px}
+h2 span{color:#e05a00}
+.badge{display:inline-block;background:rgba(224,90,0,.1);color:#e05a00;border:1px solid rgba(224,90,0,.3);border-radius:20px;padding:4px 14px;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
+.note{font-size:.72rem;color:rgba(92,58,45,.55);line-height:1.6;margin-bottom:20px;background:rgba(169,183,160,.08);border:1px solid rgba(169,183,160,.2);border-radius:10px;padding:10px 14px;text-align:left}
+.note strong{color:#5C3A2D}
+.btn{width:100%;background:#5C3A2D;color:#F4F1EB;border:none;border-radius:12px;padding:15px;font-size:.85rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-bottom:8px}
+.btn:disabled{opacity:.4}
+.btn-out{width:100%;background:transparent;color:#5C3A2D;border:1.5px solid rgba(92,58,45,.3);border-radius:12px;padding:12px;font-size:.8rem;font-weight:700;cursor:pointer;margin-top:8px}
+.step{margin-top:8px;font-size:.72rem;padding:9px 12px;border-radius:8px;display:none;text-align:left}
+.step.show{display:block}
+.ok{background:rgba(169,183,160,.15);color:#4a7045}
+.err{background:rgba(192,80,60,.1);color:#8B3A2D}
+.info{background:rgba(138,159,178,.12);color:#4a6a84}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>BVMM <span>Square Test</span></h2>
+  <div class="badge">🧪 Sandbox Mode — Fake Money</div>
+  <div class="note">
+    <strong>Safe to run on the live site.</strong> This swaps in Square's test credentials. 
+    Customers can still browse normally. Only the order flow uses test mode — no real charges ever happen in sandbox.
+    When done testing, tap Restore to go back to normal.
+  </div>
+  <button class="btn" id="deployBtn" onclick="deploy(false)">🧪 Activate Square Sandbox</button>
+  <div id="s1" class="step"></div>
+  <div id="s2" class="step"></div>
+  <div id="s3" class="step"></div>
+  <button class="btn-out" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com to Test</button>
+  <button class="btn-out" style="margin-top:8px;color:#8B3A2D;border-color:rgba(139,58,45,.3)" onclick="deploy(true)">↩ Restore Original Site</button>
+</div>
+<script>
+var WORKER='https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
+var RAW='https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html';
+
+function deploy(restore){
+  var btn=document.getElementById('deployBtn');
+  btn.disabled=true;
+  setStep('s1','info','Fetching live site...');setStep('s2','','');setStep('s3','','');
+  fetch(RAW+'?t='+Date.now())
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
+    .then(function(html){
+      setStep('s1','ok','Site fetched!');
+      setStep('s2','info',restore?'Restoring original...':'Activating sandbox...');
+      if(!restore){
+        html=html.split("var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'").join("var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'");
+        html=html.split("var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'").join("var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'");
+      } else {
+        html=html.split("var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'").join("var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'");
+        html=html.split("var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'").join("var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'");
+      }
+      var encoded;
+      try{encoded=btoa(unescape(encodeURIComponent(html)));}catch(e){encoded=btoa(html);}
+      var xhr=new XMLHttpRequest();
+      xhr.open('POST',WORKER,true);
+      xhr.setRequestHeader('Content-Type','application/json');
+      xhr.timeout=60000;
+      xhr.onload=function(){
+        try{
+          var r=JSON.parse(xhr.responseText);
+          if(r.ok){
+            setStep('s2','ok',(restore?'Restored! ':'Sandbox live! ')+r.commit);
+            setStep('s3','ok',restore?'Site is back to normal.':'Wait 30s then tap Open — place a test order!');
+            btn.disabled=false;btn.textContent=restore?'Done — Restored':'Done — Go Test!';
+          } else {
+            setStep('s2','err','Error: '+(r.error||'Unknown'));
+            btn.disabled=false;btn.textContent='Try Again';
+          }
+        }catch(e){setStep('s2','err','Bad response');btn.disabled=false;btn.textContent='Try Again';}
+      };
+      xhr.onerror=function(){setStep('s2','err','Network error');btn.disabled=false;btn.textContent='Try Again';};
+      xhr.ontimeout=function(){setStep('s2','err','Timed out');btn.disabled=false;btn.textContent='Try Again';};
+      xhr.send(JSON.stringify({action:'deploy',filename:'index.html',content:encoded}));
+    })
+    .catch(function(e){setStep('s1','err','Could not fetch: '+e.message);btn.disabled=false;btn.textContent='Try Again';});
+}
+
+function setStep(id,type,text){
+  var el=document.getElementById(id);
+  el.className='step'+(type?' show '+type:'');el.textContent=text;
+}
+</script>
+</body>
+</html>
