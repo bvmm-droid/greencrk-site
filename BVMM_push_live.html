@@ -8,7 +8,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#F4F1EB;color:#2C1810;font-family:Inter,sans-serif;min-height:100vh}
 .tabs{display:flex;background:#2C1810;padding:8px 12px 0;gap:4px;position:sticky;top:0;z-index:100}
-.tab{flex:1;padding:10px 4px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:8px 8px 0 0;cursor:pointer;transition:all .15s}
+.tab{flex:1;padding:10px 4px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:8px 8px 0 0;cursor:pointer}
 .tab.active{background:#F4F1EB;color:#2C1810}
 .panel{display:none;padding:18px 16px;max-width:500px;margin:0 auto}
 .panel.active{display:block}
@@ -18,20 +18,18 @@ h2 span{color:#A9B7A0}
 .tip{font-size:.68rem;color:rgba(92,58,45,.5);margin-bottom:16px;background:rgba(169,183,160,.1);border:1px solid rgba(169,183,160,.25);border-radius:8px;padding:8px 12px;line-height:1.6;text-align:left}
 .tip strong{color:#5C3A2D}
 .btn{width:100%;background:#5C3A2D;color:#F4F1EB;border:none;border-radius:12px;padding:15px;font-size:.85rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-bottom:8px}
-.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:disabled{opacity:.4}
 .btn-out{width:100%;background:transparent;color:#5C3A2D;border:1.5px solid rgba(92,58,45,.3);border-radius:12px;padding:12px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:4px}
 .step{margin-top:8px;font-size:.72rem;padding:9px 12px;border-radius:8px;display:none;text-align:left}
 .step.show{display:block}
-.step.ok{background:rgba(169,183,160,.15);color:#4a7045}
-.step.err{background:rgba(192,80,60,.1);color:#8B3A2D}
-.step.info{background:rgba(138,159,178,.12);color:#4a6a84}
+.ok{background:rgba(169,183,160,.15);color:#4a7045}
+.err{background:rgba(192,80,60,.1);color:#8B3A2D}
+.info{background:rgba(138,159,178,.12);color:#4a6a84}
 .search-box{width:100%;padding:11px 14px;border:1.5px solid rgba(92,58,45,.2);border-radius:10px;font-size:.85rem;background:#FDFAF6;color:#2C1810;margin-bottom:12px}
-.search-box:focus{outline:none;border-color:#5C3A2D}
 .sec-lbl{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#A9B7A0;padding:12px 0 6px}
-.item-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#FDFAF6;border:1px solid rgba(92,58,45,.1);border-radius:8px;margin-bottom:6px;gap:10px}
+.item-row{display:flex;align-items:center;padding:10px 12px;background:#FDFAF6;border:1px solid rgba(92,58,45,.1);border-radius:8px;margin-bottom:6px;gap:10px}
 .item-name{font-size:.78rem;font-weight:600;flex:1}
 .price-inp{width:90px;padding:7px 10px;border:1.5px solid rgba(92,58,45,.2);border-radius:7px;font-size:.82rem;font-weight:700;color:#5C3A2D;text-align:right;background:#F4F1EB}
-.price-inp:focus{outline:none;border-color:#5C3A2D;background:#fff}
 .price-inp.changed{border-color:#A9B7A0;background:rgba(169,183,160,.1)}
 .sec-title{font-size:1rem;font-weight:700;margin-bottom:4px}
 .sec-sub{font-size:.72rem;color:rgba(92,58,45,.5);margin-bottom:16px}
@@ -39,17 +37,15 @@ h2 span{color:#A9B7A0}
 .h-day{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5C3A2D;margin-bottom:8px}
 .h-row{display:flex;gap:8px;align-items:center}
 .h-inp{flex:1;padding:8px 10px;border:1.5px solid rgba(92,58,45,.2);border-radius:7px;font-size:.82rem;background:#F4F1EB;color:#2C1810}
-.h-inp:focus{outline:none;border-color:#5C3A2D}
-.closed-lbl{display:flex;align-items:center;gap:6px;font-size:.72rem;color:rgba(92,58,45,.6);cursor:pointer;white-space:nowrap}
+.closed-lbl{display:flex;align-items:center;gap:6px;font-size:.72rem;color:rgba(92,58,45,.6);white-space:nowrap}
 .banner-toggle{display:flex;align-items:center;justify-content:space-between;background:#FDFAF6;border:1px solid rgba(92,58,45,.1);border-radius:10px;padding:14px 16px;margin-bottom:12px}
 .sw{position:relative;width:44px;height:24px;flex-shrink:0}
-.sw input{opacity:0;width:0;height:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
 .sl{position:absolute;inset:0;background:rgba(92,58,45,.2);border-radius:24px;cursor:pointer;transition:.3s}
 .sl::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-input:checked+.sl{background:#5C3A2D}
-input:checked+.sl::before{transform:translateX(20px)}
+.sw input:checked+.sl{background:#5C3A2D}
+.sw input:checked+.sl::before{transform:translateX(20px)}
 .b-inp{width:100%;padding:11px 14px;border:1.5px solid rgba(92,58,45,.2);border-radius:10px;font-size:.82rem;background:#FDFAF6;color:#2C1810;margin-bottom:12px}
-.b-inp:focus{outline:none;border-color:#5C3A2D}
 .b-preview{background:#5C3A2D;color:#F4F1EB;text-align:center;padding:10px 16px;border-radius:8px;font-size:.78rem;font-weight:600;margin-bottom:12px;display:none}
 .chg-bar{position:fixed;bottom:0;left:0;right:0;background:#5C3A2D;color:#F4F1EB;padding:12px 16px;display:none;align-items:center;justify-content:space-between;font-size:.78rem;font-weight:700;z-index:200}
 .chg-bar.show{display:flex}
@@ -59,16 +55,16 @@ input:checked+.sl::before{transform:translateX(20px)}
 <body>
 
 <div class="tabs">
-  <button class="tab active" onclick="showTab('deploy')">🚀 Deploy</button>
-  <button class="tab" onclick="showTab('prices')">💰 Prices</button>
-  <button class="tab" onclick="showTab('hours')">🕐 Hours</button>
-  <button class="tab" onclick="showTab('banner')">📢 Banner</button>
+  <button class="tab active" id="tab-deploy" onclick="showTab('deploy')">🚀 Deploy</button>
+  <button class="tab" id="tab-prices" onclick="showTab('prices')">💰 Prices</button>
+  <button class="tab" id="tab-hours" onclick="showTab('hours')">🕐 Hours</button>
+  <button class="tab" id="tab-banner" onclick="showTab('banner')">📢 Banner</button>
 </div>
 
 <div id="panel-deploy" class="panel active">
   <div class="card">
     <h2>BVMM <span>Manager</span></h2>
-    <div class="tip">📌 <strong>Bookmark this page</strong> — tap Share ↑ then <strong>Add to Home Screen</strong></div>
+    <div class="tip">📌 <strong>Bookmark this page</strong> — tap Share then <strong>Add to Home Screen</strong></div>
     <button class="btn" id="deployBtn" onclick="deployAll()">⬆ Push greencrk.com Live</button>
     <div id="s1" class="step"></div>
     <div id="s2" class="step"></div>
@@ -80,7 +76,7 @@ input:checked+.sl::before{transform:translateX(20px)}
 <div id="panel-prices" class="panel">
   <p class="sec-title">Price Editor</p>
   <p class="sec-sub">Tap any price to edit. Hit Deploy when done.</p>
-  <input class="search-box" type="text" placeholder="🔍 Search items..." oninput="filterItems(this.value)">
+  <input class="search-box" type="text" placeholder="Search items..." id="searchBox" oninput="filterItems(this.value)">
   <div id="itemsList"></div>
   <div style="height:60px"></div>
 </div>
@@ -98,199 +94,282 @@ input:checked+.sl::before{transform:translateX(20px)}
     <span style="font-size:.82rem;font-weight:600">Show Banner</span>
     <label class="sw"><input type="checkbox" id="bannerOn" onchange="updatePreview()"><span class="sl"></span></label>
   </div>
-  <input class="b-inp" id="bannerTxt" type="text" placeholder="e.g. Closed Christmas week · Dec 23–27" oninput="updatePreview()" maxlength="120">
+  <input class="b-inp" id="bannerTxt" type="text" placeholder="e.g. Closed Christmas week" oninput="updatePreview()" maxlength="120">
   <div class="b-preview" id="bPreview"></div>
   <p style="font-size:.68rem;color:rgba(92,58,45,.4);text-align:center">Hit Deploy to push live</p>
 </div>
 
 <div class="chg-bar" id="chgBar">
-  <span id="chgCount">0 changes pending</span>
+  <span id="chgCount">0 changes</span>
   <button class="chg-btn" onclick="showTab('deploy')">→ Deploy</button>
 </div>
 
 <script>
-var WORKER='https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
-var RAW_URL='https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html';
-var ITEMS=[{"name": "Italian / American Hero", "section": "Heroes by the Foot", "displayPrice": "$20/ft", "numericPrice": "20"}, {"name": "Chicken Cutlet Any Way", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Roast Beef / Turkey / Ham", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Pastrami / Corned Beef", "section": "Heroes by the Foot", "displayPrice": "$28/ft", "numericPrice": "28"}, {"name": "Prime Dry Aged Porterhouse", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime T-Bone", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Bone-In Rib Eye", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Boneless Prime Rib Eye", "section": "Steaks", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Dry Aged Shell Steak", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime Sirloin Steak", "section": "Steaks", "displayPrice": "$32.00", "numericPrice": "32.00"}, {"name": "Prime Filet Mignon", "section": "Steaks", "displayPrice": "$34.50", "numericPrice": "34.50"}, {"name": "Skirt Steak (Prime)", "section": "Steaks", "displayPrice": "$45.00", "numericPrice": "45.00"}, {"name": "Flank Steak (Prime)", "section": "Steaks", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Western London Broil", "section": "Steaks", "displayPrice": "$29.00", "numericPrice": "29.00"}, {"name": "London Broil (Prime Top Round)", "section": "Steaks", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Pepper Steak (Prime)", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Marinated Beef Strips", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Bone-In Prime Rib", "section": "Roasts", "displayPrice": "$147.00", "numericPrice": "147.00"}, {"name": "Boneless Prime Rib", "section": "Roasts", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Filet Roast", "section": "Roasts", "displayPrice": "$69.00", "numericPrice": "69.00"}, {"name": "Roast Beef (Prime Top Round)", "section": "Roasts", "displayPrice": "$57.00", "numericPrice": "57.00"}, {"name": "Prime French Pot Roast", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Prime Brisket", "section": "Roasts", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Silver Tip (Prime)", "section": "Roasts", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Eye Round (Prime)", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Bottom Round Prime", "section": "Roasts", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Ground Beef (Prime)", "section": "Ground", "displayPrice": "$15.00", "numericPrice": "15.00"}, {"name": "Box of Prime Burgers", "section": "Ground", "displayPrice": "$39.00", "numericPrice": "39.00"}, {"name": "Stew Beef (Prime)", "section": "Ground", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Whole Chicken (All Natural)", "section": "Chicken", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Boneless / Skinless Chicken Breast", "section": "Chicken", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Legs &amp; Thighs", "section": "Chicken", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "Wings", "section": "Chicken", "displayPrice": "$7.00", "numericPrice": "7.00"}, {"name": "Chicken Sausage", "section": "Chicken", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Boneless Turkey Breast (All Natural)", "section": "Turkey", "displayPrice": "$17.00", "numericPrice": "17.00"}, {"name": "Bone-In Turkey Breast", "section": "Turkey", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Top Round Veal Cutlets", "section": "Veal", "displayPrice": "$36.00", "numericPrice": "36.00"}, {"name": "Osso Bucco", "section": "Veal", "displayPrice": "$35.00", "numericPrice": "35.00"}, {"name": "Veal For Stew", "section": "Veal", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Bone-In Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Boneless Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Bone-In Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Boneless Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$28.80", "numericPrice": "28.80"}, {"name": "Pork Tenderloin", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Pork Tenderloin Cutlets", "section": "Berkshire Pork", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Pork Belly (Boneless)", "section": "Berkshire Pork", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Pork Bracioles", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Baby Back Ribs", "section": "Berkshire Pork", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "St. Louis Ribs", "section": "Berkshire Pork", "displayPrice": "$8.00", "numericPrice": "8.00"}, {"name": "Bone-In Pork Butt", "section": "Berkshire Pork", "displayPrice": "$7.98", "numericPrice": "7.98"}, {"name": "Boneless Pork Butt", "section": "Berkshire Pork", "displayPrice": "$4.99", "numericPrice": "4.99"}, {"name": "Fresh Ham Bone-In", "section": "Berkshire Pork", "displayPrice": "$3.99", "numericPrice": "3.99"}, {"name": "Fresh Ham Boneless", "section": "Berkshire Pork", "displayPrice": "$17.97", "numericPrice": "17.97"}, {"name": "Sausage", "section": "Berkshire Pork", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Chevalatta (Ring Sausage)", "section": "Berkshire Pork", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Baked Potato Sausage", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Double Smoked Bacon", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Lamb Chops \u2014 Rib", "section": "Lamb", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Bone-In Leg of Lamb", "section": "Lamb", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Boneless American Leg of Lamb", "section": "Lamb", "displayPrice": "$26.00", "numericPrice": "26.00"}, {"name": "Lamb Shanks", "section": "Lamb", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Ground Lamb", "section": "Lamb", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Salmon Fillet", "section": "Fish", "displayPrice": "$12.99/lb", "numericPrice": "12.99"}, {"name": "Tilapia Fillet", "section": "Fish", "displayPrice": "$7.99/lb", "numericPrice": "7.99"}, {"name": "Flounder / Sole", "section": "Fish", "displayPrice": "$9.99/lb", "numericPrice": "9.99"}, {"name": "Swordfish Steak", "section": "Fish", "displayPrice": "$14.99/lb", "numericPrice": "14.99"}, {"name": "Tuna Steak", "section": "Fish", "displayPrice": "$15.99/lb", "numericPrice": "15.99"}, {"name": "Jumbo Shrimp (16-20 ct)", "section": "Shellfish", "displayPrice": "$13.99/lb", "numericPrice": "13.99"}, {"name": "Large Shrimp (21-25 ct)", "section": "Shellfish", "displayPrice": "$11.99/lb", "numericPrice": "11.99"}, {"name": "Sea Scallops", "section": "Shellfish", "displayPrice": "$18.99/lb", "numericPrice": "18.99"}, {"name": "Lump Crab Meat", "section": "Shellfish", "displayPrice": "$19.99/lb", "numericPrice": "19.99"}, {"name": "Stuffed Clams", "section": "Shellfish", "displayPrice": "$2.99 ea", "numericPrice": "2.99"}, {"name": "Stuffed Shrimp", "section": "Shellfish", "displayPrice": "$3.49 ea", "numericPrice": "3.49"}];
-var priceChanges={};
-var hoursData={'Tuesday – Saturday':'10am – 5pm','Sunday':'10am – 3pm','Monday':'Closed'};
-var hoursChanged=false;
+var WORKER = 'https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
+var RAW = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html';
+var priceChanges = {};
+var hoursChanged = false;
+var DAYS = ['Tuesday \u2013 Saturday', 'Sunday', 'Monday'];
+var hoursData = {};
+hoursData['Tuesday \u2013 Saturday'] = '10am \u2013 5pm';
+hoursData['Sunday'] = '10am \u2013 3pm';
+hoursData['Monday'] = 'Closed';
 
-function showTab(name){
-  var tabs=document.querySelectorAll('.tab');
-  var names=['deploy','prices','hours','banner'];
-  tabs.forEach(function(t,i){t.classList.toggle('active',names[i]===name);});
-  document.querySelectorAll('.panel').forEach(function(p){
-    p.classList.toggle('active',p.id==='panel-'+name);
+var ITEMS = [{"name": "Italian / American Hero", "section": "Heroes by the Foot", "displayPrice": "$20/ft", "numericPrice": "20"}, {"name": "Chicken Cutlet Any Way", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Roast Beef / Turkey / Ham", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Pastrami / Corned Beef", "section": "Heroes by the Foot", "displayPrice": "$28/ft", "numericPrice": "28"}, {"name": "Prime Dry Aged Porterhouse", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime T-Bone", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Bone-In Rib Eye", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Boneless Prime Rib Eye", "section": "Steaks", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Dry Aged Shell Steak", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime Sirloin Steak", "section": "Steaks", "displayPrice": "$32.00", "numericPrice": "32.00"}, {"name": "Prime Filet Mignon", "section": "Steaks", "displayPrice": "$34.50", "numericPrice": "34.50"}, {"name": "Skirt Steak (Prime)", "section": "Steaks", "displayPrice": "$45.00", "numericPrice": "45.00"}, {"name": "Flank Steak (Prime)", "section": "Steaks", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Western London Broil", "section": "Steaks", "displayPrice": "$29.00", "numericPrice": "29.00"}, {"name": "London Broil (Prime Top Round)", "section": "Steaks", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Pepper Steak (Prime)", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Marinated Beef Strips", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Bone-In Prime Rib", "section": "Roasts", "displayPrice": "$147.00", "numericPrice": "147.00"}, {"name": "Boneless Prime Rib", "section": "Roasts", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Filet Roast", "section": "Roasts", "displayPrice": "$69.00", "numericPrice": "69.00"}, {"name": "Roast Beef (Prime Top Round)", "section": "Roasts", "displayPrice": "$57.00", "numericPrice": "57.00"}, {"name": "Prime French Pot Roast", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Prime Brisket", "section": "Roasts", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Silver Tip (Prime)", "section": "Roasts", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Eye Round (Prime)", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Bottom Round Prime", "section": "Roasts", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Ground Beef (Prime)", "section": "Ground", "displayPrice": "$15.00", "numericPrice": "15.00"}, {"name": "Box of Prime Burgers", "section": "Ground", "displayPrice": "$39.00", "numericPrice": "39.00"}, {"name": "Stew Beef (Prime)", "section": "Ground", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Whole Chicken (All Natural)", "section": "Chicken", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Boneless / Skinless Chicken Breast", "section": "Chicken", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Legs &amp; Thighs", "section": "Chicken", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "Wings", "section": "Chicken", "displayPrice": "$7.00", "numericPrice": "7.00"}, {"name": "Chicken Sausage", "section": "Chicken", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Boneless Turkey Breast (All Natural)", "section": "Turkey", "displayPrice": "$17.00", "numericPrice": "17.00"}, {"name": "Bone-In Turkey Breast", "section": "Turkey", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Top Round Veal Cutlets", "section": "Veal", "displayPrice": "$36.00", "numericPrice": "36.00"}, {"name": "Osso Bucco", "section": "Veal", "displayPrice": "$35.00", "numericPrice": "35.00"}, {"name": "Veal For Stew", "section": "Veal", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Bone-In Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Boneless Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Bone-In Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Boneless Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$28.80", "numericPrice": "28.80"}, {"name": "Pork Tenderloin", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Pork Tenderloin Cutlets", "section": "Berkshire Pork", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Pork Belly (Boneless)", "section": "Berkshire Pork", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Pork Bracioles", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Baby Back Ribs", "section": "Berkshire Pork", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "St. Louis Ribs", "section": "Berkshire Pork", "displayPrice": "$8.00", "numericPrice": "8.00"}, {"name": "Bone-In Pork Butt", "section": "Berkshire Pork", "displayPrice": "$7.98", "numericPrice": "7.98"}, {"name": "Boneless Pork Butt", "section": "Berkshire Pork", "displayPrice": "$4.99", "numericPrice": "4.99"}, {"name": "Fresh Ham Bone-In", "section": "Berkshire Pork", "displayPrice": "$3.99", "numericPrice": "3.99"}, {"name": "Fresh Ham Boneless", "section": "Berkshire Pork", "displayPrice": "$17.97", "numericPrice": "17.97"}, {"name": "Sausage", "section": "Berkshire Pork", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Chevalatta (Ring Sausage)", "section": "Berkshire Pork", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Baked Potato Sausage", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Double Smoked Bacon", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Lamb Chops — Rib", "section": "Lamb", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Bone-In Leg of Lamb", "section": "Lamb", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Boneless American Leg of Lamb", "section": "Lamb", "displayPrice": "$26.00", "numericPrice": "26.00"}, {"name": "Lamb Shanks", "section": "Lamb", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Ground Lamb", "section": "Lamb", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Salmon Fillet", "section": "Fish", "displayPrice": "$12.99/lb", "numericPrice": "12.99"}, {"name": "Tilapia Fillet", "section": "Fish", "displayPrice": "$7.99/lb", "numericPrice": "7.99"}, {"name": "Flounder / Sole", "section": "Fish", "displayPrice": "$9.99/lb", "numericPrice": "9.99"}, {"name": "Swordfish Steak", "section": "Fish", "displayPrice": "$14.99/lb", "numericPrice": "14.99"}, {"name": "Tuna Steak", "section": "Fish", "displayPrice": "$15.99/lb", "numericPrice": "15.99"}, {"name": "Jumbo Shrimp (16-20 ct)", "section": "Shellfish", "displayPrice": "$13.99/lb", "numericPrice": "13.99"}, {"name": "Large Shrimp (21-25 ct)", "section": "Shellfish", "displayPrice": "$11.99/lb", "numericPrice": "11.99"}, {"name": "Sea Scallops", "section": "Shellfish", "displayPrice": "$18.99/lb", "numericPrice": "18.99"}, {"name": "Lump Crab Meat", "section": "Shellfish", "displayPrice": "$19.99/lb", "numericPrice": "19.99"}, {"name": "Stuffed Clams", "section": "Shellfish", "displayPrice": "$2.99 ea", "numericPrice": "2.99"}, {"name": "Stuffed Shrimp", "section": "Shellfish", "displayPrice": "$3.49 ea", "numericPrice": "3.49"}];
+
+function showTab(name) {
+  ['deploy','prices','hours','banner'].forEach(function(n) {
+    document.getElementById('tab-' + n).classList.toggle('active', n === name);
+    document.getElementById('panel-' + n).classList.toggle('active', n === name);
   });
 }
 
-function buildItemsList(){
-  var html='';var lastSec='';
-  ITEMS.forEach(function(item,idx){
-    if(item.section!==lastSec){
-      html+='<div class="sec-lbl">'+item.section+'</div>';
-      lastSec=item.section;
+function buildItemsList() {
+  var html = '';
+  var lastSec = '';
+  for (var i = 0; i < ITEMS.length; i++) {
+    var item = ITEMS[i];
+    if (item.section !== lastSec) {
+      html += '<div class="sec-lbl">' + item.section + '</div>';
+      lastSec = item.section;
     }
-    var val=priceChanges[item.name]!==undefined?priceChanges[item.name]:item.displayPrice;
-    var ch=priceChanges[item.name]!==undefined?' changed':'';
-    html+='<div class="item-row" data-n="'+item.name.toLowerCase()+'" data-s="'+item.section.toLowerCase()+'">';
-    html+='<span class="item-name">'+item.name+'</span>';
-    html+='<input class="price-inp'+ch+'" data-idx="'+idx+'" data-name="'+item.name+'" value="'+val+'" onchange="onPriceChange(this)" onfocus="this.select()">';
-    html+='</div>';
-  });
-  document.getElementById('itemsList').innerHTML=html;
+    var val = priceChanges.hasOwnProperty(item.name) ? priceChanges[item.name] : item.displayPrice;
+    var ch = priceChanges.hasOwnProperty(item.name) ? ' changed' : '';
+    html += '<div class="item-row" data-name="' + i + '">';
+    html += '<span class="item-name">' + item.name + '</span>';
+    html += '<input class="price-inp' + ch + '" id="pi-' + i + '" type="text" value="' + val + '">';
+    html += '</div>';
+  }
+  document.getElementById('itemsList').innerHTML = html;
+  for (var j = 0; j < ITEMS.length; j++) {
+    (function(idx) {
+      var inp = document.getElementById('pi-' + idx);
+      if (inp) {
+        inp.addEventListener('change', function() { onPriceChange(idx, this.value); });
+        inp.addEventListener('focus', function() { this.select(); });
+      }
+    })(j);
+  }
 }
 
-function onPriceChange(inp){
-  var name=inp.getAttribute('data-name');
-  var idx=parseInt(inp.getAttribute('data-idx'));
-  if(inp.value===ITEMS[idx].displayPrice){delete priceChanges[name];inp.classList.remove('changed');}
-  else{priceChanges[name]=inp.value;inp.classList.add('changed');}
+function onPriceChange(idx, val) {
+  var name = ITEMS[idx].name;
+  if (val === ITEMS[idx].displayPrice) {
+    delete priceChanges[name];
+    document.getElementById('pi-' + idx).classList.remove('changed');
+  } else {
+    priceChanges[name] = val;
+    document.getElementById('pi-' + idx).classList.add('changed');
+  }
   updateBar();
 }
 
-function filterItems(q){
-  q=q.toLowerCase();
-  document.querySelectorAll('.item-row').forEach(function(r){
-    r.style.display=(r.dataset.n.includes(q)||r.dataset.s.includes(q))?'':'none';
-  });
-  document.querySelectorAll('.sec-lbl').forEach(function(l){
-    var next=l.nextElementSibling;var vis=false;
-    while(next&&!next.classList.contains('sec-lbl')){
-      if(next.classList.contains('item-row')&&next.style.display!=='none')vis=true;
-      next=next.nextElementSibling;
-    }
-    l.style.display=vis?'':'none';
-  });
-}
-
-function buildHoursList(){
-  var html='';
-  Object.keys(hoursData).forEach(function(day){
-    var val=hoursData[day];var closed=val==='Closed';
-    html+='<div class="hours-item"><div class="h-day">'+day+'</div><div class="h-row">';
-    html+='<input class="h-inp" data-day="'+day+'" value="'+val+'"'+(closed?' disabled':'')+' onchange="onHoursChange(this)">';
-    html+='<label class="closed-lbl"><input type="checkbox"'+(closed?' checked':'')+' onchange="toggleClosed(this,''+day+'')"> Closed</label>';
-    html+='</div></div>';
-  });
-  document.getElementById('hoursList').innerHTML=html;
-}
-
-function onHoursChange(inp){hoursData[inp.getAttribute('data-day')]=inp.value;hoursChanged=true;updateBar();}
-function toggleClosed(cb,day){
-  var inp=cb.closest('.h-row').querySelector('.h-inp');
-  if(cb.checked){hoursData[day]='Closed';inp.value='Closed';inp.disabled=true;}
-  else{hoursData[day]='10am – 5pm';inp.value='10am – 5pm';inp.disabled=false;}
-  hoursChanged=true;updateBar();
-}
-
-function updatePreview(){
-  var on=document.getElementById('bannerOn').checked;
-  var txt=document.getElementById('bannerTxt').value.trim();
-  var p=document.getElementById('bPreview');
-  p.style.display=(on&&txt)?'block':'none';p.textContent=txt;updateBar();
-}
-
-function updateBar(){
-  var n=Object.keys(priceChanges).length+(hoursChanged?1:0);
-  var bon=document.getElementById('bannerOn').checked&&document.getElementById('bannerTxt').value.trim();
-  if(bon)n++;
-  var bar=document.getElementById('chgBar');
-  bar.className='chg-bar'+(n>0?' show':'');
-  document.getElementById('chgCount').textContent=n+' change'+(n!==1?'s':'')+' pending';
-}
-
-function applyChanges(html){
-  // Prices
-  Object.keys(priceChanges).forEach(function(name){
-    var newDisp=priceChanges[name];
-    var esc=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    var numStr=newDisp.replace(/[^0-9.]/g,'');
-    var num=parseFloat(numStr);
-    if(!isNaN(num)){
-      html=html.replace(new RegExp("(openOrderSheet\\('"+esc+"',)[\\d.]+,",'g'),'$1'+num+',');
-    }
-    var orig=ITEMS.find(function(it){return it.name===name;});
-    if(orig){
-      var oldD=orig.displayPrice.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      html=html.replace(new RegExp('(class="mi-price">)'+oldD+'(</div>)','g'),'$1'+newDisp+'$2');
-    }
-  });
-  // Hours
-  if(hoursChanged){
-    Object.keys(hoursData).forEach(function(day){
-      var val=hoursData[day];var closed=val==='Closed';
-      var esc=day.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      if(closed){
-        html=html.replace(new RegExp('(<span class="hours-day">'+esc+'</span>)<span class="hours-(?:time|closed)">[^<]*</span>','g'),'$1<span class="hours-closed">Closed</span>');
-      } else {
-        html=html.replace(new RegExp('(<span class="hours-day">'+esc+'</span>)<span class="hours-(?:time|closed)">[^<]*</span>','g'),'$1<span class="hours-time">'+val+'</span>');
-      }
-    });
+function filterItems(q) {
+  q = q.toLowerCase();
+  var rows = document.querySelectorAll('.item-row');
+  for (var i = 0; i < rows.length; i++) {
+    var idx = parseInt(rows[i].getAttribute('data-name'));
+    var item = ITEMS[idx];
+    var match = item.name.toLowerCase().indexOf(q) >= 0 || item.section.toLowerCase().indexOf(q) >= 0;
+    rows[i].style.display = match ? '' : 'none';
   }
-  // Banner
-  html=html.replace(/<div id="bvmm-announce"[^>]*>[^<]*<\/div>/g,'');
-  var bon=document.getElementById('bannerOn').checked;
-  var btxt=document.getElementById('bannerTxt').value.trim();
-  if(bon&&btxt){
-    html=html.replace('<body>','<body><div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;letter-spacing:.04em;">'+btxt+'</div>');
+  var labels = document.querySelectorAll('.sec-lbl');
+  for (var j = 0; j < labels.length; j++) {
+    var lbl = labels[j];
+    var next = lbl.nextElementSibling;
+    var vis = false;
+    while (next && !next.classList.contains('sec-lbl')) {
+      if (next.classList.contains('item-row') && next.style.display !== 'none') vis = true;
+      next = next.nextElementSibling;
+    }
+    lbl.style.display = vis ? '' : 'none';
+  }
+}
+
+function buildHoursList() {
+  var html = '';
+  for (var i = 0; i < DAYS.length; i++) {
+    var day = DAYS[i];
+    var val = hoursData[day];
+    var closed = val === 'Closed';
+    html += '<div class="hours-item">';
+    html += '<div class="h-day">' + day + '</div>';
+    html += '<div class="h-row">';
+    html += '<input class="h-inp" id="hi-' + i + '" type="text" value="' + val + '"' + (closed ? ' disabled' : '') + '>';
+    html += '<label class="closed-lbl"><input type="checkbox" id="hc-' + i + '"' + (closed ? ' checked' : '') + '> Closed</label>';
+    html += '</div></div>';
+  }
+  document.getElementById('hoursList').innerHTML = html;
+  for (var j = 0; j < DAYS.length; j++) {
+    (function(idx, day) {
+      var inp = document.getElementById('hi-' + idx);
+      var cb = document.getElementById('hc-' + idx);
+      if (inp) inp.addEventListener('change', function() { hoursData[day] = this.value; hoursChanged = true; updateBar(); });
+      if (cb) cb.addEventListener('change', function() {
+        var i2 = document.getElementById('hi-' + idx);
+        if (this.checked) { hoursData[day] = 'Closed'; i2.value = 'Closed'; i2.disabled = true; }
+        else { hoursData[day] = '10am \u2013 5pm'; i2.value = '10am \u2013 5pm'; i2.disabled = false; }
+        hoursChanged = true; updateBar();
+      });
+    })(j, DAYS[j]);
+  }
+}
+
+function updatePreview() {
+  var on = document.getElementById('bannerOn').checked;
+  var txt = document.getElementById('bannerTxt').value.trim();
+  var p = document.getElementById('bPreview');
+  p.style.display = (on && txt) ? 'block' : 'none';
+  p.textContent = txt;
+  updateBar();
+}
+
+function updateBar() {
+  var n = Object.keys(priceChanges).length + (hoursChanged ? 1 : 0);
+  var bon = document.getElementById('bannerOn').checked && document.getElementById('bannerTxt').value.trim();
+  if (bon) n++;
+  var bar = document.getElementById('chgBar');
+  bar.className = 'chg-bar' + (n > 0 ? ' show' : '');
+  document.getElementById('chgCount').textContent = n + ' change' + (n !== 1 ? 's' : '') + ' pending';
+}
+
+function applyChanges(html) {
+  var names = Object.keys(priceChanges);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i];
+    var newDisp = priceChanges[name];
+    var numStr = newDisp.replace(/[^0-9.]/g, '');
+    var num = parseFloat(numStr);
+    var orig = null;
+    for (var j = 0; j < ITEMS.length; j++) {
+      if (ITEMS[j].name === name) { orig = ITEMS[j]; break; }
+    }
+    if (orig) {
+      var oldDisp = orig.displayPrice;
+      html = html.split('class="mi-price">' + oldDisp + '</div>').join('class="mi-price">' + newDisp + '</div>');
+      if (!isNaN(num)) {
+        var onclickName = name.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+        html = html.split("openOrderSheet('" + onclickName + "'," + orig.numericPrice + ",").join("openOrderSheet('" + onclickName + "'," + num + ",");
+      }
+    }
+  }
+  if (hoursChanged) {
+    var dayKeys = Object.keys(hoursData);
+    for (var d = 0; d < dayKeys.length; d++) {
+      var day = dayKeys[d];
+      var val = hoursData[day];
+      var closed = val === 'Closed';
+      var oldTime = '<span class="hours-day">' + day + '</span><span class="hours-time">';
+      var oldClosed = '<span class="hours-day">' + day + '</span><span class="hours-closed">';
+      if (closed) {
+        while (html.indexOf(oldTime) >= 0) {
+          var st = html.indexOf(oldTime) + oldTime.length;
+          var en = html.indexOf('</span>', st);
+          html = html.substring(0, html.indexOf(oldTime)) + '<span class="hours-day">' + day + '</span><span class="hours-closed">Closed' + html.substring(en);
+        }
+        while (html.indexOf(oldClosed) >= 0) {
+          var st2 = html.indexOf(oldClosed) + oldClosed.length;
+          var en2 = html.indexOf('</span>', st2);
+          html = html.substring(0, html.indexOf(oldClosed)) + '<span class="hours-day">' + day + '</span><span class="hours-closed">Closed' + html.substring(en2);
+        }
+      } else {
+        while (html.indexOf(oldTime) >= 0) {
+          var st3 = html.indexOf(oldTime) + oldTime.length;
+          var en3 = html.indexOf('</span>', st3);
+          html = html.substring(0, html.indexOf(oldTime)) + '<span class="hours-day">' + day + '</span><span class="hours-time">' + val + html.substring(en3);
+        }
+        while (html.indexOf(oldClosed) >= 0) {
+          var st4 = html.indexOf(oldClosed) + oldClosed.length;
+          var en4 = html.indexOf('</span>', st4);
+          html = html.substring(0, html.indexOf(oldClosed)) + '<span class="hours-day">' + day + '</span><span class="hours-time">' + val + html.substring(en4);
+        }
+      }
+    }
+  }
+  var bId = 'id="bvmm-announce"';
+  while (html.indexOf(bId) >= 0) {
+    var bs = html.lastIndexOf('<div', html.indexOf(bId));
+    var be = html.indexOf('</div>', html.indexOf(bId)) + 6;
+    html = html.substring(0, bs) + html.substring(be);
+  }
+  var bon = document.getElementById('bannerOn').checked;
+  var btxt = document.getElementById('bannerTxt').value.trim();
+  if (bon && btxt) {
+    var banner = '<div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;">' + btxt + '</div>';
+    html = html.replace('<body>', '<body>' + banner);
   }
   return html;
 }
 
-function deployAll(){
-  var btn=document.getElementById('deployBtn');
-  btn.disabled=true;btn.textContent='Fetching site…';
-  step('s1','info','Fetching live site…');
+function deployAll() {
+  var btn = document.getElementById('deployBtn');
+  btn.disabled = true;
+  btn.textContent = 'Fetching site...';
+  setStep('s1', 'info', 'Fetching live site...');
+  setStep('s2', '', '');
+  setStep('s3', '', '');
 
-  fetch(RAW_URL+'?t='+Date.now())
-  .then(function(r){
-    if(!r.ok)throw new Error('Fetch failed: '+r.status);
-    return r.text();
-  })
-  .then(function(siteHTML){
-    step('s1','ok','✓ Site fetched');
-    btn.textContent='Pushing…';
-    step('s2','info','Applying changes and pushing…');
-
-    var modified=applyChanges(siteHTML);
-    var b64=btoa(unescape(encodeURIComponent(modified)));
-
-    pushFile('index.html',b64,function(ok,msg){
-      if(!ok){step('s2','err','✗ '+msg);btn.disabled=false;btn.textContent='⬆ Push greencrk.com Live';return;}
-      step('s2','ok','✓ Site pushed! '+msg);
-      step('s3','ok','✅ greencrk.com live in ~30 seconds');
-      // Reset
-      priceChanges={};hoursChanged=false;
-      document.getElementById('bannerOn').checked=false;
-      document.getElementById('bannerTxt').value='';
-      updatePreview();buildItemsList();updateBar();
-      btn.disabled=false;btn.textContent='✅ Live!';
+  fetch(RAW + '?nocache=' + Date.now())
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(siteHTML) {
+      setStep('s1', 'ok', 'Site fetched!');
+      btn.textContent = 'Pushing...';
+      setStep('s2', 'info', 'Applying changes and pushing...');
+      var modified = applyChanges(siteHTML);
+      var encoded;
+      try { encoded = btoa(unescape(encodeURIComponent(modified))); }
+      catch(e) { encoded = btoa(modified); }
+      pushFile('index.html', encoded, function(ok, msg) {
+        if (!ok) {
+          setStep('s2', 'err', 'Error: ' + msg);
+          btn.disabled = false;
+          btn.textContent = 'Try Again';
+          return;
+        }
+        setStep('s2', 'ok', 'Pushed! ' + msg);
+        setStep('s3', 'ok', 'greencrk.com live in ~30 seconds');
+        priceChanges = {};
+        hoursChanged = false;
+        document.getElementById('bannerOn').checked = false;
+        document.getElementById('bannerTxt').value = '';
+        updatePreview();
+        buildItemsList();
+        updateBar();
+        btn.disabled = false;
+        btn.textContent = 'Live!';
+      });
+    })
+    .catch(function(e) {
+      setStep('s1', 'err', 'Could not fetch site: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = 'Try Again';
     });
-  })
-  .catch(function(e){
-    step('s1','err','✗ Could not fetch site: '+e.message);
-    btn.disabled=false;btn.textContent='⬆ Push greencrk.com Live';
-  });
 }
 
-function pushFile(filename,content,cb){
-  var xhr=new XMLHttpRequest();
-  xhr.open('POST',WORKER,true);
-  xhr.setRequestHeader('Content-Type','application/json');
-  xhr.timeout=60000;
-  xhr.onload=function(){
-    try{var r=JSON.parse(xhr.responseText);if(r.ok)cb(true,'Commit:'+(r.commit||'ok'));else cb(false,r.error||'Error');}
-    catch(e){cb(false,'Bad response');}
+function pushFile(filename, content, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', WORKER, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 60000;
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.ok) cb(true, r.commit || 'ok');
+      else cb(false, r.error || 'Unknown error');
+    } catch(e) { cb(false, 'Bad response'); }
   };
-  xhr.onerror=function(){cb(false,'Network error');};
-  xhr.ontimeout=function(){cb(false,'Timed out');};
-  xhr.send(JSON.stringify({action:'deploy',filename:filename,content:content}));
+  xhr.onerror = function() { cb(false, 'Network error'); };
+  xhr.ontimeout = function() { cb(false, 'Timed out'); };
+  xhr.send(JSON.stringify({action:'deploy', filename:filename, content:content}));
 }
 
-function step(id,type,text){
-  var el=document.getElementById(id);el.className='step show '+type;el.textContent=text;
+function setStep(id, type, text) {
+  var el = document.getElementById(id);
+  el.className = 'step' + (type ? ' show ' + type : '');
+  el.textContent = text;
 }
 
 buildItemsList();
