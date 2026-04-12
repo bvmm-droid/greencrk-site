@@ -50,6 +50,9 @@ h2 span{color:#A9B7A0}
 .chg-bar{position:fixed;bottom:0;left:0;right:0;background:#5C3A2D;color:#F4F1EB;padding:12px 16px;display:none;align-items:center;justify-content:space-between;font-size:.78rem;font-weight:700;z-index:200}
 .chg-bar.show{display:flex}
 .chg-btn{background:#F4F1EB;color:#5C3A2D;border:none;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:.75rem}
+.lc-row{display:flex;gap:8px;margin-top:12px}
+.lc-btn{flex:1;padding:10px;border:1.5px solid rgba(92,58,45,.2);border-radius:8px;font-size:.72rem;font-weight:700;background:#F4F1EB;color:#2C1810;cursor:pointer}
+.lc-btn.active{background:#5C3A2D;color:#F4F1EB;border-color:#5C3A2D}
 </style>
 </head>
 <body>
@@ -75,6 +78,14 @@ if(window.location.protocol==='file:'){
     <div id="s2" class="step"></div>
     <div id="s3" class="step"></div>
     <button class="btn-out" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
+    <div style="margin-top:14px;border-top:1px solid rgba(92,58,45,.1);padding-top:14px;text-align:left">
+      <p style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A9B7A0;margin-bottom:8px">Logo Color</p>
+      <div class="lc-row">
+        <button class="lc-btn active" id="lc-brown" onclick="setLogoColor('brown')">Dark Brown</button>
+        <button class="lc-btn" id="lc-pink" onclick="setLogoColor('pink')">🩷 Bright Pink</button>
+      </div>
+      <p style="font-size:.62rem;color:rgba(92,58,45,.4);margin-top:8px">Select color then hit Deploy</p>
+    </div>
   </div>
 </div>
 
@@ -233,6 +244,7 @@ function updateBar() {
   var n = Object.keys(priceChanges).length + (hoursChanged ? 1 : 0);
   var bon = document.getElementById('bannerOn').checked && document.getElementById('bannerTxt').value.trim();
   if (bon) n++;
+  if (logoColor !== 'brown') n++;
   var bar = document.getElementById('chgBar');
   bar.className = 'chg-bar' + (n > 0 ? ' show' : '');
   document.getElementById('chgCount').textContent = n + ' change' + (n !== 1 ? 's' : '') + ' pending';
@@ -302,6 +314,12 @@ function applyChanges(html) {
   if (bon && btxt) {
     var banner = '<div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;">' + btxt + '</div>';
     html = html.replace('<body>', '<body>' + banner);
+  }
+  // Apply logo color
+  if (logoColor === 'pink') {
+    html = html.split(BROWN_FILTER).join(PINK_FILTER);
+  } else {
+    html = html.split(PINK_FILTER).join(BROWN_FILTER);
   }
   return html;
 }
@@ -379,6 +397,17 @@ function setStep(id, type, text) {
   var el = document.getElementById(id);
   el.className = 'step' + (type ? ' show ' + type : '');
   el.textContent = text;
+}
+
+var logoColor = 'brown';
+var BROWN_FILTER = 'filter:invert(1) sepia(1) saturate(2) hue-rotate(320deg) brightness(0.3);';
+var PINK_FILTER  = 'filter:invert(1) sepia(1) saturate(100) hue-rotate(280deg) brightness(1.8);';
+
+function setLogoColor(color) {
+  logoColor = color;
+  document.getElementById('lc-brown').className = 'lc-btn' + (color === 'brown' ? ' active' : '');
+  document.getElementById('lc-pink').className  = 'lc-btn' + (color === 'pink'  ? ' active' : '');
+  updateBar();
 }
 
 buildItemsList();
