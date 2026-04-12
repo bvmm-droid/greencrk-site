@@ -1,19 +1,22 @@
-<html __gchrome_remoteframetoken="065ae83d8baf77285f5aadf64c678461"><head>
+<!DOCTYPE html>
+<html>
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BVMM Manager</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#F4F1EB;color:#2C1810;font-family:Inter,sans-serif;min-height:100vh}
-.tabs{display:flex;background:#2C1810;padding:8px 12px 0;gap:4px;position:sticky;top:0;z-index:100}
-.tab{flex:1;padding:10px 4px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:8px 8px 0 0;cursor:pointer}
+.tabs{display:flex;background:#2C1810;padding:6px 8px 0;gap:3px;position:sticky;top:0;z-index:100}
+.tab{flex:1;padding:9px 2px;font-size:.55rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:8px 8px 0 0;cursor:pointer;line-height:1.3;text-align:center}
 .tab.active{background:#F4F1EB;color:#2C1810}
-.panel{display:none;padding:18px 16px;max-width:500px;margin:0 auto}
+.panel{display:none;padding:16px;max-width:500px;margin:0 auto;padding-bottom:80px}
 .panel.active{display:block}
-.card{background:#FDFAF6;border:1px solid rgba(92,58,45,.15);border-radius:16px;padding:24px 20px;margin-bottom:16px;text-align:center}
+/* DEPLOY */
+.card{background:#FDFAF6;border:1px solid rgba(92,58,45,.15);border-radius:16px;padding:22px 18px;margin-bottom:14px;text-align:center}
 h2{font-size:1.1rem;margin-bottom:4px}
 h2 span{color:#A9B7A0}
-.tip{font-size:.68rem;color:rgba(92,58,45,.5);margin-bottom:16px;background:rgba(169,183,160,.1);border:1px solid rgba(169,183,160,.25);border-radius:8px;padding:8px 12px;line-height:1.6;text-align:left}
+.tip{font-size:.68rem;color:rgba(92,58,45,.5);margin-bottom:14px;background:rgba(169,183,160,.1);border:1px solid rgba(169,183,160,.25);border-radius:8px;padding:8px 12px;line-height:1.6;text-align:left}
 .tip strong{color:#5C3A2D}
 .btn{width:100%;background:#5C3A2D;color:#F4F1EB;border:none;border-radius:12px;padding:15px;font-size:.85rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-bottom:8px}
 .btn:disabled{opacity:.4}
@@ -23,19 +26,32 @@ h2 span{color:#A9B7A0}
 .ok{background:rgba(169,183,160,.15);color:#4a7045}
 .err{background:rgba(192,80,60,.1);color:#8B3A2D}
 .info{background:rgba(138,159,178,.12);color:#4a6a84}
-.search-box{width:100%;padding:11px 14px;border:1.5px solid rgba(92,58,45,.2);border-radius:10px;font-size:.85rem;background:#FDFAF6;color:#2C1810;margin-bottom:12px}
-.sec-lbl{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#A9B7A0;padding:12px 0 6px}
-.item-row{display:flex;align-items:center;padding:10px 12px;background:#FDFAF6;border:1px solid rgba(92,58,45,.1);border-radius:8px;margin-bottom:6px;gap:10px}
-.item-name{font-size:.78rem;font-weight:600;flex:1}
-.price-inp{width:90px;padding:7px 10px;border:1.5px solid rgba(92,58,45,.2);border-radius:7px;font-size:.82rem;font-weight:700;color:#5C3A2D;text-align:right;background:#F4F1EB}
-.price-inp.changed{border-color:#A9B7A0;background:rgba(169,183,160,.1)}
+.qa-section{margin-top:14px;border-top:1px solid rgba(92,58,45,.1);padding-top:14px;text-align:left}
+.qa-label{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A9B7A0;margin-bottom:10px}
+.qa-btn{width:100%;background:#FDFAF6;color:#2C1810;border:1px solid rgba(92,58,45,.15);border-radius:10px;padding:12px 14px;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:8px;text-align:left}
+.qa-btn:active{background:rgba(92,58,45,.07)}
+/* PRICES */
 .sec-title{font-size:1rem;font-weight:700;margin-bottom:4px}
-.sec-sub{font-size:.72rem;color:rgba(92,58,45,.5);margin-bottom:16px}
+.sec-sub{font-size:.72rem;color:rgba(92,58,45,.5);margin-bottom:14px}
+.search-box{width:100%;padding:10px 14px;border:1.5px solid rgba(92,58,45,.2);border-radius:10px;font-size:.85rem;background:#FDFAF6;color:#2C1810;margin-bottom:12px}
+.search-box:focus{outline:none;border-color:#5C3A2D}
+.sec-lbl{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#A9B7A0;padding:12px 0 6px}
+.item-row{display:flex;align-items:center;padding:10px 12px;background:#FDFAF6;border:1px solid rgba(92,58,45,.1);border-radius:8px;margin-bottom:6px;gap:8px}
+.item-name{font-size:.76rem;font-weight:600;flex:1;min-width:0}
+.item-note{font-size:.62rem;color:rgba(92,58,45,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.price-inp{width:80px;padding:7px 8px;border:1.5px solid rgba(92,58,45,.2);border-radius:7px;font-size:.8rem;font-weight:700;color:#5C3A2D;text-align:right;background:#F4F1EB;flex-shrink:0}
+.price-inp:focus{outline:none;border-color:#5C3A2D;background:#fff}
+.price-inp.changed{border-color:#A9B7A0;background:rgba(169,183,160,.1)}
+.price-col{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.price-label{font-size:.52rem;color:rgba(92,58,45,.5);text-align:right;margin-bottom:1px}
+/* HOURS */
 .hours-item{background:#FDFAF6;border:1px solid rgba(92,58,45,.1);border-radius:10px;padding:14px;margin-bottom:10px}
 .h-day{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5C3A2D;margin-bottom:8px}
 .h-row{display:flex;gap:8px;align-items:center}
 .h-inp{flex:1;padding:8px 10px;border:1.5px solid rgba(92,58,45,.2);border-radius:7px;font-size:.82rem;background:#F4F1EB;color:#2C1810}
+.h-inp:focus{outline:none;border-color:#5C3A2D}
 .closed-lbl{display:flex;align-items:center;gap:6px;font-size:.72rem;color:rgba(92,58,45,.6);white-space:nowrap}
+/* BANNER */
 .banner-toggle{display:flex;align-items:center;justify-content:space-between;background:#FDFAF6;border:1px solid rgba(92,58,45,.1);border-radius:10px;padding:14px 16px;margin-bottom:12px}
 .sw{position:relative;width:44px;height:24px;flex-shrink:0}
 .sw input{opacity:0;width:0;height:0;position:absolute}
@@ -44,151 +60,211 @@ h2 span{color:#A9B7A0}
 .sw input:checked+.sl{background:#5C3A2D}
 .sw input:checked+.sl::before{transform:translateX(20px)}
 .b-inp{width:100%;padding:11px 14px;border:1.5px solid rgba(92,58,45,.2);border-radius:10px;font-size:.82rem;background:#FDFAF6;color:#2C1810;margin-bottom:12px}
+.b-inp:focus{outline:none;border-color:#5C3A2D}
 .b-preview{background:#5C3A2D;color:#F4F1EB;text-align:center;padding:10px 16px;border-radius:8px;font-size:.78rem;font-weight:600;margin-bottom:12px;display:none}
+/* CHANGES BAR */
 .chg-bar{position:fixed;bottom:0;left:0;right:0;background:#5C3A2D;color:#F4F1EB;padding:12px 16px;display:none;align-items:center;justify-content:space-between;font-size:.78rem;font-weight:700;z-index:200}
 .chg-bar.show{display:flex}
 .chg-btn{background:#F4F1EB;color:#5C3A2D;border:none;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:.75rem}
-.qa-btn{width:100%;background:#FDFAF6;color:#2C1810;border:1px solid rgba(92,58,45,.15);border-radius:10px;padding:12px 14px;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:8px;text-align:left}
-.qa-btn:active{background:rgba(92,58,45,.07)}
 </style>
 </head>
-<body style="-webkit-text-size-adjust: 100%;">
-<script>
-if(window.location.protocol==='file:'){
-  document.write('<div style="background:#8B3A2D;color:#fff;padding:16px 20px;font-size:.82rem;font-weight:600;text-align:center;line-height:1.8">⚠️ You opened this from your Downloads folder.<br>You need to <strong>upload it to GitHub first</strong>, then open from <strong>greencrk.com/BVMM_push_live.html</strong></div>');
-}
-</script>
-
+<body>
 <div class="tabs">
-  <button class="tab active" id="tab-deploy" onclick="showTab('deploy')">🚀 Deploy</button>
-  <button class="tab" id="tab-prices" onclick="showTab('prices')">💰 Prices</button>
-  <button class="tab" id="tab-hours" onclick="showTab('hours')">🕐 Hours</button>
-  <button class="tab" id="tab-banner" onclick="showTab('banner')">📢 Banner</button>
+  <button class="tab active" id="tab-deploy" onclick="showTab('deploy')">🚀<br>Deploy</button>
+  <button class="tab" id="tab-deli" onclick="showTab('deli')">🥪<br>Deli</button>
+  <button class="tab" id="tab-butcher" onclick="showTab('butcher')">🥩<br>Butcher</button>
+  <button class="tab" id="tab-catering" onclick="showTab('catering')">🍽️<br>Catering</button>
+  <button class="tab" id="tab-hours" onclick="showTab('hours')">🕐<br>Hours</button>
 </div>
 
+<!-- DEPLOY -->
 <div id="panel-deploy" class="panel active">
   <div class="card">
     <h2>BVMM <span>Manager</span></h2>
     <div class="tip">📌 <strong>Bookmark this page</strong> — tap Share then <strong>Add to Home Screen</strong></div>
-    <button class="btn" id="deployBtn" onclick="deployAll()" disabled="">Pushing...</button>
-    <div id="s1" class="step show ok">Site fetched!</div>
-    <div id="s2" class="step show ok">Pushed! a68cee2</div>
-    <div id="s3" class="step show info">Updating tool...</div>
+    <button class="btn" id="deployBtn" onclick="deployAll()">⬆ Push greencrk.com Live</button>
+    <div id="s1" class="step"></div>
+    <div id="s2" class="step"></div>
+    <div id="s3" class="step"></div>
     <button class="btn-out" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
-    <div style="margin-top:14px;border-top:1px solid rgba(92,58,45,.1);padding-top:14px;text-align:left">
-      <p style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A9B7A0;margin-bottom:10px">Quick Actions</p>
+    <div class="qa-section">
+      <p class="qa-label">Quick Actions</p>
       <button class="qa-btn" onclick="quickClose()">🔒 Mark Closed Today</button>
-      <button class="qa-btn" onclick="quickSpecial()">⭐ Set Today's Special</button>
+      <button class="qa-btn" onclick="quickSpecial()">⭐ Set Today\'s Special</button>
       <button class="qa-btn" onclick="quickClear()">✕ Clear All Notices</button>
+    </div>
+    <div class="qa-section">
+      <p class="qa-label">Square Testing</p>
+      <div id="sq-status" style="font-size:.7rem;color:rgba(92,58,45,.5);margin-bottom:8px;">Checking status...</div>
+      <button class="qa-btn" id="sqSandboxBtn" onclick="sqSandbox()" style="color:#e05a00;border-color:rgba(224,90,0,.3);">🧪 Activate Square Sandbox</button>
+      <button class="qa-btn" id="sqRestoreBtn" onclick="sqRestore()" style="display:none;color:#8B3A2D;border-color:rgba(139,58,45,.3);">↩ Restore Live Square</button>
+      <div id="sq-step" class="step" style="margin-top:6px;"></div>
     </div>
   </div>
 </div>
 
-<div id="panel-prices" class="panel">
-  <p class="sec-title">Price Editor</p>
+<!-- DELI -->
+<div id="panel-deli" class="panel">
+  <p class="sec-title">Deli</p>
   <p class="sec-sub">Tap any price to edit. Hit Deploy when done.</p>
-  <input class="search-box" type="text" placeholder="Search items..." id="searchBox" oninput="filterItems(this.value)" __gchrome_uniqueid="1">
-  <div id="itemsList"><div class="sec-lbl">Heroes by the Foot</div><div class="item-row" data-name="0"><span class="item-name">Italian / American Hero</span><input class="price-inp" id="pi-0" type="text" value="$20/ft" __gchrome_uniqueid="156"></div><div class="item-row" data-name="1"><span class="item-name">Chicken Cutlet Any Way</span><input class="price-inp" id="pi-1" type="text" value="$24/ft" __gchrome_uniqueid="157"></div><div class="item-row" data-name="2"><span class="item-name">Roast Beef / Turkey / Ham</span><input class="price-inp" id="pi-2" type="text" value="$24/ft" __gchrome_uniqueid="158"></div><div class="item-row" data-name="3"><span class="item-name">Pastrami / Corned Beef</span><input class="price-inp" id="pi-3" type="text" value="$28/ft" __gchrome_uniqueid="159"></div><div class="sec-lbl">Steaks</div><div class="item-row" data-name="4"><span class="item-name">Prime Dry Aged Porterhouse</span><input class="price-inp" id="pi-4" type="text" value="$49.00" __gchrome_uniqueid="160"></div><div class="item-row" data-name="5"><span class="item-name">Prime T-Bone</span><input class="price-inp" id="pi-5" type="text" value="$49.00" __gchrome_uniqueid="161"></div><div class="item-row" data-name="6"><span class="item-name">Bone-In Rib Eye</span><input class="price-inp" id="pi-6" type="text" value="$49.00" __gchrome_uniqueid="162"></div><div class="item-row" data-name="7"><span class="item-name">Boneless Prime Rib Eye</span><input class="price-inp" id="pi-7" type="text" value="$59.00" __gchrome_uniqueid="163"></div><div class="item-row" data-name="8"><span class="item-name">Prime Dry Aged Shell Steak</span><input class="price-inp" id="pi-8" type="text" value="$49.00" __gchrome_uniqueid="164"></div><div class="item-row" data-name="9"><span class="item-name">Prime Sirloin Steak</span><input class="price-inp" id="pi-9" type="text" value="$32.00" __gchrome_uniqueid="165"></div><div class="item-row" data-name="10"><span class="item-name">Prime Filet Mignon</span><input class="price-inp" id="pi-10" type="text" value="$34.50" __gchrome_uniqueid="166"></div><div class="item-row" data-name="11"><span class="item-name">Skirt Steak (Prime)</span><input class="price-inp" id="pi-11" type="text" value="$45.00" __gchrome_uniqueid="167"></div><div class="item-row" data-name="12"><span class="item-name">Flank Steak (Prime)</span><input class="price-inp" id="pi-12" type="text" value="$22.00" __gchrome_uniqueid="168"></div><div class="item-row" data-name="13"><span class="item-name">Western London Broil</span><input class="price-inp" id="pi-13" type="text" value="$29.00" __gchrome_uniqueid="169"></div><div class="item-row" data-name="14"><span class="item-name">London Broil (Prime Top Round)</span><input class="price-inp" id="pi-14" type="text" value="$19.00" __gchrome_uniqueid="170"></div><div class="item-row" data-name="15"><span class="item-name">Pepper Steak (Prime)</span><input class="price-inp" id="pi-15" type="text" value="$18.00" __gchrome_uniqueid="171"></div><div class="item-row" data-name="16"><span class="item-name">Marinated Beef Strips</span><input class="price-inp" id="pi-16" type="text" value="$18.00" __gchrome_uniqueid="172"></div><div class="sec-lbl">Roasts</div><div class="item-row" data-name="17"><span class="item-name">Bone-In Prime Rib</span><input class="price-inp" id="pi-17" type="text" value="$147.00" __gchrome_uniqueid="173"></div><div class="item-row" data-name="18"><span class="item-name">Boneless Prime Rib</span><input class="price-inp" id="pi-18" type="text" value="$59.00" __gchrome_uniqueid="174"></div><div class="item-row" data-name="19"><span class="item-name">Prime Filet Roast</span><input class="price-inp" id="pi-19" type="text" value="$69.00" __gchrome_uniqueid="175"></div><div class="item-row" data-name="20"><span class="item-name">Roast Beef (Prime Top Round)</span><input class="price-inp" id="pi-20" type="text" value="$57.00" __gchrome_uniqueid="176"></div><div class="item-row" data-name="21"><span class="item-name">Prime French Pot Roast</span><input class="price-inp" id="pi-21" type="text" value="$16.00" __gchrome_uniqueid="177"></div><div class="item-row" data-name="22"><span class="item-name">Prime Brisket</span><input class="price-inp" id="pi-22" type="text" value="$24.00" __gchrome_uniqueid="178"></div><div class="item-row" data-name="23"><span class="item-name">Silver Tip (Prime)</span><input class="price-inp" id="pi-23" type="text" value="$18.00" __gchrome_uniqueid="179"></div><div class="item-row" data-name="24"><span class="item-name">Eye Round (Prime)</span><input class="price-inp" id="pi-24" type="text" value="$16.00" __gchrome_uniqueid="180"></div><div class="item-row" data-name="25"><span class="item-name">Bottom Round Prime</span><input class="price-inp" id="pi-25" type="text" value="$14.00" __gchrome_uniqueid="181"></div><div class="sec-lbl">Ground</div><div class="item-row" data-name="26"><span class="item-name">Ground Beef (Prime)</span><input class="price-inp" id="pi-26" type="text" value="$15.00" __gchrome_uniqueid="182"></div><div class="item-row" data-name="27"><span class="item-name">Box of Prime Burgers</span><input class="price-inp" id="pi-27" type="text" value="$39.00" __gchrome_uniqueid="183"></div><div class="item-row" data-name="28"><span class="item-name">Stew Beef (Prime)</span><input class="price-inp" id="pi-28" type="text" value="$18.00" __gchrome_uniqueid="184"></div><div class="sec-lbl">Chicken</div><div class="item-row" data-name="29"><span class="item-name">Whole Chicken (All Natural)</span><input class="price-inp" id="pi-29" type="text" value="$19.00" __gchrome_uniqueid="185"></div><div class="item-row" data-name="30"><span class="item-name">Boneless / Skinless Chicken Breast</span><input class="price-inp" id="pi-30" type="text" value="$12.00" __gchrome_uniqueid="186"></div><div class="item-row" data-name="31"><span class="item-name">Legs &amp; Thighs</span><input class="price-inp" id="pi-31" type="text" value="$9.00" __gchrome_uniqueid="187"></div><div class="item-row" data-name="32"><span class="item-name">Wings</span><input class="price-inp" id="pi-32" type="text" value="$7.00" __gchrome_uniqueid="188"></div><div class="item-row" data-name="33"><span class="item-name">Chicken Sausage</span><input class="price-inp" id="pi-33" type="text" value="$10.00" __gchrome_uniqueid="189"></div><div class="sec-lbl">Turkey</div><div class="item-row" data-name="34"><span class="item-name">Boneless Turkey Breast (All Natural)</span><input class="price-inp" id="pi-34" type="text" value="$17.00" __gchrome_uniqueid="190"></div><div class="item-row" data-name="35"><span class="item-name">Bone-In Turkey Breast</span><input class="price-inp" id="pi-35" type="text" value="$12.00" __gchrome_uniqueid="191"></div><div class="sec-lbl">Veal</div><div class="item-row" data-name="36"><span class="item-name">Top Round Veal Cutlets</span><input class="price-inp" id="pi-36" type="text" value="$36.00" __gchrome_uniqueid="192"></div><div class="item-row" data-name="37"><span class="item-name">Osso Bucco</span><input class="price-inp" id="pi-37" type="text" value="$35.00" __gchrome_uniqueid="193"></div><div class="item-row" data-name="38"><span class="item-name">Veal For Stew</span><input class="price-inp" id="pi-38" type="text" value="$21.00" __gchrome_uniqueid="194"></div><div class="sec-lbl">Berkshire Pork</div><div class="item-row" data-name="39"><span class="item-name">Bone-In Berkshire Pork Chop</span><input class="price-inp" id="pi-39" type="text" value="$21.00" __gchrome_uniqueid="195"></div><div class="item-row" data-name="40"><span class="item-name">Boneless Berkshire Pork Chop</span><input class="price-inp" id="pi-40" type="text" value="$24.00" __gchrome_uniqueid="196"></div><div class="item-row" data-name="41"><span class="item-name">Bone-In Berkshire Pork Roast</span><input class="price-inp" id="pi-41" type="text" value="$42.00" __gchrome_uniqueid="197"></div><div class="item-row" data-name="42"><span class="item-name">Boneless Berkshire Pork Roast</span><input class="price-inp" id="pi-42" type="text" value="$28.80" __gchrome_uniqueid="198"></div><div class="item-row" data-name="43"><span class="item-name">Pork Tenderloin</span><input class="price-inp" id="pi-43" type="text" value="$12.00" __gchrome_uniqueid="199"></div><div class="item-row" data-name="44"><span class="item-name">Pork Tenderloin Cutlets</span><input class="price-inp" id="pi-44" type="text" value="$20.00" __gchrome_uniqueid="200"></div><div class="item-row" data-name="45"><span class="item-name">Pork Belly (Boneless)</span><input class="price-inp" id="pi-45" type="text" value="$14.00" __gchrome_uniqueid="201"></div><div class="item-row" data-name="46"><span class="item-name">Pork Bracioles</span><input class="price-inp" id="pi-46" type="text" value="$12.00" __gchrome_uniqueid="202"></div><div class="item-row" data-name="47"><span class="item-name">Baby Back Ribs</span><input class="price-inp" id="pi-47" type="text" value="$9.00" __gchrome_uniqueid="203"></div><div class="item-row" data-name="48"><span class="item-name">St. Louis Ribs</span><input class="price-inp" id="pi-48" type="text" value="$8.00" __gchrome_uniqueid="204"></div><div class="item-row" data-name="49"><span class="item-name">Bone-In Pork Butt</span><input class="price-inp" id="pi-49" type="text" value="$7.98" __gchrome_uniqueid="205"></div><div class="item-row" data-name="50"><span class="item-name">Boneless Pork Butt</span><input class="price-inp" id="pi-50" type="text" value="$4.99" __gchrome_uniqueid="206"></div><div class="item-row" data-name="51"><span class="item-name">Fresh Ham Bone-In</span><input class="price-inp" id="pi-51" type="text" value="$3.99" __gchrome_uniqueid="207"></div><div class="item-row" data-name="52"><span class="item-name">Fresh Ham Boneless</span><input class="price-inp" id="pi-52" type="text" value="$17.97" __gchrome_uniqueid="208"></div><div class="item-row" data-name="53"><span class="item-name">Sausage</span><input class="price-inp" id="pi-53" type="text" value="$10.00" __gchrome_uniqueid="209"></div><div class="item-row" data-name="54"><span class="item-name">Chevalatta (Ring Sausage)</span><input class="price-inp" id="pi-54" type="text" value="$22.00" __gchrome_uniqueid="210"></div><div class="item-row" data-name="55"><span class="item-name">Baked Potato Sausage</span><input class="price-inp" id="pi-55" type="text" value="$12.00" __gchrome_uniqueid="211"></div><div class="item-row" data-name="56"><span class="item-name">Double Smoked Bacon</span><input class="price-inp" id="pi-56" type="text" value="$24.00" __gchrome_uniqueid="212"></div><div class="sec-lbl">Lamb</div><div class="item-row" data-name="57"><span class="item-name">Lamb Chops — Rib</span><input class="price-inp" id="pi-57" type="text" value="$42.00" __gchrome_uniqueid="213"></div><div class="item-row" data-name="58"><span class="item-name">Bone-In Leg of Lamb</span><input class="price-inp" id="pi-58" type="text" value="$22.00" __gchrome_uniqueid="214"></div><div class="item-row" data-name="59"><span class="item-name">Boneless American Leg of Lamb</span><input class="price-inp" id="pi-59" type="text" value="$26.00" __gchrome_uniqueid="215"></div><div class="item-row" data-name="60"><span class="item-name">Lamb Shanks</span><input class="price-inp" id="pi-60" type="text" value="$20.00" __gchrome_uniqueid="216"></div><div class="item-row" data-name="61"><span class="item-name">Ground Lamb</span><input class="price-inp" id="pi-61" type="text" value="$16.00" __gchrome_uniqueid="217"></div><div class="sec-lbl">Fish</div><div class="item-row" data-name="62"><span class="item-name">Salmon Fillet</span><input class="price-inp" id="pi-62" type="text" value="$12.99/lb" __gchrome_uniqueid="218"></div><div class="item-row" data-name="63"><span class="item-name">Tilapia Fillet</span><input class="price-inp" id="pi-63" type="text" value="$7.99/lb" __gchrome_uniqueid="219"></div><div class="item-row" data-name="64"><span class="item-name">Flounder / Sole</span><input class="price-inp" id="pi-64" type="text" value="$9.99/lb" __gchrome_uniqueid="220"></div><div class="item-row" data-name="65"><span class="item-name">Swordfish Steak</span><input class="price-inp" id="pi-65" type="text" value="$14.99/lb" __gchrome_uniqueid="221"></div><div class="item-row" data-name="66"><span class="item-name">Tuna Steak</span><input class="price-inp" id="pi-66" type="text" value="$15.99/lb" __gchrome_uniqueid="222"></div><div class="sec-lbl">Shellfish</div><div class="item-row" data-name="67"><span class="item-name">Jumbo Shrimp (16-20 ct)</span><input class="price-inp" id="pi-67" type="text" value="$13.99/lb" __gchrome_uniqueid="223"></div><div class="item-row" data-name="68"><span class="item-name">Large Shrimp (21-25 ct)</span><input class="price-inp" id="pi-68" type="text" value="$11.99/lb" __gchrome_uniqueid="224"></div><div class="item-row" data-name="69"><span class="item-name">Sea Scallops</span><input class="price-inp" id="pi-69" type="text" value="$18.99/lb" __gchrome_uniqueid="225"></div><div class="item-row" data-name="70"><span class="item-name">Lump Crab Meat</span><input class="price-inp" id="pi-70" type="text" value="$19.99/lb" __gchrome_uniqueid="226"></div><div class="item-row" data-name="71"><span class="item-name">Stuffed Clams</span><input class="price-inp" id="pi-71" type="text" value="$2.99 ea" __gchrome_uniqueid="227"></div><div class="item-row" data-name="72"><span class="item-name">Stuffed Shrimp</span><input class="price-inp" id="pi-72" type="text" value="$3.49 ea" __gchrome_uniqueid="228"></div></div>
-  <div style="height:60px"></div>
+  <input class="search-box" type="text" placeholder="Search deli items..." oninput="filterList('deli-list', this.value)">
+  <div id="deli-list"></div>
 </div>
 
+<!-- BUTCHER -->
+<div id="panel-butcher" class="panel">
+  <p class="sec-title">Butcher</p>
+  <p class="sec-sub">Tap any price to edit. Hit Deploy when done.</p>
+  <input class="search-box" type="text" placeholder="Search butcher items..." oninput="filterList('butcher-list', this.value)">
+  <div id="butcher-list"></div>
+</div>
+
+<!-- CATERING -->
+<div id="panel-catering" class="panel">
+  <p class="sec-title">Catering</p>
+  <p class="sec-sub">Each item shows small/large tray price. Tap to edit.</p>
+  <input class="search-box" type="text" placeholder="Search catering items..." oninput="filterList('catering-list', this.value)">
+  <div id="catering-list"></div>
+</div>
+
+<!-- HOURS -->
 <div id="panel-hours" class="panel">
   <p class="sec-title">Hours</p>
   <p class="sec-sub">Edit hours then hit Deploy.</p>
-  <div id="hoursList"><div class="hours-item"><div class="h-day">Tuesday – Saturday</div><div class="h-row"><input class="h-inp" id="hi-0" type="text" value="10am – 5pm" __gchrome_uniqueid="77"><label class="closed-lbl"><input type="checkbox" id="hc-0" __gchrome_uniqueid="78"> Closed</label></div></div><div class="hours-item"><div class="h-day">Sunday</div><div class="h-row"><input class="h-inp" id="hi-1" type="text" value="10am – 3pm" __gchrome_uniqueid="79"><label class="closed-lbl"><input type="checkbox" id="hc-1" __gchrome_uniqueid="80"> Closed</label></div></div><div class="hours-item"><div class="h-day">Monday</div><div class="h-row"><input class="h-inp" id="hi-2" type="text" value="Closed" disabled="" __gchrome_uniqueid="81"><label class="closed-lbl"><input type="checkbox" id="hc-2" checked="" __gchrome_uniqueid="82"> Closed</label></div></div></div>
+  <div id="hoursList"></div>
 </div>
 
-<div id="panel-banner" class="panel">
-  <p class="sec-title">Announcement Banner</p>
-  <p class="sec-sub">Shows at the top of the site. Great for closures or specials.</p>
-  <div class="banner-toggle">
-    <span style="font-size:.82rem;font-weight:600">Show Banner</span>
-    <label class="sw"><input type="checkbox" id="bannerOn" onchange="updatePreview()" __gchrome_uniqueid="2"><span class="sl"></span></label>
-  </div>
-  <input class="b-inp" id="bannerTxt" type="text" placeholder="e.g. Closed Christmas week" oninput="updatePreview()" maxlength="120" __gchrome_uniqueid="3">
-  <div class="b-preview" id="bPreview" style="display: block;">⭐ Today's Special: Big fat steak 2999</div>
-  <p style="font-size:.68rem;color:rgba(92,58,45,.4);text-align:center">Hit Deploy to push live</p>
-</div>
-
-<div class="chg-bar show" id="chgBar">
-  <span id="chgCount">1 change ready to push</span>
+<div class="chg-bar" id="chgBar">
+  <span id="chgCount">0 changes ready to push</span>
   <button class="chg-btn" onclick="showTab('deploy')">→ Deploy</button>
 </div>
 
 <script>
 var WORKER = 'https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
 var RAW = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html';
-var priceChanges = {};
-var hoursChanged = false;
+var DELI = [{"name": "Italian / American Hero", "section": "Heroes by the Foot", "displayPrice": "$20/ft", "numericPrice": "20"}, {"name": "Chicken Cutlet Any Way", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Roast Beef / Turkey / Ham", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Pastrami / Corned Beef", "section": "Heroes by the Foot", "displayPrice": "$28/ft", "numericPrice": "28"}];
+var BUTCHER = [{"name": "Prime Dry Aged Porterhouse", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime T-Bone", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Bone-In Rib Eye", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Boneless Prime Rib Eye", "section": "Steaks", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Dry Aged Shell Steak", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime Sirloin Steak", "section": "Steaks", "displayPrice": "$32.00", "numericPrice": "32.00"}, {"name": "Prime Filet Mignon", "section": "Steaks", "displayPrice": "$34.50", "numericPrice": "34.50"}, {"name": "Skirt Steak (Prime)", "section": "Steaks", "displayPrice": "$45.00", "numericPrice": "45.00"}, {"name": "Flank Steak (Prime)", "section": "Steaks", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Western London Broil", "section": "Steaks", "displayPrice": "$29.00", "numericPrice": "29.00"}, {"name": "London Broil (Prime Top Round)", "section": "Steaks", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Pepper Steak (Prime)", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Marinated Beef Strips", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Bone-In Prime Rib", "section": "Roasts", "displayPrice": "$147.00", "numericPrice": "147.00"}, {"name": "Boneless Prime Rib", "section": "Roasts", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Filet Roast", "section": "Roasts", "displayPrice": "$69.00", "numericPrice": "69.00"}, {"name": "Roast Beef (Prime Top Round)", "section": "Roasts", "displayPrice": "$57.00", "numericPrice": "57.00"}, {"name": "Prime French Pot Roast", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Prime Brisket", "section": "Roasts", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Silver Tip (Prime)", "section": "Roasts", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Eye Round (Prime)", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Bottom Round Prime", "section": "Roasts", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Ground Beef (Prime)", "section": "Ground", "displayPrice": "$15.00", "numericPrice": "15.00"}, {"name": "Box of Prime Burgers", "section": "Ground", "displayPrice": "$39.00", "numericPrice": "39.00"}, {"name": "Stew Beef (Prime)", "section": "Ground", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Whole Chicken (All Natural)", "section": "Chicken", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Boneless / Skinless Chicken Breast", "section": "Chicken", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Legs &amp; Thighs", "section": "Chicken", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "Wings", "section": "Chicken", "displayPrice": "$7.00", "numericPrice": "7.00"}, {"name": "Chicken Sausage", "section": "Chicken", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Boneless Turkey Breast (All Natural)", "section": "Turkey", "displayPrice": "$17.00", "numericPrice": "17.00"}, {"name": "Bone-In Turkey Breast", "section": "Turkey", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Top Round Veal Cutlets", "section": "Veal", "displayPrice": "$36.00", "numericPrice": "36.00"}, {"name": "Osso Bucco", "section": "Veal", "displayPrice": "$35.00", "numericPrice": "35.00"}, {"name": "Veal For Stew", "section": "Veal", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Bone-In Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Boneless Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Bone-In Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Boneless Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$28.80", "numericPrice": "28.80"}, {"name": "Pork Tenderloin", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Pork Tenderloin Cutlets", "section": "Berkshire Pork", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Pork Belly (Boneless)", "section": "Berkshire Pork", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Pork Bracioles", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Baby Back Ribs", "section": "Berkshire Pork", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "St. Louis Ribs", "section": "Berkshire Pork", "displayPrice": "$8.00", "numericPrice": "8.00"}, {"name": "Bone-In Pork Butt", "section": "Berkshire Pork", "displayPrice": "$7.98", "numericPrice": "7.98"}, {"name": "Boneless Pork Butt", "section": "Berkshire Pork", "displayPrice": "$4.99", "numericPrice": "4.99"}, {"name": "Fresh Ham Bone-In", "section": "Berkshire Pork", "displayPrice": "$3.99", "numericPrice": "3.99"}, {"name": "Fresh Ham Boneless", "section": "Berkshire Pork", "displayPrice": "$17.97", "numericPrice": "17.97"}, {"name": "Sausage", "section": "Berkshire Pork", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Chevalatta (Ring Sausage)", "section": "Berkshire Pork", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Baked Potato Sausage", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Double Smoked Bacon", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Lamb Chops \u2014 Rib", "section": "Lamb", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Bone-In Leg of Lamb", "section": "Lamb", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Boneless American Leg of Lamb", "section": "Lamb", "displayPrice": "$26.00", "numericPrice": "26.00"}, {"name": "Lamb Shanks", "section": "Lamb", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Ground Lamb", "section": "Lamb", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Salmon Fillet", "section": "Fish", "displayPrice": "$12.99/lb", "numericPrice": "12.99"}, {"name": "Tilapia Fillet", "section": "Fish", "displayPrice": "$7.99/lb", "numericPrice": "7.99"}, {"name": "Flounder / Sole", "section": "Fish", "displayPrice": "$9.99/lb", "numericPrice": "9.99"}, {"name": "Swordfish Steak", "section": "Fish", "displayPrice": "$14.99/lb", "numericPrice": "14.99"}, {"name": "Tuna Steak", "section": "Fish", "displayPrice": "$15.99/lb", "numericPrice": "15.99"}, {"name": "Jumbo Shrimp (16-20 ct)", "section": "Shellfish", "displayPrice": "$13.99/lb", "numericPrice": "13.99"}, {"name": "Large Shrimp (21-25 ct)", "section": "Shellfish", "displayPrice": "$11.99/lb", "numericPrice": "11.99"}, {"name": "Sea Scallops", "section": "Shellfish", "displayPrice": "$18.99/lb", "numericPrice": "18.99"}, {"name": "Lump Crab Meat", "section": "Shellfish", "displayPrice": "$19.99/lb", "numericPrice": "19.99"}, {"name": "Stuffed Clams", "section": "Shellfish", "displayPrice": "$2.99 ea", "numericPrice": "2.99"}, {"name": "Stuffed Shrimp", "section": "Shellfish", "displayPrice": "$3.49 ea", "numericPrice": "3.49"}];
+var CATERING = [{"id": "ca1", "name": "Shrimp Cocktail Platter", "course": "apps", "courseLabel": "Appetizers", "pSmall": 89.0, "pLarge": 179.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca2", "name": "Cold Antipasto Platter", "course": "apps", "courseLabel": "Appetizers", "pSmall": 89.0, "pLarge": 179.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca12", "name": "Tomato Basil Mozzarella", "course": "apps", "courseLabel": "Appetizers", "pSmall": 79.0, "pLarge": 149.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca13", "name": "Fruit & Melon Platter", "course": "apps", "courseLabel": "Appetizers", "pSmall": 79.0, "pLarge": 149.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca14", "name": "Cheese & Grapes Platter", "course": "apps", "courseLabel": "Appetizers", "pSmall": 79.0, "pLarge": 149.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca5", "name": "Imported Brie & Grapes", "course": "apps", "courseLabel": "Appetizers", "pSmall": 79.0, "pLarge": 149.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca3", "name": "Babylon Hot Wings", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca4", "name": "Spinach Dip & Crudit\u00e9s", "course": "apps", "courseLabel": "Appetizers", "pSmall": 99.0, "pLarge": 99.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca6", "name": "Stuffed Button Mushrooms", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca7", "name": "Baked Clams Oreganata", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca8", "name": "Baked Clams Casino", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca9", "name": "Mini Crab Cakes", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca10", "name": "Dragon Stix", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca11", "name": "Pigs in a Blanket", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca15", "name": "Coconut Shrimp", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca16", "name": "Grilled Eggplant Caprese", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp1", "name": "Penne a la Vodka", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp2", "name": "Baked Ziti", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp3", "name": "Three Cheese Lasagna", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp4", "name": "Fileto Di Pomodori", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp5", "name": "Eggplant Parmigiana", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp6", "name": "Eggplant Rollatini", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp7", "name": "Stuffed Jumbo Shells", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp8", "name": "Baked Mac & Cheese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp9", "name": "Pasta Aglio e Olio", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp10", "name": "Pasta Primavera", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp11", "name": "Pasta & Broccoli", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp12", "name": "Cavatelli Bolognese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo1", "name": "Chicken Parmigiana", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo2", "name": "Chicken Marsala", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo3", "name": "Chicken Francese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo4", "name": "Marigold Chicken", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo5", "name": "Chicken Sorrento", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo6", "name": "Roasted Chicken", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo7", "name": "Turkey Breast Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo8", "name": "Chicken Rollatini", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv1", "name": "Veal Marsala", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv2", "name": "Veal Francese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv3", "name": "Veal Sorrento", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv4", "name": "Pork Paranno", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv5", "name": "Sausage & Peppers", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv6", "name": "Party Ham Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf1", "name": "Flounder Francese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf2", "name": "Flounder Puttanesca", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf3", "name": "Shrimp Parmigiana", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf4", "name": "Shrimp Scampi", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf5", "name": "Grilled & Baked Salmon", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe1", "name": "London Broil Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe2", "name": "Filet Mignon Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe3", "name": "Prime Roast Beef Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe4", "name": "BBQ Style Ribs", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe5", "name": "Meatballs", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs1", "name": "Roasted Red Potatoes", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs2", "name": "Mashed Potatoes", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs3", "name": "Broccoli Rabe", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs4", "name": "Roasted Carrots", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs5", "name": "String Bean Almondine", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs6", "name": "Wild Rice Medley", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs7", "name": "Cauliflower Alfredo", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs8", "name": "Baked Mac & Cheese", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs9", "name": "Garden Salad", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs10", "name": "Greek Salad", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs11", "name": "Caesar Salad", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs12", "name": "Tossed Salad", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch1", "name": "Chicken Parmigiana", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch2", "name": "Eggplant Rollatini", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch3", "name": "Stuffed Cabbage", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch4", "name": "Meatballs", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch5", "name": "Roasted Half Chicken", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch6", "name": "Baked Mac & Cheese", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch7", "name": "Stuffed Peppers", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch8", "name": "Stuffed Mushrooms", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}];
 var DAYS = ['Tuesday \u2013 Saturday', 'Sunday', 'Monday'];
 var hoursData = {};
 hoursData['Tuesday \u2013 Saturday'] = '10am \u2013 5pm';
 hoursData['Sunday'] = '10am \u2013 3pm';
 hoursData['Monday'] = 'Closed';
 
-var ITEMS = [{"name": "Italian / American Hero", "section": "Heroes by the Foot", "displayPrice": "$20/ft", "numericPrice": "20"}, {"name": "Chicken Cutlet Any Way", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Roast Beef / Turkey / Ham", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Pastrami / Corned Beef", "section": "Heroes by the Foot", "displayPrice": "$28/ft", "numericPrice": "28"}, {"name": "Prime Dry Aged Porterhouse", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime T-Bone", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Bone-In Rib Eye", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Boneless Prime Rib Eye", "section": "Steaks", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Dry Aged Shell Steak", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime Sirloin Steak", "section": "Steaks", "displayPrice": "$32.00", "numericPrice": "32.00"}, {"name": "Prime Filet Mignon", "section": "Steaks", "displayPrice": "$34.50", "numericPrice": "34.50"}, {"name": "Skirt Steak (Prime)", "section": "Steaks", "displayPrice": "$45.00", "numericPrice": "45.00"}, {"name": "Flank Steak (Prime)", "section": "Steaks", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Western London Broil", "section": "Steaks", "displayPrice": "$29.00", "numericPrice": "29.00"}, {"name": "London Broil (Prime Top Round)", "section": "Steaks", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Pepper Steak (Prime)", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Marinated Beef Strips", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Bone-In Prime Rib", "section": "Roasts", "displayPrice": "$147.00", "numericPrice": "147.00"}, {"name": "Boneless Prime Rib", "section": "Roasts", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Filet Roast", "section": "Roasts", "displayPrice": "$69.00", "numericPrice": "69.00"}, {"name": "Roast Beef (Prime Top Round)", "section": "Roasts", "displayPrice": "$57.00", "numericPrice": "57.00"}, {"name": "Prime French Pot Roast", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Prime Brisket", "section": "Roasts", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Silver Tip (Prime)", "section": "Roasts", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Eye Round (Prime)", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Bottom Round Prime", "section": "Roasts", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Ground Beef (Prime)", "section": "Ground", "displayPrice": "$15.00", "numericPrice": "15.00"}, {"name": "Box of Prime Burgers", "section": "Ground", "displayPrice": "$39.00", "numericPrice": "39.00"}, {"name": "Stew Beef (Prime)", "section": "Ground", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Whole Chicken (All Natural)", "section": "Chicken", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Boneless / Skinless Chicken Breast", "section": "Chicken", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Legs &amp; Thighs", "section": "Chicken", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "Wings", "section": "Chicken", "displayPrice": "$7.00", "numericPrice": "7.00"}, {"name": "Chicken Sausage", "section": "Chicken", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Boneless Turkey Breast (All Natural)", "section": "Turkey", "displayPrice": "$17.00", "numericPrice": "17.00"}, {"name": "Bone-In Turkey Breast", "section": "Turkey", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Top Round Veal Cutlets", "section": "Veal", "displayPrice": "$36.00", "numericPrice": "36.00"}, {"name": "Osso Bucco", "section": "Veal", "displayPrice": "$35.00", "numericPrice": "35.00"}, {"name": "Veal For Stew", "section": "Veal", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Bone-In Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Boneless Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Bone-In Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Boneless Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$28.80", "numericPrice": "28.80"}, {"name": "Pork Tenderloin", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Pork Tenderloin Cutlets", "section": "Berkshire Pork", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Pork Belly (Boneless)", "section": "Berkshire Pork", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Pork Bracioles", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Baby Back Ribs", "section": "Berkshire Pork", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "St. Louis Ribs", "section": "Berkshire Pork", "displayPrice": "$8.00", "numericPrice": "8.00"}, {"name": "Bone-In Pork Butt", "section": "Berkshire Pork", "displayPrice": "$7.98", "numericPrice": "7.98"}, {"name": "Boneless Pork Butt", "section": "Berkshire Pork", "displayPrice": "$4.99", "numericPrice": "4.99"}, {"name": "Fresh Ham Bone-In", "section": "Berkshire Pork", "displayPrice": "$3.99", "numericPrice": "3.99"}, {"name": "Fresh Ham Boneless", "section": "Berkshire Pork", "displayPrice": "$17.97", "numericPrice": "17.97"}, {"name": "Sausage", "section": "Berkshire Pork", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Chevalatta (Ring Sausage)", "section": "Berkshire Pork", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Baked Potato Sausage", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Double Smoked Bacon", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Lamb Chops — Rib", "section": "Lamb", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Bone-In Leg of Lamb", "section": "Lamb", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Boneless American Leg of Lamb", "section": "Lamb", "displayPrice": "$26.00", "numericPrice": "26.00"}, {"name": "Lamb Shanks", "section": "Lamb", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Ground Lamb", "section": "Lamb", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Salmon Fillet", "section": "Fish", "displayPrice": "$12.99/lb", "numericPrice": "12.99"}, {"name": "Tilapia Fillet", "section": "Fish", "displayPrice": "$7.99/lb", "numericPrice": "7.99"}, {"name": "Flounder / Sole", "section": "Fish", "displayPrice": "$9.99/lb", "numericPrice": "9.99"}, {"name": "Swordfish Steak", "section": "Fish", "displayPrice": "$14.99/lb", "numericPrice": "14.99"}, {"name": "Tuna Steak", "section": "Fish", "displayPrice": "$15.99/lb", "numericPrice": "15.99"}, {"name": "Jumbo Shrimp (16-20 ct)", "section": "Shellfish", "displayPrice": "$13.99/lb", "numericPrice": "13.99"}, {"name": "Large Shrimp (21-25 ct)", "section": "Shellfish", "displayPrice": "$11.99/lb", "numericPrice": "11.99"}, {"name": "Sea Scallops", "section": "Shellfish", "displayPrice": "$18.99/lb", "numericPrice": "18.99"}, {"name": "Lump Crab Meat", "section": "Shellfish", "displayPrice": "$19.99/lb", "numericPrice": "19.99"}, {"name": "Stuffed Clams", "section": "Shellfish", "displayPrice": "$2.99 ea", "numericPrice": "2.99"}, {"name": "Stuffed Shrimp", "section": "Shellfish", "displayPrice": "$3.49 ea", "numericPrice": "3.49"}];
+var priceChanges = {};
+var cateringChanges = {};
+var hoursChanged = false;
 
+// ── TABS ─────────────────────────────────────────────
 function showTab(name) {
-  ['deploy','prices','hours','banner'].forEach(function(n) {
+  ['deploy','deli','butcher','catering','hours'].forEach(function(n) {
     document.getElementById('tab-' + n).classList.toggle('active', n === name);
     document.getElementById('panel-' + n).classList.toggle('active', n === name);
   });
 }
 
-function buildItemsList() {
+// ── PRICE LIST BUILDER ───────────────────────────────
+function buildPriceList(containerId, items, prefix) {
   var html = '';
   var lastSec = '';
-  for (var i = 0; i < ITEMS.length; i++) {
-    var item = ITEMS[i];
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
     if (item.section !== lastSec) {
       html += '<div class="sec-lbl">' + item.section + '</div>';
       lastSec = item.section;
     }
     var val = priceChanges.hasOwnProperty(item.name) ? priceChanges[item.name] : item.displayPrice;
     var ch = priceChanges.hasOwnProperty(item.name) ? ' changed' : '';
-    html += '<div class="item-row" data-name="' + i + '">';
+    html += '<div class="item-row" data-search="' + item.name.toLowerCase() + ' ' + item.section.toLowerCase() + '">';
     html += '<span class="item-name">' + item.name + '</span>';
-    html += '<input class="price-inp' + ch + '" id="pi-' + i + '" type="text" value="' + val + '">';
+    html += '<input class="price-inp' + ch + '" id="' + prefix + i + '" type="text" value="' + val + '">';
     html += '</div>';
   }
-  document.getElementById('itemsList').innerHTML = html;
-  for (var j = 0; j < ITEMS.length; j++) {
-    (function(idx) {
-      var inp = document.getElementById('pi-' + idx);
+  document.getElementById(containerId).innerHTML = html;
+  for (var j = 0; j < items.length; j++) {
+    (function(idx, arr) {
+      var inp = document.getElementById(prefix + idx);
       if (inp) {
-        inp.addEventListener('change', function() { onPriceChange(idx, this.value); });
+        inp.addEventListener('change', function() {
+          var name = arr[idx].name;
+          if (this.value === arr[idx].displayPrice) { delete priceChanges[name]; this.classList.remove('changed'); }
+          else { priceChanges[name] = this.value; this.classList.add('changed'); }
+          updateBar();
+        });
         inp.addEventListener('focus', function() { this.select(); });
+      }
+    })(j, items);
+  }
+}
+
+// ── CATERING LIST BUILDER ────────────────────────────
+function buildCateringList() {
+  var html = '';
+  var lastCourse = '';
+  for (var i = 0; i < CATERING.length; i++) {
+    var item = CATERING[i];
+    if (item.courseLabel !== lastCourse) {
+      html += '<div class="sec-lbl">' + item.courseLabel + '</div>';
+      lastCourse = item.courseLabel;
+    }
+    var changes = cateringChanges[item.id] || {};
+    var vs = changes.pSmall !== undefined ? changes.pSmall : item.pSmall;
+    var vl = changes.pLarge !== undefined ? changes.pLarge : item.pLarge;
+    var chs = changes.pSmall !== undefined ? ' changed' : '';
+    var chl = changes.pLarge !== undefined ? ' changed' : '';
+    html += '<div class="item-row" data-search="' + item.name.toLowerCase() + ' ' + item.courseLabel.toLowerCase() + '">';
+    html += '<div style="flex:1;min-width:0"><div class="item-name">' + item.name + '</div></div>';
+    html += '<div class="price-col">';
+    if (item.labelSmall) {
+      html += '<div class="price-label">' + item.labelSmall + '</div>';
+      html += '<input class="price-inp' + chs + '" id="cs-' + i + '" type="text" value="' + vs + '" style="width:72px">';
+    }
+    if (item.labelLarge) {
+      html += '<div class="price-label" style="margin-top:4px">' + item.labelLarge + '</div>';
+      html += '<input class="price-inp' + chl + '" id="cl-' + i + '" type="text" value="' + vl + '" style="width:72px">';
+    }
+    html += '</div></div>';
+  }
+  document.getElementById('catering-list').innerHTML = html;
+  for (var j = 0; j < CATERING.length; j++) {
+    (function(idx) {
+      var item = CATERING[idx];
+      var sInp = document.getElementById('cs-' + idx);
+      var lInp = document.getElementById('cl-' + idx);
+      if (sInp) {
+        sInp.addEventListener('change', function() {
+          if (!cateringChanges[item.id]) cateringChanges[item.id] = {};
+          if (parseFloat(this.value) === item.pSmall) delete cateringChanges[item.id].pSmall;
+          else cateringChanges[item.id].pSmall = parseFloat(this.value);
+          this.classList.toggle('changed', cateringChanges[item.id].pSmall !== undefined);
+          updateBar();
+        });
+        sInp.addEventListener('focus', function() { this.select(); });
+      }
+      if (lInp) {
+        lInp.addEventListener('change', function() {
+          if (!cateringChanges[item.id]) cateringChanges[item.id] = {};
+          if (parseFloat(this.value) === item.pLarge) delete cateringChanges[item.id].pLarge;
+          else cateringChanges[item.id].pLarge = parseFloat(this.value);
+          this.classList.toggle('changed', cateringChanges[item.id].pLarge !== undefined);
+          updateBar();
+        });
+        lInp.addEventListener('focus', function() { this.select(); });
       }
     })(j);
   }
 }
 
-function onPriceChange(idx, val) {
-  var name = ITEMS[idx].name;
-  if (val === ITEMS[idx].displayPrice) {
-    delete priceChanges[name];
-    document.getElementById('pi-' + idx).classList.remove('changed');
-  } else {
-    priceChanges[name] = val;
-    document.getElementById('pi-' + idx).classList.add('changed');
-  }
-  updateBar();
-}
-
-function filterItems(q) {
+// ── FILTER ───────────────────────────────────────────
+function filterList(containerId, q) {
   q = q.toLowerCase();
-  var rows = document.querySelectorAll('.item-row');
+  var rows = document.querySelectorAll('#' + containerId + ' .item-row');
   for (var i = 0; i < rows.length; i++) {
-    var idx = parseInt(rows[i].getAttribute('data-name'));
-    var item = ITEMS[idx];
-    var match = item.name.toLowerCase().indexOf(q) >= 0 || item.section.toLowerCase().indexOf(q) >= 0;
-    rows[i].style.display = match ? '' : 'none';
+    rows[i].style.display = rows[i].dataset.search.indexOf(q) >= 0 ? '' : 'none';
   }
-  var labels = document.querySelectorAll('.sec-lbl');
+  var labels = document.querySelectorAll('#' + containerId + ' .sec-lbl');
   for (var j = 0; j < labels.length; j++) {
-    var lbl = labels[j];
-    var next = lbl.nextElementSibling;
-    var vis = false;
+    var lbl = labels[j]; var next = lbl.nextElementSibling; var vis = false;
     while (next && !next.classList.contains('sec-lbl')) {
       if (next.classList.contains('item-row') && next.style.display !== 'none') vis = true;
       next = next.nextElementSibling;
@@ -197,15 +273,12 @@ function filterItems(q) {
   }
 }
 
+// ── HOURS ────────────────────────────────────────────
 function buildHoursList() {
   var html = '';
   for (var i = 0; i < DAYS.length; i++) {
-    var day = DAYS[i];
-    var val = hoursData[day];
-    var closed = val === 'Closed';
-    html += '<div class="hours-item">';
-    html += '<div class="h-day">' + day + '</div>';
-    html += '<div class="h-row">';
+    var day = DAYS[i]; var val = hoursData[day]; var closed = val === 'Closed';
+    html += '<div class="hours-item"><div class="h-day">' + day + '</div><div class="h-row">';
     html += '<input class="h-inp" id="hi-' + i + '" type="text" value="' + val + '"' + (closed ? ' disabled' : '') + '>';
     html += '<label class="closed-lbl"><input type="checkbox" id="hc-' + i + '"' + (closed ? ' checked' : '') + '> Closed</label>';
     html += '</div></div>';
@@ -226,191 +299,28 @@ function buildHoursList() {
   }
 }
 
+// ── BANNER ───────────────────────────────────────────
 function updatePreview() {
-  var on = document.getElementById('bannerOn').checked;
-  var txt = document.getElementById('bannerTxt').value.trim();
+  var on = document.getElementById('bannerOn') && document.getElementById('bannerOn').checked;
+  var txt = document.getElementById('bannerTxt') ? document.getElementById('bannerTxt').value.trim() : '';
   var p = document.getElementById('bPreview');
-  p.style.display = (on && txt) ? 'block' : 'none';
-  p.textContent = txt;
+  if (p) { p.style.display = (on && txt) ? 'block' : 'none'; p.textContent = txt; }
   updateBar();
 }
 
-function updateBar() {
-  var n = Object.keys(priceChanges).length + (hoursChanged ? 1 : 0);
-  var bon = document.getElementById('bannerOn').checked && document.getElementById('bannerTxt').value.trim();
-  if (bon) n++;
-
-  var bar = document.getElementById('chgBar');
-  bar.className = 'chg-bar' + (n > 0 ? ' show' : '');
-  document.getElementById('chgCount').textContent = n + ' change' + (n !== 1 ? 's' : '') + ' ready to push';
-}
-
-function applyChanges(html) {
-  var names = Object.keys(priceChanges);
-  for (var i = 0; i < names.length; i++) {
-    var name = names[i];
-    var newDisp = priceChanges[name];
-    var numStr = newDisp.replace(/[^0-9.]/g, '');
-    var num = parseFloat(numStr);
-    var orig = null;
-    for (var j = 0; j < ITEMS.length; j++) {
-      if (ITEMS[j].name === name) { orig = ITEMS[j]; break; }
-    }
-    if (orig) {
-      var oldDisp = orig.displayPrice;
-      html = html.split('class="mi-price">' + oldDisp + '</div>').join('class="mi-price">' + newDisp + '</div>');
-      if (!isNaN(num)) {
-        var onclickName = name.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
-        html = html.split("openOrderSheet('" + onclickName + "'," + orig.numericPrice + ",").join("openOrderSheet('" + onclickName + "'," + num + ",");
-      }
-    }
-  }
-  if (hoursChanged) {
-    var dayKeys = Object.keys(hoursData);
-    for (var d = 0; d < dayKeys.length; d++) {
-      var day = dayKeys[d];
-      var val = hoursData[day];
-      var closed = val === 'Closed';
-      var oldTime = '<span class="hours-day">' + day + '</span><span class="hours-time">';
-      var oldClosed = '<span class="hours-day">' + day + '</span><span class="hours-closed">';
-      if (closed) {
-        while (html.indexOf(oldTime) >= 0) {
-          var st = html.indexOf(oldTime) + oldTime.length;
-          var en = html.indexOf('</span>', st);
-          html = html.substring(0, html.indexOf(oldTime)) + '<span class="hours-day">' + day + '</span><span class="hours-closed">Closed' + html.substring(en);
-        }
-        while (html.indexOf(oldClosed) >= 0) {
-          var st2 = html.indexOf(oldClosed) + oldClosed.length;
-          var en2 = html.indexOf('</span>', st2);
-          html = html.substring(0, html.indexOf(oldClosed)) + '<span class="hours-day">' + day + '</span><span class="hours-closed">Closed' + html.substring(en2);
-        }
-      } else {
-        while (html.indexOf(oldTime) >= 0) {
-          var st3 = html.indexOf(oldTime) + oldTime.length;
-          var en3 = html.indexOf('</span>', st3);
-          html = html.substring(0, html.indexOf(oldTime)) + '<span class="hours-day">' + day + '</span><span class="hours-time">' + val + html.substring(en3);
-        }
-        while (html.indexOf(oldClosed) >= 0) {
-          var st4 = html.indexOf(oldClosed) + oldClosed.length;
-          var en4 = html.indexOf('</span>', st4);
-          html = html.substring(0, html.indexOf(oldClosed)) + '<span class="hours-day">' + day + '</span><span class="hours-time">' + val + html.substring(en4);
-        }
-      }
-    }
-  }
-  var bId = 'id="bvmm-announce"';
-  while (html.indexOf(bId) >= 0) {
-    var bs = html.lastIndexOf('<div', html.indexOf(bId));
-    var be = html.indexOf('</div>', html.indexOf(bId)) + 6;
-    html = html.substring(0, bs) + html.substring(be);
-  }
-  var bon = document.getElementById('bannerOn').checked;
-  var btxt = document.getElementById('bannerTxt').value.trim();
-  if (bon && btxt) {
-    var banner = '<div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;">' + btxt + '</div>';
-    html = html.replace('<body>', '<body>' + banner);
-  }
-
-  return html;
-}
-
-function deployAll() {
-  if (window.location.protocol === 'file:') {
-    alert('This tool must be uploaded to GitHub and opened from greencrk.com — not from your Downloads folder.\n\nUpload to: github.com/bvmm-droid/greencrk-site/upload/main\nThen open: greencrk.com/BVMM_push_live.html');
-    return;
-  }
-  var btn = document.getElementById('deployBtn');
-  btn.disabled = true;
-  btn.textContent = 'Fetching site...';
-  setStep('s1', 'info', 'Fetching live site...');
-  setStep('s2', '', '');
-  setStep('s3', '', '');
-
-  fetch(RAW + '?nocache=' + Date.now())
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.text();
-    })
-    .then(function(siteHTML) {
-      setStep('s1', 'ok', 'Site fetched!');
-      btn.textContent = 'Pushing...';
-      setStep('s2', 'info', 'Applying changes and pushing...');
-      var modified = applyChanges(siteHTML);
-      var encoded;
-      try { encoded = btoa(unescape(encodeURIComponent(modified))); }
-      catch(e) { encoded = btoa(modified); }
-      pushFile('index.html', encoded, function(ok, msg) {
-        if (!ok) {
-          setStep('s2', 'err', 'Error: ' + msg);
-          btn.disabled = false;
-          btn.textContent = 'Try Again';
-          return;
-        }
-        setStep('s2', 'ok', 'Pushed! ' + msg);
-        setStep('s3', 'info', 'Updating tool...');
-        // Self-update: push this tool file to GitHub so it never needs manual upload
-        var toolHTML = document.documentElement.outerHTML;
-        var toolEncoded;
-        try { toolEncoded = btoa(unescape(encodeURIComponent(toolHTML))); }
-        catch(e) { toolEncoded = btoa(toolHTML); }
-        pushFile('BVMM_push_live.html', toolEncoded, function(ok3, msg3) {
-          setStep('s3', 'ok', ok3 ? 'greencrk.com live in ~30 seconds' : 'greencrk.com live in ~30 seconds');
-          priceChanges = {};
-          hoursChanged = false;
-          document.getElementById('bannerOn').checked = false;
-          document.getElementById('bannerTxt').value = '';
-          updatePreview();
-          buildItemsList();
-          updateBar();
-          btn.disabled = false;
-          btn.textContent = 'Live!';
-        });
-      });
-    })
-    .catch(function(e) {
-      setStep('s1', 'err', 'Could not fetch site: ' + e.message);
-      btn.disabled = false;
-      btn.textContent = 'Try Again';
-    });
-}
-
-function pushFile(filename, content, cb) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', WORKER, true);
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.timeout = 60000;
-  xhr.onload = function() {
-    try {
-      var r = JSON.parse(xhr.responseText);
-      if (r.ok) cb(true, r.commit || 'ok');
-      else cb(false, r.error || 'Unknown error');
-    } catch(e) { cb(false, 'Bad response'); }
-  };
-  xhr.onerror = function() { cb(false, 'Network error'); };
-  xhr.ontimeout = function() { cb(false, 'Timed out'); };
-  xhr.send(JSON.stringify({action:'deploy', filename:filename, content:content}));
-}
-
-function setStep(id, type, text) {
-  var el = document.getElementById(id);
-  el.className = 'step' + (type ? ' show ' + type : '');
-  el.textContent = text;
-}
-
+// ── QUICK ACTIONS ────────────────────────────────────
 function quickClose() {
   document.getElementById('bannerOn').checked = true;
-  document.getElementById('bannerTxt').value = 'We\'re closed today — see you tomorrow!';
-  updatePreview();
-  showTab('deploy');
+  document.getElementById('bannerTxt').value = "We\'re closed today — see you tomorrow!";
+  updatePreview(); showTab('deploy');
   alert('Tap Push to go live with the closure notice.');
 }
 function quickSpecial() {
-  var special = prompt('Enter today\'s special (e.g. Dry-Aged Ribeye $32/lb):');
-  if (special) {
+  var s = prompt("Enter today\'s special (e.g. Ribeye $38/lb):");
+  if (s) {
     document.getElementById('bannerOn').checked = true;
-    document.getElementById('bannerTxt').value = '⭐ Today\'s Special: ' + special;
-    updatePreview();
-    showTab('deploy');
+    document.getElementById('bannerTxt').value = '\u2b50 Today\'s Special: ' + s;
+    updatePreview(); showTab('deploy');
   }
 }
 function quickClear() {
@@ -419,10 +329,242 @@ function quickClear() {
   updatePreview();
 }
 
+// ── UPDATE BAR ───────────────────────────────────────
+function updateBar() {
+  var n = Object.keys(priceChanges).length;
+  var catN = Object.keys(cateringChanges).reduce(function(sum, id) {
+    return sum + Object.keys(cateringChanges[id]).length;
+  }, 0);
+  n += catN + (hoursChanged ? 1 : 0);
+  var bannerEl = document.getElementById('bannerOn');
+  var bannerTxtEl = document.getElementById('bannerTxt');
+  if (bannerEl && bannerEl.checked && bannerTxtEl && bannerTxtEl.value.trim()) n++;
+  var bar = document.getElementById('chgBar');
+  bar.className = 'chg-bar' + (n > 0 ? ' show' : '');
+  document.getElementById('chgCount').textContent = n + ' change' + (n !== 1 ? 's' : '') + ' ready to push';
+}
 
-buildItemsList();
+// ── APPLY CHANGES ────────────────────────────────────
+function applyChanges(html) {
+  // Butcher/Deli prices
+  var names = Object.keys(priceChanges);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i]; var newDisp = priceChanges[name];
+    var numStr = newDisp.replace(/[^0-9.]/g, ''); var num = parseFloat(numStr);
+    var orig = null;
+    var allItems = DELI.concat(BUTCHER);
+    for (var j = 0; j < allItems.length; j++) { if (allItems[j].name === name) { orig = allItems[j]; break; } }
+    if (orig) {
+      html = html.split('class="mi-price">' + orig.displayPrice + '</div>').join('class="mi-price">' + newDisp + '</div>');
+      if (!isNaN(num)) {
+        var onclickName = name.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+        html = html.split("openOrderSheet('" + onclickName + "'," + orig.numericPrice + ",").join("openOrderSheet('" + onclickName + "'," + num + ",");
+      }
+    }
+  }
+
+  // Catering prices
+  var catIds = Object.keys(cateringChanges);
+  for (var ci = 0; ci < catIds.length; ci++) {
+    var itemId = catIds[ci]; var changes = cateringChanges[itemId];
+    var catItem = null;
+    for (var k = 0; k < CATERING.length; k++) { if (CATERING[k].id === itemId) { catItem = CATERING[k]; break; } }
+    if (!catItem) continue;
+    // Use split/join to update catering prices - works for all occurrences
+    if (changes.pSmall !== undefined) {
+      var oldSmall = catItem.fieldSmall + ':' + catItem.pSmall;
+      var newSmall = catItem.fieldSmall + ':' + changes.pSmall;
+      html = html.split(oldSmall).join(newSmall);
+      // Also handle float format
+      var oldSmallF = catItem.fieldSmall + ':' + catItem.pSmall + '.0';
+      if (html.indexOf(oldSmallF) >= 0) html = html.split(oldSmallF).join(newSmall);
+    }
+    if (changes.pLarge !== undefined && catItem.fieldLarge) {
+      var oldLarge = catItem.fieldLarge + ':' + catItem.pLarge;
+      var newLarge = catItem.fieldLarge + ':' + changes.pLarge;
+      html = html.split(oldLarge).join(newLarge);
+      var oldLargeF = catItem.fieldLarge + ':' + catItem.pLarge + '.0';
+      if (html.indexOf(oldLargeF) >= 0) html = html.split(oldLargeF).join(newLarge);
+    }
+  }
+
+  // Hours
+  if (hoursChanged) {
+    Object.keys(hoursData).forEach(function(day) {
+      var val = hoursData[day]; var closed = val === 'Closed';
+      var esc = day.replace(/[-–]/g, function(m) { return m === '-' ? '-' : '\u2013'; });
+      var oldTime = '<span class="hours-day">' + day + '</span><span class="hours-time">';
+      var oldClosed = '<span class="hours-day">' + day + '</span><span class="hours-closed">';
+      if (closed) {
+        while (html.indexOf(oldTime) >= 0) { var s=html.indexOf(oldTime),e=html.indexOf('</span>',s+oldTime.length); html=html.substring(0,s)+'<span class="hours-day">'+day+'</span><span class="hours-closed">Closed'+html.substring(e); }
+        while (html.indexOf(oldClosed) >= 0) { var s=html.indexOf(oldClosed),e=html.indexOf('</span>',s+oldClosed.length); html=html.substring(0,s)+'<span class="hours-day">'+day+'</span><span class="hours-closed">Closed'+html.substring(e); }
+      } else {
+        while (html.indexOf(oldTime) >= 0) { var s=html.indexOf(oldTime),e=html.indexOf('</span>',s+oldTime.length); html=html.substring(0,s)+'<span class="hours-day">'+day+'</span><span class="hours-time">'+val+html.substring(e); }
+        while (html.indexOf(oldClosed) >= 0) { var s=html.indexOf(oldClosed),e=html.indexOf('</span>',s+oldClosed.length); html=html.substring(0,s)+'<span class="hours-day">'+day+'</span><span class="hours-time">'+val+html.substring(e); }
+      }
+    });
+  }
+
+  // Banner
+  var bId = 'id="bvmm-announce"';
+  while (html.indexOf(bId) >= 0) { var bs=html.lastIndexOf('<div',html.indexOf(bId)),be=html.indexOf('</div>',html.indexOf(bId))+6; html=html.substring(0,bs)+html.substring(be); }
+  var bannerOnEl = document.getElementById('bannerOn');
+  var bannerTxtEl = document.getElementById('bannerTxt');
+  var bon = bannerOnEl && bannerOnEl.checked;
+  var btxt = bannerTxtEl ? bannerTxtEl.value.trim() : '';
+  if (bon && btxt) {
+    html = html.replace('<body>', '<body><div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;letter-spacing:.04em;">' + btxt + '</div>');
+  }
+  return html;
+}
+
+// ── DEPLOY ───────────────────────────────────────────
+function deployAll() {
+  if (window.location.protocol === 'file:') {
+    alert('Upload this file to GitHub first, then open from greencrk.com/BVMM_push_live.html');
+    return;
+  }
+  var btn = document.getElementById('deployBtn');
+  btn.disabled = true; btn.textContent = 'Fetching site...';
+  setStep('s1','info','Fetching live site...'); setStep('s2','',''); setStep('s3','','');
+  fetch(RAW + '?nocache=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(function(siteHTML) {
+      setStep('s1','ok','Site fetched!'); btn.textContent = 'Pushing...';
+      setStep('s2','info','Applying changes...');
+      var modified = applyChanges(siteHTML);
+      var encoded; try { encoded = btoa(unescape(encodeURIComponent(modified))); } catch(e) { encoded = btoa(modified); }
+      pushFile('index.html', encoded, function(ok, msg) {
+        if (!ok) { setStep('s2','err','Error: '+msg); btn.disabled=false; btn.textContent='Try Again'; return; }
+        setStep('s2','ok','Pushed! '+msg);
+        setStep('s3','info','Updating tool...');
+        fetch(RAW.replace('index.html','BVMM_push_live.html')+'?t='+Date.now())
+          .then(function(r){ return r.text(); })
+          .then(function(toolHTML){
+            var toolEnc; try { toolEnc = btoa(unescape(encodeURIComponent(toolHTML))); } catch(e) { toolEnc = btoa(toolHTML); }
+            pushFile('BVMM_push_live.html', toolEnc, function(ok2) {
+              setStep('s3','ok','✅ greencrk.com live in ~30 seconds');
+              priceChanges = {}; cateringChanges = {}; hoursChanged = false;
+              if (document.getElementById('bannerOn')) document.getElementById('bannerOn').checked = false;
+              if (document.getElementById('bannerTxt')) document.getElementById('bannerTxt').value = '';
+              updatePreview(); buildPriceList('deli-list', DELI, 'd'); buildPriceList('butcher-list', BUTCHER, 'b'); buildCateringList(); updateBar();
+              btn.disabled = false; btn.textContent = 'Live!';
+            });
+          })
+          .catch(function(){ btn.disabled=false; btn.textContent='Live!'; });
+      });
+    })
+    .catch(function(e) { setStep('s1','err','Could not fetch site: '+e.message); btn.disabled=false; btn.textContent='Try Again'; });
+}
+
+function pushFile(filename, content, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 60000;
+  xhr.onload = function() { try { var r=JSON.parse(xhr.responseText); if(r.ok) cb(true,r.commit||'ok'); else cb(false,r.error||'Error'); } catch(e){cb(false,'Bad response');} };
+  xhr.onerror = function(){cb(false,'Network error');}; xhr.ontimeout = function(){cb(false,'Timed out');};
+  xhr.send(JSON.stringify({action:'deploy',filename:filename,content:content}));
+}
+
+function setStep(id,type,text) {
+  var el=document.getElementById(id); el.className='step'+(type?' show '+type:''); el.textContent=text;
+}
+
+// ── INIT ─────────────────────────────────────────────
+buildPriceList('deli-list', DELI, 'd');
+buildPriceList('butcher-list', BUTCHER, 'b');
+buildCateringList();
 buildHoursList();
+
+// SQUARE SANDBOX
+function sqCheckStatus() {
+  fetch('https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?t=' + Date.now())
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var isSandbox = html.indexOf('sandbox-sq0idb') > -1;
+      var el = document.getElementById('sq-status');
+      if (!el) return;
+      if (isSandbox) {
+        el.textContent = '🟠 SANDBOX ACTIVE — fake money mode';
+        el.style.color = '#e05a00';
+        document.getElementById('sqSandboxBtn').style.display = 'none';
+        document.getElementById('sqRestoreBtn').style.display = 'block';
+      } else {
+        el.textContent = '🟢 Live mode — real credentials';
+        el.style.color = '#4a7045';
+        document.getElementById('sqSandboxBtn').style.display = 'block';
+        document.getElementById('sqRestoreBtn').style.display = 'none';
+      }
+    })
+    .catch(function() {
+      var el = document.getElementById('sq-status');
+      if (el) el.textContent = 'Could not check status';
+    });
+}
+
+function sqDeploy(activate) {
+  var banner = '<!-- SB --><div style="position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#e05a00;color:#fff;text-align:center;padding:10px;font-size:.8rem;font-weight:700;">🧪 SQUARE SANDBOX — FAKE MONEY — NOT LIVE</div><!-- /SB -->';
+  var stepEl = document.getElementById('sq-step');
+  var sbBtn = document.getElementById('sqSandboxBtn');
+  var rsBtn = document.getElementById('sqRestoreBtn');
+  stepEl.className = 'step show info';
+  stepEl.textContent = 'Fetching live site...';
+  sbBtn.disabled = true;
+  rsBtn.disabled = true;
+  fetch('https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?t=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(function(siteHtml) {
+      if (activate) {
+        siteHtml = siteHtml.replace("var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'", "var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'");
+        siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'", "var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'");
+        if (siteHtml.indexOf('<!-- SB -->') < 0) {
+          siteHtml = siteHtml.replace('</body>', banner + '</body>');
+        }
+      } else {
+        siteHtml = siteHtml.replace("var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'", "var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'");
+        siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'", "var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'");
+        siteHtml = siteHtml.replace(/<!-- SB -->[\s\S]*?<!-- \/SB -->/, '');
+      }
+      stepEl.textContent = activate ? 'Activating...' : 'Restoring...';
+      var encoded;
+      try { encoded = btoa(unescape(encodeURIComponent(siteHtml))); } catch(e) { encoded = btoa(siteHtml); }
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', WORKER, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.timeout = 60000;
+      xhr.onload = function() {
+        try {
+          var res = JSON.parse(xhr.responseText);
+          if (res.ok) {
+            stepEl.className = 'step show ok';
+            stepEl.textContent = (activate ? 'Sandbox active!' : 'Restored!') + ' Wait 30s then open the site.';
+            setTimeout(sqCheckStatus, 5000);
+          } else {
+            stepEl.className = 'step show err';
+            stepEl.textContent = 'Error: ' + (res.error || 'Unknown');
+          }
+        } catch(e) {
+          stepEl.className = 'step show err';
+          stepEl.textContent = 'Bad response';
+        }
+        sbBtn.disabled = false;
+        rsBtn.disabled = false;
+      };
+      xhr.onerror = function() { stepEl.className = 'step show err'; stepEl.textContent = 'Network error'; sbBtn.disabled = false; rsBtn.disabled = false; };
+      xhr.ontimeout = function() { stepEl.className = 'step show err'; stepEl.textContent = 'Timed out'; sbBtn.disabled = false; rsBtn.disabled = false; };
+      xhr.send(JSON.stringify({ action: 'deploy', filename: 'index.html', content: encoded }));
+    })
+    .catch(function(e) {
+      stepEl.className = 'step show err';
+      stepEl.textContent = 'Could not fetch: ' + e.message;
+      sbBtn.disabled = false;
+      rsBtn.disabled = false;
+    });
+}
+
+function sqSandbox() { sqDeploy(true); }
+function sqRestore() { sqDeploy(false); }
+
+sqCheckStatus();
 </script>
-
-
-</body></html>
+</body>
+</html>
