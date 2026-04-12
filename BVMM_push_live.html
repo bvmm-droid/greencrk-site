@@ -81,7 +81,7 @@ if(window.location.protocol==='file:'){
     <div style="margin-top:14px;border-top:1px solid rgba(92,58,45,.1);padding-top:14px;text-align:left">
       <p style="font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A9B7A0;margin-bottom:8px">Logo Color</p>
       <div class="lc-row">
-        <button class="lc-btn active" id="lc-brown" onclick="setLogoColor('brown')">Dark Brown</button>
+        <button class="lc-btn active" id="lc-brown" onclick="setLogoColor('brown')">↩ Revert Logo</button>
         <button class="lc-btn" id="lc-pink" onclick="setLogoColor('pink')">🩷 Bright Pink</button>
       </div>
       <p style="font-size:.62rem;color:rgba(92,58,45,.4);margin-top:8px">Select color then hit Deploy</p>
@@ -247,7 +247,7 @@ function updateBar() {
   if (logoColor !== 'brown') n++;
   var bar = document.getElementById('chgBar');
   bar.className = 'chg-bar' + (n > 0 ? ' show' : '');
-  document.getElementById('chgCount').textContent = n + ' change' + (n !== 1 ? 's' : '') + ' pending';
+  document.getElementById('chgCount').textContent = n + ' change' + (n !== 1 ? 's' : '') + ' ready to push';
 }
 
 function applyChanges(html) {
@@ -357,16 +357,27 @@ function deployAll() {
           return;
         }
         setStep('s2', 'ok', 'Pushed! ' + msg);
-        setStep('s3', 'ok', 'greencrk.com live in ~30 seconds');
-        priceChanges = {};
-        hoursChanged = false;
-        document.getElementById('bannerOn').checked = false;
-        document.getElementById('bannerTxt').value = '';
-        updatePreview();
-        buildItemsList();
-        updateBar();
-        btn.disabled = false;
-        btn.textContent = 'Live!';
+        setStep('s3', 'info', 'Updating tool...');
+        // Self-update: push this tool file to GitHub so it never needs manual upload
+        var toolHTML = document.documentElement.outerHTML;
+        var toolEncoded;
+        try { toolEncoded = btoa(unescape(encodeURIComponent(toolHTML))); }
+        catch(e) { toolEncoded = btoa(toolHTML); }
+        pushFile('BVMM_push_live.html', toolEncoded, function(ok3, msg3) {
+          setStep('s3', 'ok', ok3 ? 'greencrk.com live in ~30 seconds' : 'greencrk.com live in ~30 seconds');
+          priceChanges = {};
+          hoursChanged = false;
+          logoColor = 'brown';
+          document.getElementById('lc-brown').className = 'lc-btn active';
+          document.getElementById('lc-pink').className = 'lc-btn';
+          document.getElementById('bannerOn').checked = false;
+          document.getElementById('bannerTxt').value = '';
+          updatePreview();
+          buildItemsList();
+          updateBar();
+          btn.disabled = false;
+          btn.textContent = 'Live!';
+        });
       });
     })
     .catch(function(e) {
