@@ -315,12 +315,12 @@ function applyChanges(html) {
     var banner = '<div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;">' + btxt + '</div>';
     html = html.replace('<body>', '<body>' + banner);
   }
-  // Apply logo color
-  if (logoColor === 'pink') {
-    html = html.split(BROWN_FILTER).join(PINK_FILTER);
-  } else {
-    html = html.split(PINK_FILTER).join(BROWN_FILTER);
-  }
+  // Apply logo color - handles any current filter state
+  var WRONG_PINK = 'filter:invert(1) sepia(1) saturate(100) hue-rotate(280deg) brightness(1.8);';
+  var newFilter = logoColor === 'pink' ? PINK_FILTER : BROWN_FILTER;
+  html = html.split(BROWN_FILTER).join(newFilter);
+  html = html.split(PINK_FILTER).join(newFilter);
+  html = html.split(WRONG_PINK).join(newFilter);
   return html;
 }
 
