@@ -111,18 +111,6 @@ h2 span{color:#A9B7A0}
       <button class="qa-btn" onclick="quickSpecial()">⭐ Set Today\'s Special</button>
       <button class="qa-btn" onclick="quickClear()">✕ Clear All Notices</button>
     </div>
-    <div class="qa-section">
-      <p class="qa-label">Square Testing</p>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#FDFAF6;border:1px solid rgba(92,58,45,.15);border-radius:10px;margin-bottom:8px;cursor:pointer;" onclick="sqToggle()" id="sq-toggle-row">
-        <div id="sq-status" style="font-size:.74rem;font-weight:600;color:rgba(92,58,45,.5);">Checking...</div>
-        <div style="display:flex;align-items:center;gap:7px;">
-          <div id="sq-toggle-label" style="font-size:.62rem;font-weight:700;letter-spacing:.08em;color:rgba(92,58,45,.35);">OFF</div>
-          <div id="sq-track" style="width:42px;height:22px;border-radius:100px;background:rgba(92,58,45,.12);border:1.5px solid rgba(92,58,45,.18);position:relative;transition:all .2s;">
-            <div id="sq-thumb" style="width:16px;height:16px;border-radius:50%;background:#C6A897;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15);"></div>
-          </div>
-        </div>
-      </div>
-      <div id="sq-step" class="step" style="margin-top:6px;"></div>
     </div>
     <div class="qa-section">
       <p class="qa-label">Update This Tool</p>
@@ -730,78 +718,10 @@ buildPriceList('butcher-list', BUTCHER, 'b');
 buildCateringList();
 buildHoursList();
 
-// SQUARE SANDBOX
-var sqIsSandbox = false;
 
-function sqSetToggle(active) {
-  sqIsSandbox = active;
-  var track = document.getElementById('sq-track');
-  var thumb = document.getElementById('sq-thumb');
-  var label = document.getElementById('sq-toggle-label');
-  var status = document.getElementById('sq-status');
-  if (!track) return;
-  if (active) {
-    track.style.background = '#e05a00'; track.style.borderColor = '#e05a00';
-    thumb.style.left = '22px'; thumb.style.background = '#fff';
-    label.textContent = 'ON'; label.style.color = '#e05a00';
-    status.textContent = '🧪 Testing — fake money'; status.style.color = '#e05a00';
-  } else {
-    track.style.background = 'rgba(92,58,45,.12)'; track.style.borderColor = 'rgba(92,58,45,.18)';
-    thumb.style.left = '2px'; thumb.style.background = '#C6A897';
-    label.textContent = 'OFF'; label.style.color = 'rgba(92,58,45,.35)';
-    status.textContent = '🟢 Live mode'; status.style.color = '#4a7045';
-  }
-}
 
-function sqToggle() { sqDeploy(!sqIsSandbox); }
 
-function sqCheckStatus() {
-  fetch(RAW + '?t=' + Date.now())
-    .then(function(r) { return r.text(); })
-    .then(function(html) { sqSetToggle(html.indexOf('sandbox-sq0idb') > -1); })
-    .catch(function() { var el = document.getElementById('sq-status'); if (el) el.textContent = 'Could not check'; });
-}
 
-function sqDeploy(activate) {
-  var banner = '<!-- SB --><div style="position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#e05a00;color:#fff;text-align:center;padding:10px;font-size:.8rem;font-weight:700;">🧪 SQUARE SANDBOX — FAKE MONEY — NOT LIVE</div><!-- /SB -->';
-  var stepEl = document.getElementById('sq-step');
-  var row = document.getElementById('sq-toggle-row');
-  stepEl.className = 'step show info';
-  stepEl.textContent = activate ? 'Turning on testing...' : 'Turning off testing...';
-  if (row) row.style.pointerEvents = 'none';
-  fetch(RAW + '?t=' + Date.now())
-    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
-    .then(function(siteHtml) {
-      if (activate) {
-        siteHtml = siteHtml.replace("var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'", "var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'");
-        siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'", "var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'");
-        if (siteHtml.indexOf('<!-- SB -->') < 0) siteHtml = siteHtml.replace('</body>', banner + '</body>');
-      } else {
-        siteHtml = siteHtml.replace("var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'", "var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'");
-        siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'", "var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'");
-        siteHtml = siteHtml.replace(/<!-- SB -->[\s\S]*?<!-- \/SB -->/, '');
-      }
-      var encoded; try { encoded = btoa(unescape(encodeURIComponent(siteHtml))); } catch(e) { encoded = btoa(siteHtml); }
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 90000;
-      xhr.onload = function() {
-        try {
-          var res = JSON.parse(xhr.responseText);
-          if (res.ok) {
-            stepEl.className = 'step show ok';
-            stepEl.textContent = activate ? '🧪 Testing ON — wait 30s.' : '✅ Live mode — wait 30s.';
-            sqSetToggle(activate);
-            setTimeout(sqCheckStatus, 8000);
-          } else { stepEl.className = 'step show err'; stepEl.textContent = 'Error: ' + (res.error||'Unknown'); }
-        } catch(e) { stepEl.className = 'step show err'; stepEl.textContent = 'Bad response'; }
-        if (row) row.style.pointerEvents = '';
-      };
-      xhr.onerror = function() { stepEl.className='step show err'; stepEl.textContent='Network error'; if(row) row.style.pointerEvents=''; };
-      xhr.ontimeout = function() { stepEl.className='step show err'; stepEl.textContent='Timed out'; if(row) row.style.pointerEvents=''; };
-      xhr.send(JSON.stringify({ action: 'deploy', filename: 'index.html', content: encoded }));
-    })
-    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Could not fetch: '+e.message; if(row) row.style.pointerEvents=''; });
-}
 
 function updateTool() {
   var btn = document.getElementById('updateToolBtn');
@@ -1082,6 +1002,76 @@ function aiCancel() {
   document.getElementById('ai-preview').style.display='none';
   document.getElementById('ai-status').className='step';
   window._aiPatches=null; window._aiHtml=null;
+}
+
+
+// SQUARE SANDBOX
+var sqIsSandbox = false;
+
+function sqSetToggle(active) {
+  sqIsSandbox = active;
+  var track = document.getElementById('sq-track');
+  var thumb = document.getElementById('sq-thumb');
+  var label = document.getElementById('sq-toggle-label');
+  var status = document.getElementById('sq-status');
+  if (!track) return;
+  if (active) {
+    track.style.background = '#e05a00'; track.style.borderColor = '#e05a00';
+    thumb.style.left = '22px'; thumb.style.background = '#fff';
+    label.textContent = 'ON'; label.style.color = '#e05a00';
+    status.textContent = 'Testing - fake money'; status.style.color = '#e05a00';
+  } else {
+    track.style.background = 'rgba(92,58,45,.12)'; track.style.borderColor = 'rgba(92,58,45,.18)';
+    thumb.style.left = '2px'; thumb.style.background = '#C6A897';
+    label.textContent = 'OFF'; label.style.color = 'rgba(92,58,45,.35)';
+    status.textContent = 'Live mode'; status.style.color = '#4a7045';
+  }
+}
+
+function sqToggle() { sqDeploy(!sqIsSandbox); }
+
+function sqCheckStatus() {
+  fetch(RAW + '?t=' + Date.now())
+    .then(function(r) { return r.text(); })
+    .then(function(html) { sqSetToggle(html.indexOf('sandbox-sq0idb') > -1); })
+    .catch(function() { var el = document.getElementById('sq-status'); if (el) el.textContent = 'Could not check'; });
+}
+
+function sqDeploy(activate) {
+  var banner = '<!-- SB --><div style="position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#e05a00;color:#fff;text-align:center;padding:10px;font-size:.8rem;font-weight:700;">SQUARE SANDBOX - FAKE MONEY - NOT LIVE</div><!-- /SB -->';
+  var stepEl = document.getElementById('sq-step');
+  var row = document.getElementById('sq-toggle-row');
+  stepEl.className = 'step show info';
+  stepEl.textContent = activate ? 'Turning on testing...' : 'Turning off testing...';
+  if (row) row.style.pointerEvents = 'none';
+  fetch(RAW + '?t=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(function(siteHtml) {
+      if (activate) {
+        siteHtml = siteHtml.replace("var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'", "var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'");
+        siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'", "var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'");
+        if (siteHtml.indexOf('<!-- SB -->') < 0) siteHtml = siteHtml.replace('</body>', banner + '</body>');
+      } else {
+        siteHtml = siteHtml.replace("var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'", "var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'");
+        siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'", "var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'");
+        siteHtml = siteHtml.replace(/<!-- SB -->[\s\S]*?<!-- \/SB -->/, '');
+      }
+      var encoded; try { encoded = btoa(unescape(encodeURIComponent(siteHtml))); } catch(e) { encoded = btoa(siteHtml); }
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 90000;
+      xhr.onload = function() {
+        try {
+          var res = JSON.parse(xhr.responseText);
+          if (res.ok) { stepEl.className='step show ok'; stepEl.textContent = activate ? 'Testing ON - wait 30s.' : 'Live mode - wait 30s.'; sqSetToggle(activate); setTimeout(sqCheckStatus, 8000); }
+          else { stepEl.className='step show err'; stepEl.textContent='Error: '+(res.error||'Unknown'); }
+        } catch(e) { stepEl.className='step show err'; stepEl.textContent='Bad response'; }
+        if (row) row.style.pointerEvents = '';
+      };
+      xhr.onerror = function() { stepEl.className='step show err'; stepEl.textContent='Network error'; if(row) row.style.pointerEvents=''; };
+      xhr.ontimeout = function() { stepEl.className='step show err'; stepEl.textContent='Timed out'; if(row) row.style.pointerEvents=''; };
+      xhr.send(JSON.stringify({ action: 'deploy', filename: 'index.html', content: encoded }));
+    })
+    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Could not fetch: '+e.message; if(row) row.style.pointerEvents=''; });
 }
 
 sqCheckStatus();
