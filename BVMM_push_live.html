@@ -654,7 +654,7 @@ function rollback() {
   var row = document.createElement('div');
   row.id = 'rollback-confirm';
   row.style.cssText = 'margin-top:8px;padding:10px 12px;background:rgba(139,58,45,.08);border:1px solid rgba(139,58,45,.2);border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:space-between;gap:8px;';
-  row.innerHTML = '<span style="color:#8B3A2D;font-weight:600">Roll back to last good version?</span><div style="display:flex;gap:6px"><button onclick="doRollback()" style="background:#8B3A2D;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.7rem;font-weight:700;cursor:pointer">Yes</button><button onclick="document.getElementById('rollback-confirm').remove()" style="background:rgba(92,58,45,.1);color:#5C3A2D;border:none;border-radius:6px;padding:5px 10px;font-size:.7rem;cursor:pointer">Cancel</button></div>';
+  row.innerHTML = '<span style="color:#8B3A2D;font-weight:600">Roll back to last good version?</span><div style="display:flex;gap:6px"><button onclick="doRollback()" style="background:#8B3A2D;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.7rem;font-weight:700;cursor:pointer">Yes</button><button onclick="document.getElementById(&quot;rollback-confirm&quot;).remove()" style="background:rgba(92,58,45,.1);color:#5C3A2D;border:none;border-radius:6px;padding:5px 10px;font-size:.7rem;cursor:pointer">Cancel</button></div>';
   var rollbackBtn = document.querySelector('.btn-out[onclick="rollback()"]');
   if (rollbackBtn) rollbackBtn.parentNode.insertBefore(row, rollbackBtn.nextSibling);
   else stepEl.parentNode.insertBefore(row, stepEl);
@@ -866,10 +866,10 @@ function uploadFile() {
 // -- AI CHAT ------------------------------------------
 function aiChat() {
   var req = document.getElementById('aiInput').value.trim();
-  if (!req) { 
+  if (!req) {
     document.getElementById('ai-status').className='step show err';
     document.getElementById('ai-status').textContent='Type what you want to change first.';
-    return; 
+    return;
   }
   var btn = document.getElementById('aiBtn');
   var statusEl = document.getElementById('ai-status');
@@ -884,89 +884,38 @@ function aiChat() {
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
     .then(function(html){
       saveRollback(html);
-      statusEl.textContent='AI is reading your request...';
-
-      // Strip big script/data blocks to reduce tokens sent
-      var stripped = html
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/data:[^;]+;base64,[A-Za-z0-9+/=]{200,}/g, '')
-        .replace(/\s{2,}/g, ' ');
-      if (stripped.length > 70000) stripped = stripped.substring(0, 70000) + '...(truncated)';
-
-      // Build current price context for accuracy
-      var ctx = 'CURRENT PRICES:
-';
-      BUTCHER.slice(0,20).forEach(function(i){ ctx += i.name+': '+i.displayPrice+'
-'; });
-      DELI.slice(0,10).forEach(function(i){ ctx += i.name+': '+i.displayPrice+'
-'; });
-
-      var sysPrompt = 'You manage the website for Babylon Village Meat Market (greencrk.com).
-'
-        +'The owner tells you what to change. You output ONLY valid JSON, no markdown, no backticks:
-'
-        +'{"summary":"one plain-English sentence of exactly what will change","patches":[{"find":"verbatim HTML text","replace":"new HTML text"}]}
-
-'
-        +'Rules:
-'
-        +'- find must be verbatim text that exists exactly in the HTML
-'
-        +'- For prices find: class="mi-price">$XX.XX</div> or class="lcard-price">$XX.XX</div>
-'
-        +'- For banners: target <body> tag, inject: <div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;letter-spacing:.04em;">TEXT</div> after <body>
-'
-        +'- To clear banner: find and replace the full bvmm-announce div with nothing
-'
-        +'- For hours: find class="hours-time">current time</span>
-'
-        +'- Make changes minimal - only what was asked
-'
-        +'- If unclear or not found, return empty patches and explain in summary
-
-'
-        + ctx;
-
+      statusEl.textContent='AI reading your request...';
+      var stripped = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace(/data:[^;]+;base64,[A-Za-z0-9+\/=]{200,}/g,'').replace(/\s{2,}/g,' ');
+      if (stripped.length > 70000) stripped = stripped.substring(0,70000) + '...(truncated)';
+      var ctx = 'CURRENT PRICES: ';
+      BUTCHER.slice(0,20).forEach(function(i){ ctx += i.name+': '+i.displayPrice+' | '; });
+      DELI.slice(0,10).forEach(function(i){ ctx += i.name+': '+i.displayPrice+' | '; });
+      var sysPrompt = 'You manage the website for Babylon Village Meat Market (greencrk.com). The owner tells you what to change. Output ONLY valid JSON, no markdown, no backticks: {"summary":"one plain-English sentence of exactly what will change","patches":[{"find":"verbatim HTML text","replace":"new HTML text"}]} Rules: find must be verbatim text from the HTML. For prices: class=\"mi-price\">$XX.XX</div> or class=\"lcard-price\">$XX.XX</div>. For banners: target <body> tag, inject: <div id=\"bvmm-announce\" style=\"background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;letter-spacing:.04em;\">TEXT</div> after <body>. To clear banner: find and replace full bvmm-announce div with nothing. For hours: find class=\"hours-time\">current time</span>. Make changes minimal. If unclear return empty patches and explain in summary. ' + ctx;
       var xhr = new XMLHttpRequest();
       xhr.open('POST', WORKER, true);
       xhr.setRequestHeader('Content-Type','application/json');
       xhr.timeout = 45000;
       xhr.onload = function(){
-        btn.disabled=false; btn.textContent='- Ask AI';
+        btn.disabled=false; btn.textContent='Ask AI';
         try {
           var res = JSON.parse(xhr.responseText);
           if (!res.ok){ statusEl.className='step show err'; statusEl.textContent='AI error: '+(res.error||'Unknown - is the worker updated?'); return; }
           var raw = res.content.replace(/```json|```/g,'').trim();
           var parsed = JSON.parse(raw);
           statusEl.className='step';
-          if (!parsed.patches || !parsed.patches.length){
-            statusEl.className='step show err';
-            statusEl.textContent='AI says: '+parsed.summary;
-            return;
-          }
+          if (!parsed.patches || !parsed.patches.length){ statusEl.className='step show err'; statusEl.textContent='AI: '+parsed.summary; return; }
           previewEl.style.display='block';
           document.getElementById('ai-summary').textContent=parsed.summary;
           window._aiPatches=parsed.patches;
           window._aiHtml=html;
           confirmRow.style.display='flex';
-        } catch(e){
-          statusEl.className='step show err'; statusEl.textContent='Could not read AI response: '+e.message;
-        }
+        } catch(e){ statusEl.className='step show err'; statusEl.textContent='Could not read AI response: '+e.message; }
       };
-      xhr.onerror=function(){ btn.disabled=false; btn.textContent='- Ask AI'; statusEl.className='step show err'; statusEl.textContent='Network error'; };
-      xhr.ontimeout=function(){ btn.disabled=false; btn.textContent='- Ask AI'; statusEl.className='step show err'; statusEl.textContent='Timed out - try again'; };
-      xhr.send(JSON.stringify({
-        action:'ai',
-        messages:[
-          {role:'system', content:sysPrompt},
-          {role:'user', content:'Request: '+req+'
-
-Site HTML:
-'+stripped}
-        ]
-      }));
+      xhr.onerror=function(){ btn.disabled=false; btn.textContent='Ask AI'; statusEl.className='step show err'; statusEl.textContent='Network error'; };
+      xhr.ontimeout=function(){ btn.disabled=false; btn.textContent='Ask AI'; statusEl.className='step show err'; statusEl.textContent='Timed out - try again'; };
+      xhr.send(JSON.stringify({action:'ai', messages:[{role:'system',content:sysPrompt},{role:'user',content:'Request: '+req+'\n\nSite HTML:\n'+stripped}]}));
     })
-    .catch(function(e){ btn.disabled=false; btn.textContent='- Ask AI'; statusEl.className='step show err'; statusEl.textContent='Error: '+e.message; });
+    .catch(function(e){ btn.disabled=false; btn.textContent='Ask AI'; statusEl.className='step show err'; statusEl.textContent='Error: '+e.message; });
 }
 
 function aiConfirm() {
