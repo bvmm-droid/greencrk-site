@@ -31,6 +31,12 @@ h2 span{color:#A9B7A0}
 .err{background:rgba(192,80,60,.1);color:#8B3A2D}
 .info{background:rgba(138,159,178,.12);color:#4a6a84}
 .qa-section{margin-top:14px;border-top:1px solid rgba(92,58,45,.1);padding-top:14px;text-align:left}
+.file-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;margin-bottom:5px;font-size:.72rem;background:rgba(92,58,45,.04);border:1px solid rgba(92,58,45,.07)}
+.fn{font-weight:600;color:#5C3A2D}
+.fs{font-size:.65rem;color:rgba(92,58,45,.35)}
+.fs.ok{color:#4a7045;font-weight:700}
+.fs.err{color:#8B3A2D;font-weight:700}
+.fs.going{color:#8A9FB2;font-weight:700}
 .qa-label{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A9B7A0;margin-bottom:10px}
 .qa-btn{width:100%;background:#FDFAF6;color:#2C1810;border:1px solid rgba(92,58,45,.15);border-radius:10px;padding:12px 14px;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:8px;text-align:left}
 .qa-btn:active{background:rgba(92,58,45,.07)}
@@ -87,10 +93,12 @@ h2 span{color:#A9B7A0}
     <h2>BVMM <span>Manager</span></h2>
     <div class="tip">📌 <strong>Bookmark this page</strong> — tap Share then <strong>Add to Home Screen</strong></div>
     <button class="btn" id="deployBtn" onclick="deployAll()">⬆ Push greencrk.com Live</button>
+    <div id="deploy-rows" style="margin-top:10px;display:none">
+      <div class="file-row"><span class="fn">greencrk.com</span><span class="fs" id="fs-site">—</span></div>
+      <div class="file-row"><span class="fn">Manager</span><span class="fs" id="fs-mgr">—</span></div>
+    </div>
     <div id="s1" class="step"></div>
-    <div id="s2" class="step"></div>
-    <div id="s3" class="step"></div>
-    <button class="btn-out" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
+    <button class="btn-out" id="openSiteBtn" style="display:none" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
     <div class="qa-section">
       <p class="qa-label">Quick Actions</p>
       <button class="qa-btn" onclick="quickClose()">🔒 Mark Closed Today</button>
@@ -109,6 +117,12 @@ h2 span{color:#A9B7A0}
         </div>
       </div>
       <div id="sq-step" class="step" style="margin-top:6px;"></div>
+    </div>
+    <div class="qa-section">
+      <p class="qa-label">Update This Tool</p>
+      <p style="font-size:.68rem;color:rgba(92,58,45,.45);margin-bottom:10px;line-height:1.5;">When Claude gives you updates, tap here to push them live.</p>
+      <button class="qa-btn" onclick="updateTool()" id="updateToolBtn">&#x1F4E6; Push Updated Tool to Server</button>
+      <div id="update-step" class="step" style="margin-top:6px;"></div>
     </div>
   </div>
 </div>
@@ -391,10 +405,8 @@ function applyChanges(html) {
     for (var j = 0; j < allItems.length; j++) { if (allItems[j].name === name) { orig = allItems[j]; break; } }
     if (orig) {
       if (orig.isLcard) {
-        // lcard items (cold cuts, cheese) — update lcard-price display
         html = html.split('class="lcard-price">' + orig.displayPrice + '</div>').join('class="lcard-price">' + newDisp + '</div>');
       } else {
-        // mrow items (butcher, heroes) — update mi-price display
         html = html.split('class="mi-price">' + orig.displayPrice + '</div>').join('class="mi-price">' + newDisp + '</div>');
       }
       if (!isNaN(num)) {
@@ -460,42 +472,44 @@ function applyChanges(html) {
 }
 
 // ── DEPLOY ───────────────────────────────────────────
+function fst(id, cls, txt) {
+  var el = document.getElementById(id); if (!el) return;
+  el.className = 'fs ' + cls; el.textContent = txt;
+}
+
 function deployAll() {
   if (window.location.protocol === 'file:') {
     alert('Upload this file to GitHub first, then open from greencrk.com/BVMM_push_live.html');
     return;
   }
   var btn = document.getElementById('deployBtn');
-  btn.disabled = true; btn.textContent = 'Fetching site...';
-  setStep('s1','info','Fetching live site...'); setStep('s2','',''); setStep('s3','','');
+  btn.disabled = true; btn.textContent = 'Pushing...';
+  document.getElementById('deploy-rows').style.display = 'block';
+  document.getElementById('openSiteBtn').style.display = 'none';
+  document.getElementById('s1').className = 'step';
+  fst('fs-site','going','Pushing...'); fst('fs-mgr','','—');
   fetch(RAW + '?nocache=' + Date.now())
     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
     .then(function(siteHTML) {
-      setStep('s1','ok','Site fetched!'); btn.textContent = 'Pushing...';
-      setStep('s2','info','Applying changes...');
       var modified = applyChanges(siteHTML);
       var encoded; try { encoded = btoa(unescape(encodeURIComponent(modified))); } catch(e) { encoded = btoa(modified); }
       pushFile('index.html', encoded, function(ok, msg) {
-        if (!ok) { setStep('s2','err','Error: '+msg); btn.disabled=false; btn.textContent='Try Again'; return; }
-        setStep('s2','ok','Pushed! '+msg);
-        setStep('s3','info','Updating tool...');
-        fetch(RAW.replace('index.html','BVMM_push_live.html')+'?t='+Date.now())
-          .then(function(r){ return r.text(); })
-          .then(function(toolHTML){
-            var toolEnc; try { toolEnc = btoa(unescape(encodeURIComponent(toolHTML))); } catch(e) { toolEnc = btoa(toolHTML); }
-            pushFile('BVMM_push_live.html', toolEnc, function(ok2) {
-              setStep('s3','ok','✅ Pushed! Counting down to live...');
-              priceChanges = {}; cateringChanges = {}; hoursChanged = false;
-              if (document.getElementById('bannerOn')) document.getElementById('bannerOn').checked = false;
-              if (document.getElementById('bannerTxt')) document.getElementById('bannerTxt').value = '';
-              updatePreview(); buildPriceList('deli-list', DELI, 'd'); buildPriceList('butcher-list', BUTCHER, 'b'); buildCateringList(); updateBar();
-              startDeployCountdown(btn);
-            });
-          })
-          .catch(function(){ startDeployCountdown(btn); });
+        if (!ok) { fst('fs-site','err','Failed'); setStep('s1','err','Error: '+msg); btn.disabled=false; btn.textContent='Try Again'; return; }
+        fst('fs-site','ok','✓ '+msg);
+        fst('fs-mgr','going','Pushing...');
+        var toolHTML = document.documentElement.outerHTML;
+        var toolEnc; try { toolEnc = btoa(unescape(encodeURIComponent(toolHTML))); } catch(e) { toolEnc = btoa(toolHTML); }
+        pushFile('BVMM_push_live.html', toolEnc, function(ok2, msg2) {
+          fst('fs-mgr', ok2 ? 'ok' : 'err', ok2 ? '✓ '+msg2 : 'Failed');
+          priceChanges = {}; cateringChanges = {}; hoursChanged = false;
+          if (document.getElementById('bannerOn')) document.getElementById('bannerOn').checked = false;
+          if (document.getElementById('bannerTxt')) document.getElementById('bannerTxt').value = '';
+          updatePreview(); buildPriceList('deli-list', DELI, 'd'); buildPriceList('butcher-list', BUTCHER, 'b'); buildCateringList(); updateBar();
+          startDeployCountdown(btn);
+        });
       });
     })
-    .catch(function(e) { setStep('s1','err','Could not fetch site: '+e.message); btn.disabled=false; btn.textContent='Try Again'; });
+    .catch(function(e) { fst('fs-site','err','Failed'); setStep('s1','err','Could not fetch: '+e.message); btn.disabled=false; btn.textContent='Try Again'; });
 }
 
 function pushFile(filename, content, cb) {
@@ -507,23 +521,18 @@ function pushFile(filename, content, cb) {
 }
 
 function startDeployCountdown(btn) {
+  document.getElementById('openSiteBtn').style.display = 'block';
   var secs = 30;
-  btn.disabled = true;
-  btn.className = 'btn counting';
+  btn.disabled = true; btn.className = 'btn counting';
   btn.textContent = '⏳ Live in ' + secs + 's…';
   var iv = setInterval(function() {
     secs--;
-    if (secs > 0) {
-      btn.textContent = '⏳ Live in ' + secs + 's…';
-    } else {
+    if (secs > 0) { btn.textContent = '⏳ Live in ' + secs + 's…'; }
+    else {
       clearInterval(iv);
-      btn.disabled = false;
-      btn.className = 'btn ready';
+      btn.disabled = false; btn.className = 'btn ready';
       btn.textContent = '✅ Site is Live!';
-      setTimeout(function() {
-        btn.className = 'btn success';
-        btn.textContent = '⬆ Push greencrk.com Live';
-      }, 3000);
+      setTimeout(function() { btn.className = 'btn success'; btn.textContent = '⬆ Push greencrk.com Live'; }, 3000);
     }
   }, 1000);
 }
@@ -549,38 +558,25 @@ function sqSetToggle(active) {
   var status = document.getElementById('sq-status');
   if (!track) return;
   if (active) {
-    track.style.background = '#e05a00';
-    track.style.borderColor = '#e05a00';
-    thumb.style.left = '22px';
-    thumb.style.background = '#fff';
-    label.textContent = 'ON';
-    label.style.color = '#e05a00';
-    status.textContent = '🧪 Testing — fake money';
-    status.style.color = '#e05a00';
+    track.style.background = '#e05a00'; track.style.borderColor = '#e05a00';
+    thumb.style.left = '22px'; thumb.style.background = '#fff';
+    label.textContent = 'ON'; label.style.color = '#e05a00';
+    status.textContent = '🧪 Testing — fake money'; status.style.color = '#e05a00';
   } else {
-    track.style.background = 'rgba(92,58,45,.12)';
-    track.style.borderColor = 'rgba(92,58,45,.18)';
-    thumb.style.left = '2px';
-    thumb.style.background = '#C6A897';
-    label.textContent = 'OFF';
-    label.style.color = 'rgba(92,58,45,.35)';
-    status.textContent = '🟢 Live mode';
-    status.style.color = '#4a7045';
+    track.style.background = 'rgba(92,58,45,.12)'; track.style.borderColor = 'rgba(92,58,45,.18)';
+    thumb.style.left = '2px'; thumb.style.background = '#C6A897';
+    label.textContent = 'OFF'; label.style.color = 'rgba(92,58,45,.35)';
+    status.textContent = '🟢 Live mode'; status.style.color = '#4a7045';
   }
 }
 
 function sqToggle() { sqDeploy(!sqIsSandbox); }
 
 function sqCheckStatus() {
-  fetch('https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?t=' + Date.now())
+  fetch(RAW.replace('index.html','index.html') + '?t=' + Date.now())
     .then(function(r) { return r.text(); })
-    .then(function(html) {
-      sqSetToggle(html.indexOf('sandbox-sq0idb') > -1);
-    })
-    .catch(function() {
-      var el = document.getElementById('sq-status');
-      if (el) { el.textContent = 'Could not check'; }
-    });
+    .then(function(html) { sqSetToggle(html.indexOf('sandbox-sq0idb') > -1); })
+    .catch(function() { var el = document.getElementById('sq-status'); if (el) el.textContent = 'Could not check'; });
 }
 
 function sqDeploy(activate) {
@@ -590,53 +586,60 @@ function sqDeploy(activate) {
   stepEl.className = 'step show info';
   stepEl.textContent = activate ? 'Turning on testing...' : 'Turning off testing...';
   if (row) row.style.pointerEvents = 'none';
-  fetch('https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?t=' + Date.now())
+  fetch(RAW + '?t=' + Date.now())
     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
     .then(function(siteHtml) {
       if (activate) {
         siteHtml = siteHtml.replace("var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'", "var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'");
         siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'", "var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'");
-        if (siteHtml.indexOf('<!-- SB -->') < 0) {
-          siteHtml = siteHtml.replace('</body>', banner + '</body>');
-        }
+        if (siteHtml.indexOf('<!-- SB -->') < 0) siteHtml = siteHtml.replace('</body>', banner + '</body>');
       } else {
         siteHtml = siteHtml.replace("var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ'", "var SQ_ACCESS_TOKEN = 'YOUR_SQ_ACCESS_TOKEN'");
         siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'", "var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'");
         siteHtml = siteHtml.replace(/<!-- SB -->[\s\S]*?<!-- \/SB -->/, '');
       }
-      var encoded;
-      try { encoded = btoa(unescape(encodeURIComponent(siteHtml))); } catch(e) { encoded = btoa(siteHtml); }
+      var encoded; try { encoded = btoa(unescape(encodeURIComponent(siteHtml))); } catch(e) { encoded = btoa(siteHtml); }
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', WORKER, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.timeout = 60000;
+      xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 60000;
       xhr.onload = function() {
         try {
           var res = JSON.parse(xhr.responseText);
           if (res.ok) {
             stepEl.className = 'step show ok';
-            stepEl.textContent = activate ? '🧪 Testing ON — wait 30s then open site.' : '✅ Live mode — wait 30s then open site.';
+            stepEl.textContent = activate ? '🧪 Testing ON — wait 30s.' : '✅ Live mode — wait 30s.';
             sqSetToggle(activate);
             setTimeout(sqCheckStatus, 8000);
-          } else {
-            stepEl.className = 'step show err';
-            stepEl.textContent = 'Error: ' + (res.error || 'Unknown');
-          }
-        } catch(e) {
-          stepEl.className = 'step show err';
-          stepEl.textContent = 'Bad response';
-        }
+          } else { stepEl.className = 'step show err'; stepEl.textContent = 'Error: ' + (res.error||'Unknown'); }
+        } catch(e) { stepEl.className = 'step show err'; stepEl.textContent = 'Bad response'; }
         if (row) row.style.pointerEvents = '';
       };
       xhr.onerror = function() { stepEl.className='step show err'; stepEl.textContent='Network error'; if(row) row.style.pointerEvents=''; };
       xhr.ontimeout = function() { stepEl.className='step show err'; stepEl.textContent='Timed out'; if(row) row.style.pointerEvents=''; };
       xhr.send(JSON.stringify({ action: 'deploy', filename: 'index.html', content: encoded }));
     })
-    .catch(function(e) {
-      stepEl.className = 'step show err';
-      stepEl.textContent = 'Could not fetch: ' + e.message;
-      if (row) row.style.pointerEvents = '';
+    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Could not fetch: '+e.message; if(row) row.style.pointerEvents=''; });
+}
+
+function updateTool() {
+  var btn = document.getElementById('updateToolBtn');
+  var stepEl = document.getElementById('update-step');
+  btn.disabled = true;
+  stepEl.className = 'step show info'; stepEl.textContent = 'Encoding tool...';
+  setTimeout(function() {
+    var toolHtml = document.documentElement.outerHTML;
+    var encoded; try { encoded = btoa(unescape(encodeURIComponent(toolHtml))); } catch(e) { encoded = btoa(toolHtml); }
+    stepEl.textContent = 'Pushing manager...';
+    pushFile('BVMM_push_live.html', encoded, function(ok1, msg1) {
+      if (!ok1) { stepEl.className='step show err'; stepEl.textContent='Error: '+msg1; btn.disabled=false; return; }
+      stepEl.textContent = 'Pushing deploy tool URL...';
+      pushFile('BVMM_deploy_tool.html', encoded, function(ok2) {
+        stepEl.className = 'step show ok';
+        stepEl.textContent = '✅ Tool updated! ' + (msg1||'');
+        btn.disabled = false; btn.textContent = '✅ Done!';
+        setTimeout(function() { btn.textContent = '&#x1F4E6; Push Updated Tool to Server'; btn.innerHTML = '&#x1F4E6; Push Updated Tool to Server'; }, 3000);
+      });
     });
+  }, 50);
 }
 
 sqCheckStatus();
