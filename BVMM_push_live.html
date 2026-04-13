@@ -1,12 +1,14 @@
-<html><head>
+<!DOCTYPE html>
+<html>
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BVMM Manager</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#F4F1EB;color:#2C1810;font-family:Inter,sans-serif;min-height:100vh}
-.tabs{display:flex;background:#2C1810;padding:6px 8px 0;gap:3px;position:sticky;top:0;z-index:100}
-.tab{flex:1;padding:9px 2px;font-size:.55rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:8px 8px 0 0;cursor:pointer;line-height:1.3;text-align:center}
+body{background:#F4F1EB;color:#2C1810;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;display:none}
+.tabs{position:relative;display:flex;background:#2C1810;padding:6px 8px 0;gap:3px;position:sticky;top:0;z-index:100;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs::after{content:"";position:absolute;right:0;top:0;bottom:0;width:24px;background:linear-gradient(to right,transparent,rgba(44,24,16,.9));pointer-events:none}
+.tab{flex:0 0 56px;min-width:56px;padding:9px 2px;font-size:.55rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:8px 8px 0 0;cursor:pointer;line-height:1.3;text-align:center}
 .tab.active{background:#F4F1EB;color:#2C1810}
 .panel{display:none;padding:16px;max-width:500px;margin:0 auto;padding-bottom:80px}
 .panel.active{display:block}
@@ -29,6 +31,12 @@ h2 span{color:#A9B7A0}
 .err{background:rgba(192,80,60,.1);color:#8B3A2D}
 .info{background:rgba(138,159,178,.12);color:#4a6a84}
 .qa-section{margin-top:14px;border-top:1px solid rgba(92,58,45,.1);padding-top:14px;text-align:left}
+.file-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;margin-bottom:5px;font-size:.72rem;background:rgba(92,58,45,.04);border:1px solid rgba(92,58,45,.07)}
+.fn{font-weight:600;color:#5C3A2D}
+.fs{font-size:.65rem;color:rgba(92,58,45,.35)}
+.fs.ok{color:#4a7045;font-weight:700}
+.fs.err{color:#8B3A2D;font-weight:700}
+.fs.going{color:#8A9FB2;font-weight:700}
 .qa-label{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#A9B7A0;margin-bottom:10px}
 .qa-btn{width:100%;background:#FDFAF6;color:#2C1810;border:1px solid rgba(92,58,45,.15);border-radius:10px;padding:12px 14px;font-size:.78rem;font-weight:600;cursor:pointer;margin-bottom:8px;text-align:left}
 .qa-btn:active{background:rgba(92,58,45,.07)}
@@ -77,6 +85,9 @@ h2 span{color:#A9B7A0}
   <button class="tab" id="tab-butcher" onclick="showTab('butcher')">🥩<br>Butcher</button>
   <button class="tab" id="tab-catering" onclick="showTab('catering')">🍽️<br>Catering</button>
   <button class="tab" id="tab-hours" onclick="showTab('hours')">🕐<br>Hours</button>
+  <button class="tab" id="tab-specials" onclick="showTab('specials')">📢<br>Specials</button>
+  <button class="tab" id="tab-claude" onclick="showTab('claude')">🔧<br>Claude</button>
+  <button class="tab" id="tab-files" onclick="showTab('files')">📁<br>Files</button>
 </div>
 
 <!-- DEPLOY -->
@@ -84,11 +95,16 @@ h2 span{color:#A9B7A0}
   <div class="card">
     <h2>BVMM <span>Manager</span></h2>
     <div class="tip">📌 <strong>Bookmark this page</strong> — tap Share then <strong>Add to Home Screen</strong></div>
-    <button class="btn success" id="deployBtn" onclick="deployAll()" disabled="">Pushing...</button>
-    <div id="s1" class="step show ok">Site fetched!</div>
-    <div id="s2" class="step show ok">Pushed! 83f4875</div>
-    <div id="s3" class="step show info">Saving tool...</div>
-    <button class="btn-out" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
+    <div id="last-deployed" style="font-size:.66rem;color:rgba(92,58,45,.4);margin-bottom:10px;text-align:center"></div>
+    <button class="btn" id="deployBtn" onclick="deployAll()">⬆ Push greencrk.com Live</button>
+    <div id="deploy-rows" style="margin-top:10px;display:none">
+      <div class="file-row"><span class="fn">greencrk.com</span><span class="fs" id="fs-site">—</span></div>
+      <div class="file-row"><span class="fn">Manager</span><span class="fs" id="fs-mgr">—</span></div>
+    </div>
+    <div id="s1" class="step"></div>
+    <button class="btn-out" id="openSiteBtn" style="display:none" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
+    <button class="btn-out" onclick="backupSite(this)" style="margin-top:6px">💾 Download Live Site Backup</button>
+    <button class="btn-out" onclick="rollback()" style="margin-top:6px;color:#8B3A2D;border-color:rgba(139,58,45,.3)">↩ Rollback to Last Good Version</button>
     <div class="qa-section">
       <p class="qa-label">Quick Actions</p>
       <button class="qa-btn" onclick="quickClose()">🔒 Mark Closed Today</button>
@@ -97,12 +113,12 @@ h2 span{color:#A9B7A0}
     </div>
     <div class="qa-section">
       <p class="qa-label">Square Testing</p>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;" onclick="sqToggle()" id="sq-toggle-row">
-        <div id="sq-status" style="font-size: 0.74rem; font-weight: 600; color: rgb(224, 90, 0);">🧪 Testing — fake money</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#FDFAF6;border:1px solid rgba(92,58,45,.15);border-radius:10px;margin-bottom:8px;cursor:pointer;" onclick="sqToggle()" id="sq-toggle-row">
+        <div id="sq-status" style="font-size:.74rem;font-weight:600;color:rgba(92,58,45,.5);">Checking...</div>
         <div style="display:flex;align-items:center;gap:7px;">
-          <div id="sq-toggle-label" style="font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; color: rgb(224, 90, 0);">ON</div>
-          <div id="sq-track" style="width: 42px; height: 22px; border-radius: 100px; background: rgb(224, 90, 0); border: 1.5px solid rgb(224, 90, 0); position: relative; transition: 0.2s;">
-            <div id="sq-thumb" style="width: 16px; height: 16px; border-radius: 50%; background: rgb(255, 255, 255); position: absolute; top: 2px; left: 22px; transition: left 0.2s; box-shadow: rgba(0, 0, 0, 0.15) 0px 1px 3px;"></div>
+          <div id="sq-toggle-label" style="font-size:.62rem;font-weight:700;letter-spacing:.08em;color:rgba(92,58,45,.35);">OFF</div>
+          <div id="sq-track" style="width:42px;height:22px;border-radius:100px;background:rgba(92,58,45,.12);border:1.5px solid rgba(92,58,45,.18);position:relative;transition:all .2s;">
+            <div id="sq-thumb" style="width:16px;height:16px;border-radius:50%;background:#C6A897;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15);"></div>
           </div>
         </div>
       </div>
@@ -111,7 +127,7 @@ h2 span{color:#A9B7A0}
     <div class="qa-section">
       <p class="qa-label">Update This Tool</p>
       <p style="font-size:.68rem;color:rgba(92,58,45,.45);margin-bottom:10px;line-height:1.5;">When Claude gives you updates, tap here to push them live.</p>
-      <button class="qa-btn" onclick="updateTool()" id="updateToolBtn">📦 Push Updated Tool to Server</button>
+      <button class="qa-btn" onclick="updateTool()" id="updateToolBtn">&#x1F4E6; Push Updated Tool to Server</button>
       <div id="update-step" class="step" style="margin-top:6px;"></div>
     </div>
   </div>
@@ -122,7 +138,7 @@ h2 span{color:#A9B7A0}
   <p class="sec-title">Deli</p>
   <p class="sec-sub">Tap any price to edit. Hit Deploy when done.</p>
   <input class="search-box" type="text" placeholder="Search deli items..." oninput="filterList('deli-list', this.value)">
-  <div id="deli-list"><div class="sec-lbl">Heroes by the Foot</div><div class="item-row" data-search="italian / american hero heroes by the foot"><span class="item-name">Italian / American Hero</span><input class="price-inp" id="d0" type="text" value="$20/ft"></div><div class="item-row" data-search="chicken cutlet any way heroes by the foot"><span class="item-name">Chicken Cutlet Any Way</span><input class="price-inp" id="d1" type="text" value="$24/ft"></div><div class="item-row" data-search="roast beef / turkey / ham heroes by the foot"><span class="item-name">Roast Beef / Turkey / Ham</span><input class="price-inp" id="d2" type="text" value="$24/ft"></div><div class="item-row" data-search="pastrami / corned beef heroes by the foot"><span class="item-name">Pastrami / Corned Beef</span><input class="price-inp" id="d3" type="text" value="$28/ft"></div><div class="sec-lbl">Cold Cuts</div><div class="item-row" data-search="prime roast beef cold cuts"><span class="item-name">Prime Roast Beef</span><input class="price-inp" id="d4" type="text" value="Mkt Price"></div><div class="item-row" data-search="swedish ham cold cuts"><span class="item-name">Swedish Ham</span><input class="price-inp" id="d5" type="text" value="Mkt Price"></div><div class="item-row" data-search="all natural turkey breast cold cuts"><span class="item-name">All Natural Turkey Breast</span><input class="price-inp" id="d6" type="text" value="Mkt Price"></div><div class="item-row" data-search="pastrami cold cuts"><span class="item-name">Pastrami</span><input class="price-inp" id="d7" type="text" value="Mkt Price"></div><div class="item-row" data-search="corned beef cold cuts"><span class="item-name">Corned Beef</span><input class="price-inp" id="d8" type="text" value="Mkt Price"></div><div class="item-row" data-search="genoa salami cold cuts"><span class="item-name">Genoa Salami</span><input class="price-inp" id="d9" type="text" value="Mkt Price"></div><div class="item-row" data-search="prosciutto cold cuts"><span class="item-name">Prosciutto</span><input class="price-inp" id="d10" type="text" value="Mkt Price"></div><div class="item-row" data-search="ham cappy cold cuts"><span class="item-name">Ham Cappy</span><input class="price-inp" id="d11" type="text" value="Mkt Price"></div><div class="item-row" data-search="pepperoni cold cuts"><span class="item-name">Pepperoni</span><input class="price-inp" id="d12" type="text" value="Mkt Price"></div><div class="sec-lbl">Cheese</div><div class="item-row" data-search="imported provolone cheese"><span class="item-name">Imported Provolone</span><input class="price-inp" id="d13" type="text" value="Mkt Price"></div><div class="item-row" data-search="swiss cheese"><span class="item-name">Swiss</span><input class="price-inp" id="d14" type="text" value="Mkt Price"></div><div class="item-row" data-search="american cheese"><span class="item-name">American</span><input class="price-inp" id="d15" type="text" value="Mkt Price"></div><div class="item-row" data-search="reggiano parmesan cheese"><span class="item-name">Reggiano Parmesan</span><input class="price-inp" id="d16" type="text" value="Mkt Price"></div><div class="item-row" data-search="imported auricchio cheese"><span class="item-name">Imported Auricchio</span><input class="price-inp" id="d17" type="text" value="Mkt Price"></div><div class="item-row" data-search="brie cheese"><span class="item-name">Brie</span><input class="price-inp" id="d18" type="text" value="Mkt Price"></div><div class="item-row" data-search="aged gouda cheese"><span class="item-name">Aged Gouda</span><input class="price-inp" id="d19" type="text" value="Mkt Price"></div><div class="item-row" data-search="smoked aged cheddar cheese"><span class="item-name">Smoked Aged Cheddar</span><input class="price-inp" id="d20" type="text" value="Mkt Price"></div><div class="item-row" data-search="italian piave cheese"><span class="item-name">Italian Piave</span><input class="price-inp" id="d21" type="text" value="Mkt Price"></div><div class="item-row" data-search="fresh mozzarella cheese"><span class="item-name">Fresh Mozzarella</span><input class="price-inp" id="d22" type="text" value="Mkt Price"></div><div class="item-row" data-search="pepperjack cheese"><span class="item-name">Pepperjack</span><input class="price-inp" id="d23" type="text" value="Mkt Price"></div></div>
+  <div id="deli-list"></div>
 </div>
 
 <!-- BUTCHER -->
@@ -130,7 +146,7 @@ h2 span{color:#A9B7A0}
   <p class="sec-title">Butcher</p>
   <p class="sec-sub">Tap any price to edit. Hit Deploy when done.</p>
   <input class="search-box" type="text" placeholder="Search butcher items..." oninput="filterList('butcher-list', this.value)">
-  <div id="butcher-list"><div class="sec-lbl">Steaks</div><div class="item-row" data-search="prime dry aged porterhouse steaks"><span class="item-name">Prime Dry Aged Porterhouse</span><input class="price-inp" id="b0" type="text" value="$49.00"></div><div class="item-row" data-search="prime t-bone steaks"><span class="item-name">Prime T-Bone</span><input class="price-inp" id="b1" type="text" value="$49.00"></div><div class="item-row" data-search="bone-in rib eye steaks"><span class="item-name">Bone-In Rib Eye</span><input class="price-inp" id="b2" type="text" value="$49.00"></div><div class="item-row" data-search="boneless prime rib eye steaks"><span class="item-name">Boneless Prime Rib Eye</span><input class="price-inp" id="b3" type="text" value="$59.00"></div><div class="item-row" data-search="prime dry aged shell steak steaks"><span class="item-name">Prime Dry Aged Shell Steak</span><input class="price-inp" id="b4" type="text" value="$49.00"></div><div class="item-row" data-search="prime sirloin steak steaks"><span class="item-name">Prime Sirloin Steak</span><input class="price-inp" id="b5" type="text" value="$32.00"></div><div class="item-row" data-search="prime filet mignon steaks"><span class="item-name">Prime Filet Mignon</span><input class="price-inp" id="b6" type="text" value="$34.50"></div><div class="item-row" data-search="skirt steak (prime) steaks"><span class="item-name">Skirt Steak (Prime)</span><input class="price-inp" id="b7" type="text" value="$45.00"></div><div class="item-row" data-search="flank steak (prime) steaks"><span class="item-name">Flank Steak (Prime)</span><input class="price-inp" id="b8" type="text" value="$22.00"></div><div class="item-row" data-search="western london broil steaks"><span class="item-name">Western London Broil</span><input class="price-inp" id="b9" type="text" value="$29.00"></div><div class="item-row" data-search="london broil (prime top round) steaks"><span class="item-name">London Broil (Prime Top Round)</span><input class="price-inp" id="b10" type="text" value="$19.00"></div><div class="item-row" data-search="pepper steak (prime) steaks"><span class="item-name">Pepper Steak (Prime)</span><input class="price-inp" id="b11" type="text" value="$18.00"></div><div class="item-row" data-search="marinated beef strips steaks"><span class="item-name">Marinated Beef Strips</span><input class="price-inp" id="b12" type="text" value="$18.00"></div><div class="sec-lbl">Roasts</div><div class="item-row" data-search="bone-in prime rib roasts"><span class="item-name">Bone-In Prime Rib</span><input class="price-inp" id="b13" type="text" value="$147.00"></div><div class="item-row" data-search="boneless prime rib roasts"><span class="item-name">Boneless Prime Rib</span><input class="price-inp" id="b14" type="text" value="$59.00"></div><div class="item-row" data-search="prime filet roast roasts"><span class="item-name">Prime Filet Roast</span><input class="price-inp" id="b15" type="text" value="$69.00"></div><div class="item-row" data-search="roast beef (prime top round) roasts"><span class="item-name">Roast Beef (Prime Top Round)</span><input class="price-inp" id="b16" type="text" value="$57.00"></div><div class="item-row" data-search="prime french pot roast roasts"><span class="item-name">Prime French Pot Roast</span><input class="price-inp" id="b17" type="text" value="$16.00"></div><div class="item-row" data-search="prime brisket roasts"><span class="item-name">Prime Brisket</span><input class="price-inp" id="b18" type="text" value="$24.00"></div><div class="item-row" data-search="silver tip (prime) roasts"><span class="item-name">Silver Tip (Prime)</span><input class="price-inp" id="b19" type="text" value="$18.00"></div><div class="item-row" data-search="eye round (prime) roasts"><span class="item-name">Eye Round (Prime)</span><input class="price-inp" id="b20" type="text" value="$16.00"></div><div class="item-row" data-search="bottom round prime roasts"><span class="item-name">Bottom Round Prime</span><input class="price-inp" id="b21" type="text" value="$14.00"></div><div class="sec-lbl">Ground</div><div class="item-row" data-search="ground beef (prime) ground"><span class="item-name">Ground Beef (Prime)</span><input class="price-inp" id="b22" type="text" value="$15.00"></div><div class="item-row" data-search="box of prime burgers ground"><span class="item-name">Box of Prime Burgers</span><input class="price-inp" id="b23" type="text" value="$39.00"></div><div class="item-row" data-search="stew beef (prime) ground"><span class="item-name">Stew Beef (Prime)</span><input class="price-inp" id="b24" type="text" value="$18.00"></div><div class="sec-lbl">Chicken</div><div class="item-row" data-search="whole chicken (all natural) chicken"><span class="item-name">Whole Chicken (All Natural)</span><input class="price-inp" id="b25" type="text" value="$19.00"></div><div class="item-row" data-search="boneless / skinless chicken breast chicken"><span class="item-name">Boneless / Skinless Chicken Breast</span><input class="price-inp" id="b26" type="text" value="$12.00"></div><div class="item-row" data-search="legs &amp; thighs chicken"><span class="item-name">Legs &amp; Thighs</span><input class="price-inp" id="b27" type="text" value="$9.00"></div><div class="item-row" data-search="wings chicken"><span class="item-name">Wings</span><input class="price-inp" id="b28" type="text" value="$7.00"></div><div class="item-row" data-search="chicken sausage chicken"><span class="item-name">Chicken Sausage</span><input class="price-inp" id="b29" type="text" value="$10.00"></div><div class="sec-lbl">Turkey</div><div class="item-row" data-search="boneless turkey breast (all natural) turkey"><span class="item-name">Boneless Turkey Breast (All Natural)</span><input class="price-inp" id="b30" type="text" value="$17.00"></div><div class="item-row" data-search="bone-in turkey breast turkey"><span class="item-name">Bone-In Turkey Breast</span><input class="price-inp" id="b31" type="text" value="$12.00"></div><div class="sec-lbl">Veal</div><div class="item-row" data-search="top round veal cutlets veal"><span class="item-name">Top Round Veal Cutlets</span><input class="price-inp" id="b32" type="text" value="$36.00"></div><div class="item-row" data-search="osso bucco veal"><span class="item-name">Osso Bucco</span><input class="price-inp" id="b33" type="text" value="$35.00"></div><div class="item-row" data-search="veal for stew veal"><span class="item-name">Veal For Stew</span><input class="price-inp" id="b34" type="text" value="$21.00"></div><div class="sec-lbl">Berkshire Pork</div><div class="item-row" data-search="bone-in berkshire pork chop berkshire pork"><span class="item-name">Bone-In Berkshire Pork Chop</span><input class="price-inp" id="b35" type="text" value="$21.00"></div><div class="item-row" data-search="boneless berkshire pork chop berkshire pork"><span class="item-name">Boneless Berkshire Pork Chop</span><input class="price-inp" id="b36" type="text" value="$24.00"></div><div class="item-row" data-search="bone-in berkshire pork roast berkshire pork"><span class="item-name">Bone-In Berkshire Pork Roast</span><input class="price-inp" id="b37" type="text" value="$42.00"></div><div class="item-row" data-search="boneless berkshire pork roast berkshire pork"><span class="item-name">Boneless Berkshire Pork Roast</span><input class="price-inp" id="b38" type="text" value="$28.80"></div><div class="item-row" data-search="pork tenderloin berkshire pork"><span class="item-name">Pork Tenderloin</span><input class="price-inp" id="b39" type="text" value="$12.00"></div><div class="item-row" data-search="pork tenderloin cutlets berkshire pork"><span class="item-name">Pork Tenderloin Cutlets</span><input class="price-inp" id="b40" type="text" value="$20.00"></div><div class="item-row" data-search="pork belly (boneless) berkshire pork"><span class="item-name">Pork Belly (Boneless)</span><input class="price-inp" id="b41" type="text" value="$14.00"></div><div class="item-row" data-search="pork bracioles berkshire pork"><span class="item-name">Pork Bracioles</span><input class="price-inp" id="b42" type="text" value="$12.00"></div><div class="item-row" data-search="baby back ribs berkshire pork"><span class="item-name">Baby Back Ribs</span><input class="price-inp" id="b43" type="text" value="$9.00"></div><div class="item-row" data-search="st. louis ribs berkshire pork"><span class="item-name">St. Louis Ribs</span><input class="price-inp" id="b44" type="text" value="$8.00"></div><div class="item-row" data-search="bone-in pork butt berkshire pork"><span class="item-name">Bone-In Pork Butt</span><input class="price-inp" id="b45" type="text" value="$7.98"></div><div class="item-row" data-search="boneless pork butt berkshire pork"><span class="item-name">Boneless Pork Butt</span><input class="price-inp" id="b46" type="text" value="$4.99"></div><div class="item-row" data-search="fresh ham bone-in berkshire pork"><span class="item-name">Fresh Ham Bone-In</span><input class="price-inp" id="b47" type="text" value="$3.99"></div><div class="item-row" data-search="fresh ham boneless berkshire pork"><span class="item-name">Fresh Ham Boneless</span><input class="price-inp" id="b48" type="text" value="$17.97"></div><div class="item-row" data-search="sausage berkshire pork"><span class="item-name">Sausage</span><input class="price-inp" id="b49" type="text" value="$10.00"></div><div class="item-row" data-search="chevalatta (ring sausage) berkshire pork"><span class="item-name">Chevalatta (Ring Sausage)</span><input class="price-inp" id="b50" type="text" value="$22.00"></div><div class="item-row" data-search="baked potato sausage berkshire pork"><span class="item-name">Baked Potato Sausage</span><input class="price-inp" id="b51" type="text" value="$12.00"></div><div class="item-row" data-search="double smoked bacon berkshire pork"><span class="item-name">Double Smoked Bacon</span><input class="price-inp" id="b52" type="text" value="$24.00"></div><div class="sec-lbl">Lamb</div><div class="item-row" data-search="lamb chops — rib lamb"><span class="item-name">Lamb Chops — Rib</span><input class="price-inp" id="b53" type="text" value="$42.00"></div><div class="item-row" data-search="bone-in leg of lamb lamb"><span class="item-name">Bone-In Leg of Lamb</span><input class="price-inp" id="b54" type="text" value="$22.00"></div><div class="item-row" data-search="boneless american leg of lamb lamb"><span class="item-name">Boneless American Leg of Lamb</span><input class="price-inp" id="b55" type="text" value="$26.00"></div><div class="item-row" data-search="lamb shanks lamb"><span class="item-name">Lamb Shanks</span><input class="price-inp" id="b56" type="text" value="$20.00"></div><div class="item-row" data-search="ground lamb lamb"><span class="item-name">Ground Lamb</span><input class="price-inp" id="b57" type="text" value="$16.00"></div><div class="sec-lbl">Fish</div><div class="item-row" data-search="salmon fillet fish"><span class="item-name">Salmon Fillet</span><input class="price-inp" id="b58" type="text" value="$12.99/lb"></div><div class="item-row" data-search="tilapia fillet fish"><span class="item-name">Tilapia Fillet</span><input class="price-inp" id="b59" type="text" value="$7.99/lb"></div><div class="item-row" data-search="flounder / sole fish"><span class="item-name">Flounder / Sole</span><input class="price-inp" id="b60" type="text" value="$9.99/lb"></div><div class="item-row" data-search="swordfish steak fish"><span class="item-name">Swordfish Steak</span><input class="price-inp" id="b61" type="text" value="$14.99/lb"></div><div class="item-row" data-search="tuna steak fish"><span class="item-name">Tuna Steak</span><input class="price-inp" id="b62" type="text" value="$15.99/lb"></div><div class="sec-lbl">Shellfish</div><div class="item-row" data-search="jumbo shrimp (16-20 ct) shellfish"><span class="item-name">Jumbo Shrimp (16-20 ct)</span><input class="price-inp" id="b63" type="text" value="$13.99/lb"></div><div class="item-row" data-search="large shrimp (21-25 ct) shellfish"><span class="item-name">Large Shrimp (21-25 ct)</span><input class="price-inp" id="b64" type="text" value="$11.99/lb"></div><div class="item-row" data-search="sea scallops shellfish"><span class="item-name">Sea Scallops</span><input class="price-inp" id="b65" type="text" value="$18.99/lb"></div><div class="item-row" data-search="lump crab meat shellfish"><span class="item-name">Lump Crab Meat</span><input class="price-inp" id="b66" type="text" value="$19.99/lb"></div><div class="item-row" data-search="stuffed clams shellfish"><span class="item-name">Stuffed Clams</span><input class="price-inp" id="b67" type="text" value="$2.99 ea"></div><div class="item-row" data-search="stuffed shrimp shellfish"><span class="item-name">Stuffed Shrimp</span><input class="price-inp" id="b68" type="text" value="$3.49 ea"></div></div>
+  <div id="butcher-list"></div>
 </div>
 
 <!-- CATERING -->
@@ -138,14 +154,101 @@ h2 span{color:#A9B7A0}
   <p class="sec-title">Catering</p>
   <p class="sec-sub">Each item shows small/large tray price. Tap to edit.</p>
   <input class="search-box" type="text" placeholder="Search catering items..." oninput="filterList('catering-list', this.value)">
-  <div id="catering-list"><div class="sec-lbl">Appetizers</div><div class="item-row" data-search="shrimp cocktail platter appetizers"><div style="flex:1;min-width:0"><div class="item-name">Shrimp Cocktail Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-0" type="text" value="89" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-0" type="text" value="179" style="width:72px"></div></div><div class="item-row" data-search="cold antipasto platter appetizers"><div style="flex:1;min-width:0"><div class="item-name">Cold Antipasto Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-1" type="text" value="89" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-1" type="text" value="179" style="width:72px"></div></div><div class="item-row" data-search="tomato basil mozzarella appetizers"><div style="flex:1;min-width:0"><div class="item-name">Tomato Basil Mozzarella</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-2" type="text" value="79" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-2" type="text" value="149" style="width:72px"></div></div><div class="item-row" data-search="fruit &amp; melon platter appetizers"><div style="flex:1;min-width:0"><div class="item-name">Fruit &amp; Melon Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-3" type="text" value="79" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-3" type="text" value="149" style="width:72px"></div></div><div class="item-row" data-search="cheese &amp; grapes platter appetizers"><div style="flex:1;min-width:0"><div class="item-name">Cheese &amp; Grapes Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-4" type="text" value="79" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-4" type="text" value="149" style="width:72px"></div></div><div class="item-row" data-search="imported brie &amp; grapes appetizers"><div style="flex:1;min-width:0"><div class="item-name">Imported Brie &amp; Grapes</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-5" type="text" value="79" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-5" type="text" value="149" style="width:72px"></div></div><div class="item-row" data-search="babylon hot wings appetizers"><div style="flex:1;min-width:0"><div class="item-name">Babylon Hot Wings</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-6" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-6" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="spinach dip &amp; crudités appetizers"><div style="flex:1;min-width:0"><div class="item-name">Spinach Dip &amp; Crudités</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-7" type="text" value="99" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-7" type="text" value="99" style="width:72px"></div></div><div class="item-row" data-search="stuffed button mushrooms appetizers"><div style="flex:1;min-width:0"><div class="item-name">Stuffed Button Mushrooms</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-8" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-8" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="baked clams oreganata appetizers"><div style="flex:1;min-width:0"><div class="item-name">Baked Clams Oreganata</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-9" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-9" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="baked clams casino appetizers"><div style="flex:1;min-width:0"><div class="item-name">Baked Clams Casino</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-10" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-10" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="mini crab cakes appetizers"><div style="flex:1;min-width:0"><div class="item-name">Mini Crab Cakes</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-11" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-11" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="dragon stix appetizers"><div style="flex:1;min-width:0"><div class="item-name">Dragon Stix</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-12" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-12" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="pigs in a blanket appetizers"><div style="flex:1;min-width:0"><div class="item-name">Pigs in a Blanket</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-13" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-13" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="coconut shrimp appetizers"><div style="flex:1;min-width:0"><div class="item-name">Coconut Shrimp</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-14" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-14" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="grilled eggplant caprese appetizers"><div style="flex:1;min-width:0"><div class="item-name">Grilled Eggplant Caprese</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-15" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-15" type="text" value="0" style="width:72px"></div></div><div class="sec-lbl">Entrées</div><div class="item-row" data-search="penne a la vodka entrées"><div style="flex:1;min-width:0"><div class="item-name">Penne a la Vodka</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-16" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-16" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="baked ziti entrées"><div style="flex:1;min-width:0"><div class="item-name">Baked Ziti</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-17" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-17" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="three cheese lasagna entrées"><div style="flex:1;min-width:0"><div class="item-name">Three Cheese Lasagna</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-18" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-18" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="fileto di pomodori entrées"><div style="flex:1;min-width:0"><div class="item-name">Fileto Di Pomodori</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-19" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-19" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="eggplant parmigiana entrées"><div style="flex:1;min-width:0"><div class="item-name">Eggplant Parmigiana</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-20" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-20" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="eggplant rollatini entrées"><div style="flex:1;min-width:0"><div class="item-name">Eggplant Rollatini</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-21" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-21" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="stuffed jumbo shells entrées"><div style="flex:1;min-width:0"><div class="item-name">Stuffed Jumbo Shells</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-22" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-22" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="baked mac &amp; cheese entrées"><div style="flex:1;min-width:0"><div class="item-name">Baked Mac &amp; Cheese</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-23" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-23" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="pasta aglio e olio entrées"><div style="flex:1;min-width:0"><div class="item-name">Pasta Aglio e Olio</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-24" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-24" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="pasta primavera entrées"><div style="flex:1;min-width:0"><div class="item-name">Pasta Primavera</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-25" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-25" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="pasta &amp; broccoli entrées"><div style="flex:1;min-width:0"><div class="item-name">Pasta &amp; Broccoli</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-26" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-26" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="cavatelli bolognese entrées"><div style="flex:1;min-width:0"><div class="item-name">Cavatelli Bolognese</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-27" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-27" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="chicken parmigiana entrées"><div style="flex:1;min-width:0"><div class="item-name">Chicken Parmigiana</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-28" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-28" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="chicken marsala entrées"><div style="flex:1;min-width:0"><div class="item-name">Chicken Marsala</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-29" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-29" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="chicken francese entrées"><div style="flex:1;min-width:0"><div class="item-name">Chicken Francese</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-30" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-30" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="marigold chicken entrées"><div style="flex:1;min-width:0"><div class="item-name">Marigold Chicken</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-31" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-31" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="chicken sorrento entrées"><div style="flex:1;min-width:0"><div class="item-name">Chicken Sorrento</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-32" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-32" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="roasted chicken entrées"><div style="flex:1;min-width:0"><div class="item-name">Roasted Chicken</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-33" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-33" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="turkey breast platter entrées"><div style="flex:1;min-width:0"><div class="item-name">Turkey Breast Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-34" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-34" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="chicken rollatini entrées"><div style="flex:1;min-width:0"><div class="item-name">Chicken Rollatini</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-35" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-35" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="veal marsala entrées"><div style="flex:1;min-width:0"><div class="item-name">Veal Marsala</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-36" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-36" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="veal francese entrées"><div style="flex:1;min-width:0"><div class="item-name">Veal Francese</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-37" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-37" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="veal sorrento entrées"><div style="flex:1;min-width:0"><div class="item-name">Veal Sorrento</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-38" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-38" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="pork paranno entrées"><div style="flex:1;min-width:0"><div class="item-name">Pork Paranno</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-39" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-39" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="sausage &amp; peppers entrées"><div style="flex:1;min-width:0"><div class="item-name">Sausage &amp; Peppers</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-40" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-40" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="party ham platter entrées"><div style="flex:1;min-width:0"><div class="item-name">Party Ham Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-41" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-41" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="flounder francese entrées"><div style="flex:1;min-width:0"><div class="item-name">Flounder Francese</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-42" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-42" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="flounder puttanesca entrées"><div style="flex:1;min-width:0"><div class="item-name">Flounder Puttanesca</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-43" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-43" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="shrimp parmigiana entrées"><div style="flex:1;min-width:0"><div class="item-name">Shrimp Parmigiana</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-44" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-44" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="shrimp scampi entrées"><div style="flex:1;min-width:0"><div class="item-name">Shrimp Scampi</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-45" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-45" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="grilled &amp; baked salmon entrées"><div style="flex:1;min-width:0"><div class="item-name">Grilled &amp; Baked Salmon</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-46" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-46" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="london broil platter entrées"><div style="flex:1;min-width:0"><div class="item-name">London Broil Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-47" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-47" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="filet mignon platter entrées"><div style="flex:1;min-width:0"><div class="item-name">Filet Mignon Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-48" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-48" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="prime roast beef platter entrées"><div style="flex:1;min-width:0"><div class="item-name">Prime Roast Beef Platter</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-49" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-49" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="bbq style ribs entrées"><div style="flex:1;min-width:0"><div class="item-name">BBQ Style Ribs</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-50" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-50" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="meatballs entrées"><div style="flex:1;min-width:0"><div class="item-name">Meatballs</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-51" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-51" type="text" value="0" style="width:72px"></div></div><div class="sec-lbl">Salads &amp; Sides</div><div class="item-row" data-search="roasted red potatoes salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Roasted Red Potatoes</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-52" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-52" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="mashed potatoes salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Mashed Potatoes</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-53" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-53" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="broccoli rabe salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Broccoli Rabe</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-54" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-54" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="roasted carrots salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Roasted Carrots</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-55" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-55" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="string bean almondine salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">String Bean Almondine</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-56" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-56" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="wild rice medley salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Wild Rice Medley</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-57" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-57" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="cauliflower alfredo salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Cauliflower Alfredo</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-58" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-58" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="baked mac &amp; cheese salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Baked Mac &amp; Cheese</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-59" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-59" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="garden salad salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Garden Salad</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-60" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-60" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="greek salad salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Greek Salad</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-61" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-61" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="caesar salad salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Caesar Salad</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-62" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-62" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="tossed salad salads &amp; sides"><div style="flex:1;min-width:0"><div class="item-name">Tossed Salad</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-63" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-63" type="text" value="0" style="width:72px"></div></div><div class="sec-lbl">Hot Food</div><div class="item-row" data-search="chicken parmigiana hot food"><div style="flex:1;min-width:0"><div class="item-name">Chicken Parmigiana</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-64" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-64" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="eggplant rollatini hot food"><div style="flex:1;min-width:0"><div class="item-name">Eggplant Rollatini</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-65" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-65" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="stuffed cabbage hot food"><div style="flex:1;min-width:0"><div class="item-name">Stuffed Cabbage</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-66" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-66" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="meatballs hot food"><div style="flex:1;min-width:0"><div class="item-name">Meatballs</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-67" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-67" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="roasted half chicken hot food"><div style="flex:1;min-width:0"><div class="item-name">Roasted Half Chicken</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-68" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-68" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="baked mac &amp; cheese hot food"><div style="flex:1;min-width:0"><div class="item-name">Baked Mac &amp; Cheese</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-69" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-69" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="stuffed peppers hot food"><div style="flex:1;min-width:0"><div class="item-name">Stuffed Peppers</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-70" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-70" type="text" value="0" style="width:72px"></div></div><div class="item-row" data-search="stuffed mushrooms hot food"><div style="flex:1;min-width:0"><div class="item-name">Stuffed Mushrooms</div></div><div class="price-col"><div class="price-label">For 14</div><input class="price-inp" id="cs-71" type="text" value="0" style="width:72px"><div class="price-label" style="margin-top:4px">For 18</div><input class="price-inp" id="cl-71" type="text" value="0" style="width:72px"></div></div></div>
+  <div id="catering-list"></div>
 </div>
 
 <!-- HOURS -->
 <div id="panel-hours" class="panel">
   <p class="sec-title">Hours</p>
   <p class="sec-sub">Edit hours then hit Deploy.</p>
-  <div id="hoursList"><div class="hours-item"><div class="h-day">Tuesday – Saturday</div><div class="h-row"><input class="h-inp" id="hi-0" type="text" value="10am – 5pm"><label class="closed-lbl"><input type="checkbox" id="hc-0"> Closed</label></div></div><div class="hours-item"><div class="h-day">Sunday</div><div class="h-row"><input class="h-inp" id="hi-1" type="text" value="10am – 3pm"><label class="closed-lbl"><input type="checkbox" id="hc-1"> Closed</label></div></div><div class="hours-item"><div class="h-day">Monday</div><div class="h-row"><input class="h-inp" id="hi-2" type="text" value="Closed" disabled=""><label class="closed-lbl"><input type="checkbox" id="hc-2" checked=""> Closed</label></div></div></div>
+  <div id="hoursList"></div>
+</div>
+
+<!-- SPECIALS -->
+<div id="panel-specials" class="panel">
+  <p class="sec-title">Specials & Notices</p>
+  <p class="sec-sub">Set an announcement banner on the site.</p>
+  <div class="banner-toggle">
+    <span style="font-size:.82rem;font-weight:600">Show Banner</span>
+    <label class="sw"><input type="checkbox" id="bannerOn" onchange="updatePreview()"><span class="sl"></span></label>
+  </div>
+  <textarea class="b-inp" id="bannerTxt" rows="3" placeholder="e.g. ⭐ Today's Special: Bone-In Ribeye $38/lb" oninput="updatePreview()"></textarea>
+  <div class="b-preview" id="bPreview"></div>
+  <button class="btn" onclick="pushBannerOnly()" id="bannerPushBtn">📢 Push Banner Live</button>
+  <div id="banner-step" class="step" style="margin-top:8px"></div>
+</div>
+
+<!-- CLAUDE AI + PATCH -->
+<div id="panel-claude" class="panel">
+  <p class="sec-title">AI Assistant</p>
+  <p class="sec-sub">Type what you want. AI reads the site, makes the change, shows you what it will do — you confirm.</p>
+
+  <!-- AI CHAT -->
+  <div class="card" style="text-align:left;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="width:32px;height:32px;background:#5C3A2D;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">✨</div>
+      <div>
+        <div style="font-size:.84rem;font-weight:700;color:#2C1810">Ask AI</div>
+        <div style="font-size:.64rem;color:rgba(92,58,45,.45)">Plain English. AI does the rest.</div>
+      </div>
+    </div>
+    <textarea id="aiInput" rows="3" style="width:100%;padding:11px 14px;border:1.5px solid rgba(92,58,45,.2);border-radius:10px;font-size:.82rem;background:#F4F1EB;color:#2C1810;resize:none;font-family:inherit;line-height:1.5" placeholder="e.g. Change the ribeye to $52 and add a banner saying we're closed Christmas Eve"></textarea>
+    <button class="btn" id="aiBtn" style="margin-top:10px" onclick="aiChat()">✨ Ask AI</button>
+    <div id="ai-status" class="step" style="margin-top:8px"></div>
+    <div id="ai-preview" style="display:none;margin-top:10px;background:rgba(169,183,160,.1);border:1.5px solid rgba(169,183,160,.3);border-radius:10px;padding:12px 14px">
+      <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4a7045;margin-bottom:6px">AI WILL DO THIS</div>
+      <div id="ai-summary" style="font-size:.8rem;color:#2C1810;line-height:1.6;font-weight:500"></div>
+    </div>
+    <div id="ai-confirm" style="display:none;margin-top:10px;gap:8px;flex-direction:row">
+      <button onclick="aiConfirm()" style="flex:1;background:#4a7045;color:#fff;border:none;border-radius:10px;padding:13px;font-size:.8rem;font-weight:700;cursor:pointer;letter-spacing:.03em">✅ Push Live</button>
+      <button onclick="aiCancel()" style="background:rgba(92,58,45,.08);color:#5C3A2D;border:1px solid rgba(92,58,45,.15);border-radius:10px;padding:13px 18px;font-size:.8rem;cursor:pointer;font-weight:600">✕</button>
+    </div>
+  </div>
+
+  <!-- MANUAL PATCH (fallback) -->
+  <details style="margin-top:4px">
+    <summary style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(92,58,45,.4);cursor:pointer;padding:10px 0;list-style:none;display:flex;align-items:center;gap:6px"><span>▸</span> Manual Patch (advanced)</summary>
+    <div style="margin-top:10px;background:#FDFAF6;border:1px solid rgba(92,58,45,.12);border-radius:12px;padding:16px">
+      <p style="font-size:.68rem;color:rgba(92,58,45,.5);line-height:1.6;margin-bottom:8px">Paste the JSON patch from Claude:<br><code style="font-size:.65rem;background:rgba(92,58,45,.06);padding:2px 5px;border-radius:4px">[{"find":"old text","replace":"new text"}]</code></p>
+      <textarea id="patchInput" style="width:100%;padding:10px;border:1.5px solid rgba(92,58,45,.2);border-radius:10px;font-size:.75rem;font-family:monospace;background:#F4F1EB;color:#2C1810;min-height:120px;resize:vertical" placeholder='[{"find":"old text","replace":"new text"}]'></textarea>
+      <button class="btn" id="patchBtn" style="margin-top:10px" onclick="applyPatch()">⚡ Apply Patch & Push Live</button>
+      <div id="patch-step" class="step" style="margin-top:8px"></div>
+    </div>
+  </details>
+</div>
+
+<!-- FILES -->
+<div id="panel-files" class="panel">
+  <p class="sec-title">File Manager</p>
+  <p class="sec-sub">Upload any file directly to the server. No GitHub needed.</p>
+  <div class="card" style="text-align:left">
+    <p class="qa-label">Upload a File</p>
+    <div style="border:2px dashed rgba(92,58,45,.2);border-radius:12px;padding:20px;text-align:center;margin-bottom:12px;cursor:pointer" onclick="document.getElementById('fileInput').click()">
+      <div style="font-size:1.5rem;margin-bottom:6px">📄</div>
+      <div id="fileLabel" style="font-size:.76rem;color:rgba(92,58,45,.5);font-weight:600">Tap to choose a file</div>
+    </div>
+    <input type="file" id="fileInput" style="display:none" onchange="fileSelected()">
+    <div id="file-name-row" style="display:none;margin-bottom:10px">
+      <div style="font-size:.72rem;font-weight:700;color:#5C3A2D" id="selectedFileName"></div>
+      <div style="font-size:.65rem;color:rgba(92,58,45,.45)" id="selectedFileSize"></div>
+    </div>
+    <button class="btn" id="uploadBtn" style="display:none" onclick="uploadFile()">⬆ Push to Server</button>
+    <div id="upload-step" class="step" style="margin-top:8px"></div>
+  </div>
+  <div class="card" style="text-align:left;margin-top:0">
+    <p class="qa-label">Live Files</p>
+    <button class="qa-btn" onclick="backupSite(this)">💾 Download index.html (site)</button>
+    <button class="qa-btn" onclick="downloadManager()">💾 Download BVMM_push_live.html (this tool)</button>
+  </div>
+  <div class="card" style="text-align:left;margin-top:0">
+    <p class="qa-label">Cloudflare Worker</p>
+    <p style="font-size:.68rem;color:rgba(92,58,45,.5);line-height:1.6;margin-bottom:10px">To enable the AI tab, update your worker once. Takes 60 seconds.</p>
+    <a href="https://dash.cloudflare.com/3e33cb7e32f60a1266e6e50ed47d9b4b/workers/services/edit/bvmm-proxy/production" target="_blank" class="qa-btn" style="display:block;text-decoration:none;color:#2C1810">⚡ Open Worker Editor</a>
+    <div style="background:rgba(92,58,45,.04);border:1px solid rgba(92,58,45,.08);border-radius:8px;padding:10px 12px;margin-top:8px">
+      <p style="font-size:.64rem;font-weight:700;color:rgba(92,58,45,.5);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase">3 steps</p>
+      <p style="font-size:.7rem;color:rgba(92,58,45,.6);line-height:1.8">1. Tap Open Worker Editor above<br>2. Tap anywhere in the code → Select All → Delete<br>3. Paste the new code Claude gave you → Save and Deploy</p>
+    </div>
+  </div>
 </div>
 
 <div class="chg-bar" id="chgBar">
@@ -196,7 +299,7 @@ var hoursChanged = false;
 
 // ── TABS ─────────────────────────────────────────────
 function showTab(name) {
-  ['deploy','deli','butcher','catering','hours'].forEach(function(n) {
+  ['deploy','deli','butcher','catering','hours','specials','claude','files'].forEach(function(n) {
     document.getElementById('tab-' + n).classList.toggle('active', n === name);
     document.getElementById('panel-' + n).classList.toggle('active', n === name);
   });
@@ -330,8 +433,8 @@ function buildHoursList() {
       if (inp) inp.addEventListener('change', function() { hoursData[day] = this.value; hoursChanged = true; updateBar(); });
       if (cb) cb.addEventListener('change', function() {
         var i2 = document.getElementById('hi-' + idx);
-        if (this.checked) { hoursData[day] = 'Closed'; i2.value = 'Closed'; i2.disabled = true; }
-        else { hoursData[day] = '10am \u2013 5pm'; i2.value = '10am \u2013 5pm'; i2.disabled = false; }
+        if (this.checked) { i2.dataset.prev = i2.value; hoursData[day] = 'Closed'; i2.value = 'Closed'; i2.disabled = true; }
+        else { var prev = i2.dataset.prev || ''; hoursData[day] = prev; i2.value = prev; i2.disabled = false; }
         hoursChanged = true; updateBar();
       });
     })(j, DAYS[j]);
@@ -351,16 +454,16 @@ function updatePreview() {
 function quickClose() {
   document.getElementById('bannerOn').checked = true;
   document.getElementById('bannerTxt').value = "We\'re closed today — see you tomorrow!";
-  updatePreview(); showTab('deploy');
-  alert('Tap Push to go live with the closure notice.');
+  updatePreview(); showTab('specials');
 }
 function quickSpecial() {
-  var s = prompt("Enter today\'s special (e.g. Ribeye $38/lb):");
-  if (s) {
-    document.getElementById('bannerOn').checked = true;
-    document.getElementById('bannerTxt').value = '\u2b50 Today\'s Special: ' + s;
-    updatePreview(); showTab('deploy');
-  }
+  document.getElementById('bannerOn').checked = true;
+  document.getElementById('bannerTxt').value = '\u2b50 Today\'s Special: ';
+  updatePreview(); showTab('specials');
+  setTimeout(function() {
+    var t = document.getElementById('bannerTxt');
+    t.focus(); t.setSelectionRange(t.value.length, t.value.length);
+  }, 100);
 }
 function quickClear() {
   document.getElementById('bannerOn').checked = false;
@@ -435,7 +538,6 @@ function applyChanges(html) {
   if (hoursChanged) {
     Object.keys(hoursData).forEach(function(day) {
       var val = hoursData[day]; var closed = val === 'Closed';
-      var esc = day.replace(/[-–]/g, function(m) { return m === '-' ? '-' : '\u2013'; });
       var oldTime = '<span class="hours-day">' + day + '</span><span class="hours-time">';
       var oldClosed = '<span class="hours-day">' + day + '</span><span class="hours-closed">';
       if (closed) {
@@ -462,52 +564,73 @@ function applyChanges(html) {
 }
 
 // ── DEPLOY ───────────────────────────────────────────
+function fst(id, cls, txt) {
+  var el = document.getElementById(id); if (!el) return;
+  el.className = 'fs ' + cls; el.textContent = txt;
+}
+
 function deployAll() {
   if (window.location.protocol === 'file:') {
     alert('Upload this file to GitHub first, then open from greencrk.com/BVMM_push_live.html');
     return;
   }
   var btn = document.getElementById('deployBtn');
-  btn.disabled = true; btn.textContent = 'Fetching site...';
-  setStep('s1','info','Fetching live site...'); setStep('s2','',''); setStep('s3','','');
+  btn.disabled = true; btn.textContent = 'Pushing...';
+  document.getElementById('deploy-rows').style.display = 'block';
+  document.getElementById('openSiteBtn').style.display = 'none';
+  document.getElementById('s1').className = 'step';
+  fst('fs-site','going','Pushing...'); fst('fs-mgr','','—');
   fetch(RAW + '?nocache=' + Date.now())
     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
     .then(function(siteHTML) {
-      setStep('s1','ok','Site fetched!'); btn.textContent = 'Pushing...';
-      setStep('s2','info','Applying changes...');
+      saveRollback(siteHTML);
       var modified = applyChanges(siteHTML);
       var encoded; try { encoded = btoa(unescape(encodeURIComponent(modified))); } catch(e) { encoded = btoa(modified); }
       pushFile('index.html', encoded, function(ok, msg) {
-        if (!ok) { setStep('s2','err','Error: '+msg); btn.disabled=false; btn.textContent='Try Again'; return; }
-        setStep('s2','ok','Pushed! '+msg);
-        setStep('s3','info','Saving tool...');
+        if (!ok) { fst('fs-site','err','Failed'); setStep('s1','err','Error: '+msg); btn.disabled=false; btn.textContent='Try Again'; return; }
+        fst('fs-site','ok','✓ '+msg);
+        localStorage.setItem('bvmm_last_deployed', Date.now());
+        var ldEl = document.getElementById('last-deployed'); if(ldEl) ldEl.textContent = 'Last pushed: just now';
+        fst('fs-mgr','going','Pushing...');
         var toolHTML = document.documentElement.outerHTML;
         var toolEnc; try { toolEnc = btoa(unescape(encodeURIComponent(toolHTML))); } catch(e) { toolEnc = btoa(toolHTML); }
-        pushFile('BVMM_push_live.html', toolEnc, function(ok2) {
-          // Also keep deploy_tool URL in sync
-          pushFile('BVMM_deploy_tool.html', toolEnc, function() {
-            setStep('s3','ok','✅ Pushed! Counting down...');
-            priceChanges = {}; cateringChanges = {}; hoursChanged = false;
-            if (document.getElementById('bannerOn')) document.getElementById('bannerOn').checked = false;
-            if (document.getElementById('bannerTxt')) document.getElementById('bannerTxt').value = '';
-            updatePreview(); buildPriceList('deli-list', DELI, 'd'); buildPriceList('butcher-list', BUTCHER, 'b'); buildCateringList(); updateBar();
-            startDeployCountdown(btn);
+        pushFile('BVMM_push_live.html', toolEnc, function(ok2, msg2) {
+          fst('fs-mgr', ok2 ? 'ok' : 'err', ok2 ? '✓ '+msg2 : 'Failed');
+          // Sync arrays with deployed prices
+          Object.keys(priceChanges).forEach(function(name) {
+            var all = DELI.concat(BUTCHER);
+            for (var i=0;i<all.length;i++) { if(all[i].name===name){all[i].displayPrice=priceChanges[name]; break;} }
           });
+          Object.keys(cateringChanges).forEach(function(id) {
+            for (var i=0;i<CATERING.length;i++) {
+              if(CATERING[i].id===id){
+                if(cateringChanges[id].pSmall!==undefined) CATERING[i].pSmall=cateringChanges[id].pSmall;
+                if(cateringChanges[id].pLarge!==undefined) CATERING[i].pLarge=cateringChanges[id].pLarge;
+                break;
+              }
+            }
+          });
+          priceChanges = {}; cateringChanges = {}; hoursChanged = false;
+          if (document.getElementById('bannerOn')) document.getElementById('bannerOn').checked = false;
+          if (document.getElementById('bannerTxt')) document.getElementById('bannerTxt').value = '';
+          updatePreview(); buildPriceList('deli-list', DELI, 'd'); buildPriceList('butcher-list', BUTCHER, 'b'); buildCateringList(); updateBar();
+          startDeployCountdown(btn);
         });
       });
     })
-    .catch(function(e) { setStep('s1','err','Could not fetch site: '+e.message); btn.disabled=false; btn.textContent='Try Again'; });
+    .catch(function(e) { fst('fs-site','err','Failed'); setStep('s1','err','Could not fetch: '+e.message); btn.disabled=false; btn.textContent='Try Again'; });
 }
 
 function pushFile(filename, content, cb) {
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 60000;
+  xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 90000;
   xhr.onload = function() { try { var r=JSON.parse(xhr.responseText); if(r.ok) cb(true,r.commit||'ok'); else cb(false,r.error||'Error'); } catch(e){cb(false,'Bad response');} };
   xhr.onerror = function(){cb(false,'Network error');}; xhr.ontimeout = function(){cb(false,'Timed out');};
   xhr.send(JSON.stringify({action:'deploy',filename:filename,content:content}));
 }
 
 function startDeployCountdown(btn) {
+  document.getElementById('openSiteBtn').style.display = 'block';
   var secs = 30;
   btn.disabled = true; btn.className = 'btn counting';
   btn.textContent = '⏳ Live in ' + secs + 's…';
@@ -526,6 +649,107 @@ function startDeployCountdown(btn) {
 function setStep(id,type,text) {
   var el=document.getElementById(id); el.className='step'+(type?' show '+type:''); el.textContent=text;
 }
+
+// ── PIN PROTECTION ───────────────────────────────────
+(function() {
+  var stored = sessionStorage.getItem('bvmm_auth');
+  if (stored === 'ok') { document.body.style.display = ''; return; }
+  // Show PIN screen — body stays hidden, show a custom PIN UI
+  document.body.style.display = '';
+  document.body.innerHTML = '<div id="pin-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#F4F1EB;gap:16px;padding:32px">'
+    + '<div style="font-size:1.1rem;font-weight:700;color:#2C1810">BVMM Manager</div>'
+    + '<div style="font-size:.75rem;color:rgba(92,58,45,.5)">Enter PIN to continue</div>'
+    + '<input id="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" style="width:120px;text-align:center;padding:14px;border:1.5px solid rgba(92,58,45,.2);border-radius:12px;font-size:1.4rem;letter-spacing:.3em;background:#FDFAF6;color:#2C1810;outline:none" placeholder="••••">'
+    + '<button id="pin-btn" style="background:#5C3A2D;color:#F4F1EB;border:none;border-radius:12px;padding:14px 32px;font-size:.85rem;font-weight:700;cursor:pointer;width:160px" onclick="checkPin()">Unlock</button>'
+    + '<div id="pin-err" style="font-size:.72rem;color:#8B3A2D;min-height:18px"></div>'
+    + '</div>';
+  var inp = document.getElementById('pin-input');
+  inp.focus();
+  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') checkPin(); });
+})();
+function checkPin() {
+  var val = document.getElementById('pin-input').value;
+  if (val === '8585') {
+    sessionStorage.setItem('bvmm_auth', 'ok');
+    location.reload();
+  } else {
+    document.getElementById('pin-err').textContent = 'Incorrect PIN. Try again.';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+  }
+}
+
+// ── ROLLBACK ─────────────────────────────────────────
+var lastGoodSite = null;
+
+function saveRollback(html) { lastGoodSite = html; }
+
+function rollback() {
+  var stepEl = document.getElementById('s1');
+  if (!lastGoodSite) { stepEl.className='step show err'; stepEl.textContent='No backup yet — push the site once first.'; return; }
+  // Inline confirm
+  var existing = document.getElementById('rollback-confirm');
+  if (existing) { existing.remove(); return; }
+  var row = document.createElement('div');
+  row.id = 'rollback-confirm';
+  row.style.cssText = 'margin-top:8px;padding:10px 12px;background:rgba(139,58,45,.08);border:1px solid rgba(139,58,45,.2);border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:space-between;gap:8px;';
+  row.innerHTML = '<span style="color:#8B3A2D;font-weight:600">Roll back to last good version?</span><div style="display:flex;gap:6px"><button onclick="doRollback()" style="background:#8B3A2D;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:.7rem;font-weight:700;cursor:pointer">Yes</button><button onclick="document.getElementById('rollback-confirm').remove()" style="background:rgba(92,58,45,.1);color:#5C3A2D;border:none;border-radius:6px;padding:5px 10px;font-size:.7rem;cursor:pointer">Cancel</button></div>';
+  var rollbackBtn = document.querySelector('.btn-out[onclick="rollback()"]');
+  if (rollbackBtn) rollbackBtn.parentNode.insertBefore(row, rollbackBtn.nextSibling);
+  else stepEl.parentNode.insertBefore(row, stepEl);
+}
+function doRollback() {
+  var row = document.getElementById('rollback-confirm'); if (row) row.remove();
+  var stepEl = document.getElementById('s1');
+  stepEl.className = 'step show info'; stepEl.textContent = 'Rolling back...';
+  var encoded; try { encoded = btoa(unescape(encodeURIComponent(lastGoodSite))); } catch(e) { encoded = btoa(lastGoodSite); }
+  pushFile('index.html', encoded, function(ok, msg) {
+    if (ok) { stepEl.className='step show ok'; stepEl.textContent='✅ Rolled back! '+msg+' — wait 30s.'; }
+    else { stepEl.className='step show err'; stepEl.textContent='Rollback failed: '+msg; }
+  });
+}
+
+// ── BANNER-ONLY PUSH ─────────────────────────────────
+function pushBannerOnly() {
+  var btn = document.getElementById('bannerPushBtn');
+  var stepEl = document.getElementById('banner-step');
+  btn.disabled = true; btn.textContent = 'Pushing...';
+  stepEl.className = 'step show info'; stepEl.textContent = 'Fetching site...';
+  fetch(RAW + '?t=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(html) {
+      saveRollback(html);
+      // Only apply banner, not prices/hours
+      var bId = 'id="bvmm-announce"';
+      while (html.indexOf(bId) >= 0) {
+        var bs = html.lastIndexOf('<div', html.indexOf(bId));
+        var be = html.indexOf('</div>', html.indexOf(bId)) + 6;
+        html = html.substring(0, bs) + html.substring(be);
+      }
+      var bon = document.getElementById('bannerOn').checked;
+      var btxt = document.getElementById('bannerTxt').value.trim();
+      if (bon && btxt) {
+        html = html.replace('<body>', '<body><div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;letter-spacing:.04em;">' + btxt + '</div>');
+      }
+      var encoded; try { encoded = btoa(unescape(encodeURIComponent(html))); } catch(e) { encoded = btoa(html); }
+      pushFile('index.html', encoded, function(ok, msg) {
+        btn.disabled = false; btn.textContent = '📢 Push Banner Live';
+        if (ok) { stepEl.className='step show ok'; stepEl.textContent='✅ Banner live! '+msg+' — wait 30s.'; }
+        else { stepEl.className='step show err'; stepEl.textContent='Failed: '+msg; }
+      });
+    })
+    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Error: '+e.message; btn.disabled=false; btn.textContent='📢 Push Banner Live'; });
+}
+
+// ── UNSAVED CHANGES WARNING ───────────────────────────
+window.addEventListener('beforeunload', function(e) {
+  var n = Object.keys(priceChanges).length;
+  var catN = Object.keys(cateringChanges).reduce(function(s,id){return s+Object.keys(cateringChanges[id]).length;},0);
+  var bannerDirty = (function(){ var el=document.getElementById('bannerOn'); var t=document.getElementById('bannerTxt'); return el&&el.checked&&t&&t.value.trim(); })();
+  if (n + catN + (hoursChanged ? 1 : 0) + (bannerDirty ? 1 : 0) > 0) {
+    e.preventDefault(); e.returnValue = '';
+  }
+});
 
 // ── INIT ─────────────────────────────────────────────
 buildPriceList('deli-list', DELI, 'd');
@@ -559,7 +783,7 @@ function sqSetToggle(active) {
 function sqToggle() { sqDeploy(!sqIsSandbox); }
 
 function sqCheckStatus() {
-  fetch(RAW.replace('index.html','index.html') + '?t=' + Date.now())
+  fetch(RAW + '?t=' + Date.now())
     .then(function(r) { return r.text(); })
     .then(function(html) { sqSetToggle(html.indexOf('sandbox-sq0idb') > -1); })
     .catch(function() { var el = document.getElementById('sq-status'); if (el) el.textContent = 'Could not check'; });
@@ -586,7 +810,7 @@ function sqDeploy(activate) {
       }
       var encoded; try { encoded = btoa(unescape(encodeURIComponent(siteHtml))); } catch(e) { encoded = btoa(siteHtml); }
       var xhr = new XMLHttpRequest();
-      xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 60000;
+      xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 90000;
       xhr.onload = function() {
         try {
           var res = JSON.parse(xhr.responseText);
@@ -617,18 +841,277 @@ function updateTool() {
     stepEl.textContent = 'Pushing manager...';
     pushFile('BVMM_push_live.html', encoded, function(ok1, msg1) {
       if (!ok1) { stepEl.className='step show err'; stepEl.textContent='Error: '+msg1; btn.disabled=false; return; }
-      stepEl.textContent = 'Pushing deploy tool URL...';
-      pushFile('BVMM_deploy_tool.html', encoded, function(ok2) {
-        stepEl.className = 'step show ok';
-        stepEl.textContent = '✅ Tool updated! ' + (msg1||'');
-        btn.disabled = false; btn.textContent = '✅ Done!';
-        setTimeout(function() { btn.textContent = '&#x1F4E6; Push Updated Tool to Server'; btn.innerHTML = '&#x1F4E6; Push Updated Tool to Server'; }, 3000);
-      });
+      stepEl.className = 'step show ok';
+      stepEl.textContent = '✅ Tool updated! ' + (msg1||'');
+      btn.disabled = false; btn.textContent = '✅ Done!';
+      setTimeout(function() { btn.innerHTML = '&#x1F4E6; Push Updated Tool to Server'; }, 3000);
     });
   }, 50);
 }
 
+// ── BACKUP ───────────────────────────────────────────
+function backupSite(btnEl) {
+  var orig = btnEl ? btnEl.textContent : '';
+  if (btnEl) { btnEl.disabled=true; btnEl.textContent='Downloading...'; }
+  fetch(RAW + '?t=' + Date.now())
+    .then(function(r) { if(!r.ok) throw new Error('HTTP '+r.status); return r.blob(); })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href = url; a.download = 'index.html'; a.click();
+      URL.revokeObjectURL(url);
+      if (btnEl) { btnEl.disabled=false; btnEl.textContent=orig; }
+    }).catch(function(e) {
+      if (btnEl) { btnEl.disabled=false; btnEl.textContent='Failed — try again'; setTimeout(function(){btnEl.textContent=orig;},3000); }
+    });
+}
+
+function downloadManager() {
+  var html = document.documentElement.outerHTML;
+  var blob = new Blob([html], {type:'text/html'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = 'BVMM_push_live.html'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── CLAUDE PATCH ─────────────────────────────────────
+function applyPatch() {
+  var raw = document.getElementById('patchInput').value.trim();
+  var stepEl = document.getElementById('patch-step');
+  var btn = document.getElementById('patchBtn');
+  if (!raw) { stepEl.className='step show err'; stepEl.textContent='Paste a patch first.'; return; }
+  var ops;
+  try { ops = JSON.parse(raw); } catch(e) { stepEl.className='step show err'; stepEl.textContent='Invalid JSON: ' + e.message; return; }
+  if (!Array.isArray(ops) || !ops.length) { stepEl.className='step show err'; stepEl.textContent='Patch must be a JSON array of {find,replace} objects.'; return; }
+  btn.disabled = true; btn.textContent = 'Fetching site...';
+  stepEl.className='step show info'; stepEl.textContent='Fetching live site...';
+  fetch(RAW + '?t=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(function(html) {
+      saveRollback(html);
+      var applied = 0;
+      for (var i = 0; i < ops.length; i++) {
+        var op = ops[i];
+        if (!op.find) continue;
+        if (html.indexOf(op.find) === -1) {
+          stepEl.className='step show err';
+          stepEl.textContent='Could not find: "' + op.find.substring(0,60) + '..."';
+          btn.disabled=false; btn.textContent='⚡ Apply Patch & Push Live'; return;
+        }
+        html = html.split(op.find).join(op.replace || '');
+        applied++;
+      }
+      stepEl.textContent = 'Pushing ' + applied + ' change' + (applied!==1?'s':'') + '...';
+      var encoded; try { encoded = btoa(unescape(encodeURIComponent(html))); } catch(e) { encoded = btoa(html); }
+      pushFile('index.html', encoded, function(ok, msg) {
+        if (!ok) { stepEl.className='step show err'; stepEl.textContent='Push failed: '+msg; btn.disabled=false; btn.textContent='⚡ Apply Patch & Push Live'; return; }
+        stepEl.className='step show ok'; stepEl.textContent='✅ Patched & live! ' + (msg||'') + ' — wait 30s.';
+        document.getElementById('patchInput').value = '';
+        btn.disabled=false; btn.textContent='⚡ Apply Patch & Push Live';
+      });
+    })
+    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Error: '+e.message; btn.disabled=false; btn.textContent='⚡ Apply Patch & Push Live'; });
+}
+
+// ── FILE UPLOAD ───────────────────────────────────────
+var selectedFile = null;
+function fileSelected() {
+  var input = document.getElementById('fileInput');
+  if (!input.files.length) return;
+  selectedFile = input.files[0];
+  if (selectedFile.size > 3 * 1024 * 1024) {
+    document.getElementById('upload-step').className = 'step show err';
+    document.getElementById('upload-step').textContent = 'File too large (' + (selectedFile.size/1024/1024).toFixed(1) + ' MB). Max 3MB.';
+    selectedFile = null; input.value = ''; return;
+  }
+  document.getElementById('fileLabel').textContent = 'File selected ✓';
+  document.getElementById('file-name-row').style.display = 'block';
+  document.getElementById('selectedFileName').textContent = selectedFile.name;
+  document.getElementById('selectedFileSize').textContent = (selectedFile.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('uploadBtn').style.display = 'block';
+  document.getElementById('upload-step').className = 'step';
+}
+function uploadFile() {
+  if (!selectedFile) return;
+  var stepEl = document.getElementById('upload-step');
+  var btn = document.getElementById('uploadBtn');
+  btn.disabled = true; btn.textContent = 'Reading file...';
+  stepEl.className = 'step show info'; stepEl.textContent = 'Reading file...';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var arr = new Uint8Array(e.target.result);
+    var binary = ''; for (var i=0;i<arr.length;i++) binary += String.fromCharCode(arr[i]);
+    var b64 = btoa(binary);
+    stepEl.textContent = 'Pushing ' + selectedFile.name + '...';
+    pushFile(selectedFile.name, b64, function(ok, msg) {
+      if (!ok) { stepEl.className='step show err'; stepEl.textContent='Failed: '+msg; btn.disabled=false; btn.textContent='⬆ Push to Server'; return; }
+      stepEl.className='step show ok'; stepEl.textContent='✅ ' + selectedFile.name + ' is live! ' + (msg||'');
+      btn.disabled=false; btn.textContent='⬆ Push to Server';
+      selectedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileLabel').textContent = 'Tap to choose a file';
+      document.getElementById('file-name-row').style.display = 'none';
+      document.getElementById('uploadBtn').style.display = 'none';
+    });
+  };
+  reader.readAsArrayBuffer(selectedFile);
+}
+
+// Last deployed display
+(function(){
+  var ts = localStorage.getItem('bvmm_last_deployed');
+  var el = document.getElementById('last-deployed');
+  if (el && ts) {
+    var d = new Date(parseInt(ts));
+    var now = new Date();
+    var diff = Math.floor((now - d) / 60000);
+    var label = diff < 1 ? 'just now' : diff < 60 ? diff + 'm ago' : diff < 1440 ? Math.floor(diff/60) + 'h ago' : d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' at ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    el.textContent = 'Last pushed: ' + label;
+  } else if (el) {
+    el.textContent = 'Not yet pushed this session';
+  }
+})();
+// ── AI CHAT ──────────────────────────────────────────
+function aiChat() {
+  var req = document.getElementById('aiInput').value.trim();
+  if (!req) { 
+    document.getElementById('ai-status').className='step show err';
+    document.getElementById('ai-status').textContent='Type what you want to change first.';
+    return; 
+  }
+  var btn = document.getElementById('aiBtn');
+  var statusEl = document.getElementById('ai-status');
+  var previewEl = document.getElementById('ai-preview');
+  var confirmRow = document.getElementById('ai-confirm');
+  btn.disabled=true; btn.textContent='Thinking...';
+  statusEl.className='step show info'; statusEl.textContent='Fetching live site...';
+  previewEl.style.display='none'; confirmRow.style.display='none';
+  window._aiPatches=null; window._aiHtml=null;
+
+  fetch(RAW + '?t=' + Date.now())
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(html){
+      saveRollback(html);
+      statusEl.textContent='AI is reading your request...';
+
+      // Strip big script/data blocks to reduce tokens sent
+      var stripped = html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/data:[^;]+;base64,[A-Za-z0-9+/=]{200,}/g, '')
+        .replace(/\s{2,}/g, ' ');
+      if (stripped.length > 70000) stripped = stripped.substring(0, 70000) + '...(truncated)';
+
+      // Build current price context for accuracy
+      var ctx = 'CURRENT PRICES:
+';
+      BUTCHER.slice(0,20).forEach(function(i){ ctx += i.name+': '+i.displayPrice+'
+'; });
+      DELI.slice(0,10).forEach(function(i){ ctx += i.name+': '+i.displayPrice+'
+'; });
+
+      var sysPrompt = 'You manage the website for Babylon Village Meat Market (greencrk.com).
+'
+        +'The owner tells you what to change. You output ONLY valid JSON, no markdown, no backticks:
+'
+        +'{"summary":"one plain-English sentence of exactly what will change","patches":[{"find":"verbatim HTML text","replace":"new HTML text"}]}
+
+'
+        +'Rules:
+'
+        +'- find must be verbatim text that exists exactly in the HTML
+'
+        +'- For prices find: class="mi-price">$XX.XX</div> or class="lcard-price">$XX.XX</div>
+'
+        +'- For banners: target <body> tag, inject: <div id="bvmm-announce" style="background:#5C3A2D;color:#F4F1EB;text-align:center;padding:11px 20px;font-size:.78rem;font-weight:600;letter-spacing:.04em;">TEXT</div> after <body>
+'
+        +'- To clear banner: find and replace the full bvmm-announce div with nothing
+'
+        +'- For hours: find class="hours-time">current time</span>
+'
+        +'- Make changes minimal — only what was asked
+'
+        +'- If unclear or not found, return empty patches and explain in summary
+
+'
+        + ctx;
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', WORKER, true);
+      xhr.setRequestHeader('Content-Type','application/json');
+      xhr.timeout = 45000;
+      xhr.onload = function(){
+        btn.disabled=false; btn.textContent='✨ Ask AI';
+        try {
+          var res = JSON.parse(xhr.responseText);
+          if (!res.ok){ statusEl.className='step show err'; statusEl.textContent='AI error: '+(res.error||'Unknown — is the worker updated?'); return; }
+          var raw = res.content.replace(/```json|```/g,'').trim();
+          var parsed = JSON.parse(raw);
+          statusEl.className='step';
+          if (!parsed.patches || !parsed.patches.length){
+            statusEl.className='step show err';
+            statusEl.textContent='AI says: '+parsed.summary;
+            return;
+          }
+          previewEl.style.display='block';
+          document.getElementById('ai-summary').textContent=parsed.summary;
+          window._aiPatches=parsed.patches;
+          window._aiHtml=html;
+          confirmRow.style.display='flex';
+        } catch(e){
+          statusEl.className='step show err'; statusEl.textContent='Could not read AI response: '+e.message;
+        }
+      };
+      xhr.onerror=function(){ btn.disabled=false; btn.textContent='✨ Ask AI'; statusEl.className='step show err'; statusEl.textContent='Network error'; };
+      xhr.ontimeout=function(){ btn.disabled=false; btn.textContent='✨ Ask AI'; statusEl.className='step show err'; statusEl.textContent='Timed out — try again'; };
+      xhr.send(JSON.stringify({
+        action:'ai',
+        messages:[
+          {role:'system', content:sysPrompt},
+          {role:'user', content:'Request: '+req+'
+
+Site HTML:
+'+stripped}
+        ]
+      }));
+    })
+    .catch(function(e){ btn.disabled=false; btn.textContent='✨ Ask AI'; statusEl.className='step show err'; statusEl.textContent='Error: '+e.message; });
+}
+
+function aiConfirm() {
+  var patches = window._aiPatches;
+  var html = window._aiHtml;
+  var statusEl = document.getElementById('ai-status');
+  var confirmRow = document.getElementById('ai-confirm');
+  if (!patches||!html){ statusEl.className='step show err'; statusEl.textContent='Nothing to apply.'; return; }
+  confirmRow.style.display='none';
+  document.getElementById('ai-preview').style.display='none';
+  statusEl.className='step show info'; statusEl.textContent='Applying...';
+  for (var i=0;i<patches.length;i++){
+    if (html.indexOf(patches[i].find)===-1){
+      statusEl.className='step show err'; statusEl.textContent='Could not find: "'+patches[i].find.substring(0,50)+'"';
+      return;
+    }
+    html=html.split(patches[i].find).join(patches[i].replace||'');
+  }
+  statusEl.textContent='Pushing live...';
+  var encoded; try{ encoded=btoa(unescape(encodeURIComponent(html))); }catch(e){ encoded=btoa(html); }
+  pushFile('index.html', encoded, function(ok,msg){
+    if(!ok){ statusEl.className='step show err'; statusEl.textContent='Push failed: '+msg; return; }
+    statusEl.className='step show ok'; statusEl.textContent='✅ Live! '+msg+' — wait 30s.';
+    localStorage.setItem('bvmm_last_deployed', Date.now());
+    var ldEl=document.getElementById('last-deployed'); if(ldEl) ldEl.textContent='Last pushed: just now';
+    document.getElementById('aiInput').value='';
+    window._aiPatches=null; window._aiHtml=null;
+  });
+}
+
+function aiCancel() {
+  document.getElementById('ai-confirm').style.display='none';
+  document.getElementById('ai-preview').style.display='none';
+  document.getElementById('ai-status').className='step';
+  window._aiPatches=null; window._aiHtml=null;
+}
+
 sqCheckStatus();
 </script>
-
-</body></html>
+</body>
+</html>
