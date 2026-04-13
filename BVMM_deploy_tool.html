@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
+<html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deploy BVMM</title>
@@ -37,16 +35,16 @@ h2{font-size:1.1rem;margin-bottom:12px;color:#5C3A2D}
     <a href="https://greencrk.com/BVMM_deploy_tool.html">greencrk.com/BVMM_deploy_tool.html</a>
   </div>
 
-  <div class="url-box" id="url-box">
+  <div class="url-box" id="url-box" style="display: block;">
     <strong>Bookmark this URL</strong>
     <a href="https://greencrk.com/BVMM_deploy_tool.html">greencrk.com/BVMM_deploy_tool.html</a>
   </div>
 
-  <div class="file-row"><span class="file-name">BVMM_push_live.html</span><span class="file-status" id="st-mgr">Waiting</span></div>
-  <div class="file-row"><span class="file-name">index.html</span><span class="file-status" id="st-site">Waiting</span></div>
+  <div class="file-row"><span class="file-name">BVMM_push_live.html</span><span class="file-status ok" id="st-mgr">✓ 29c46da</span></div>
+  <div class="file-row"><span class="file-name">index.html</span><span class="file-status ok" id="st-site">✓ e79cfe5</span></div>
   <div class="file-row"><span class="file-name">BVMM_deploy_tool.html</span><span class="file-status" id="st-self">Waiting</span></div>
   <br>
-  <button class="btn" id="btn" onclick="deployAll()">Deploy All Files</button>
+  <button class="btn" id="btn" onclick="deployAll()" disabled="">Deploying...</button>
   <div id="msg" style="margin-top:10px;font-size:.72rem;color:rgba(92,58,45,.5);min-height:20px"></div>
 </div>
 <script>
@@ -126,5 +124,5 @@ function countdown(btn){
   },1000);
 }
 </script>
-</body>
-</html>
+
+</body></html>
