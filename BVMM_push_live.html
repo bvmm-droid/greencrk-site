@@ -20,6 +20,10 @@ h2 span{color:#A9B7A0}
 .tip strong{color:#5C3A2D}
 .btn{width:100%;background:#5C3A2D;color:#F4F1EB;border:none;border-radius:12px;padding:15px;font-size:.85rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-bottom:8px}
 .btn:disabled{opacity:.4}
+.btn.counting{background:#8A9FB2 !important;cursor:default}
+.btn.ready{background:#4a7045 !important;animation:btnPulse 0.9s ease-in-out 3}
+.btn.success{background:#4a7045 !important}
+@keyframes btnPulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(74,112,69,.7)}50%{transform:scale(1.03);box-shadow:0 0 0 12px rgba(74,112,69,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(74,112,69,0)}}
 .btn-out{width:100%;background:transparent;color:#5C3A2D;border:1.5px solid rgba(92,58,45,.3);border-radius:12px;padding:12px;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:4px}
 .step{margin-top:8px;font-size:.72rem;padding:9px 12px;border-radius:8px;display:none;text-align:left}
 .step.show{display:block}
@@ -95,9 +99,15 @@ h2 span{color:#A9B7A0}
     </div>
     <div class="qa-section">
       <p class="qa-label">Square Testing</p>
-      <div id="sq-status" style="font-size:.7rem;color:rgba(92,58,45,.5);margin-bottom:8px;">Checking status...</div>
-      <button class="qa-btn" id="sqSandboxBtn" onclick="sqSandbox()" style="color:#e05a00;border-color:rgba(224,90,0,.3);">🧪 Activate Square Sandbox</button>
-      <button class="qa-btn" id="sqRestoreBtn" onclick="sqRestore()" style="display:none;color:#8B3A2D;border-color:rgba(139,58,45,.3);">↩ Restore Live Square</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;" onclick="sqToggle()" id="sq-toggle-row">
+        <div id="sq-status" style="font-size:.74rem;font-weight:600;color:rgba(92,58,45,.5);">Checking...</div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div id="sq-toggle-label" style="font-size:.62rem;font-weight:700;letter-spacing:.08em;color:rgba(92,58,45,.35);">OFF</div>
+          <div id="sq-track" style="width:42px;height:22px;border-radius:100px;background:rgba(92,58,45,.12);border:1.5px solid rgba(92,58,45,.18);position:relative;transition:all .2s;">
+            <div id="sq-thumb" style="width:16px;height:16px;border-radius:50%;background:#C6A897;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15);"></div>
+          </div>
+        </div>
+      </div>
       <div id="sq-step" class="step" style="margin-top:6px;"></div>
     </div>
   </div>
@@ -142,7 +152,32 @@ h2 span{color:#A9B7A0}
 <script>
 var WORKER = 'https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
 var RAW = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html';
-var DELI = [{"name": "Italian / American Hero", "section": "Heroes by the Foot", "displayPrice": "$20/ft", "numericPrice": "20"}, {"name": "Chicken Cutlet Any Way", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Roast Beef / Turkey / Ham", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"}, {"name": "Pastrami / Corned Beef", "section": "Heroes by the Foot", "displayPrice": "$28/ft", "numericPrice": "28"}];
+var DELI = [
+  {"name": "Italian / American Hero", "section": "Heroes by the Foot", "displayPrice": "$20/ft", "numericPrice": "20"},
+  {"name": "Chicken Cutlet Any Way", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"},
+  {"name": "Roast Beef / Turkey / Ham", "section": "Heroes by the Foot", "displayPrice": "$24/ft", "numericPrice": "24"},
+  {"name": "Pastrami / Corned Beef", "section": "Heroes by the Foot", "displayPrice": "$28/ft", "numericPrice": "28"},
+  {"name": "Prime Roast Beef", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Swedish Ham", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "All Natural Turkey Breast", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Pastrami", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Corned Beef", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Genoa Salami", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Prosciutto", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Ham Cappy", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Pepperoni", "section": "Cold Cuts", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Imported Provolone", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Swiss", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "American", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Reggiano Parmesan", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Imported Auricchio", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Brie", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Aged Gouda", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Smoked Aged Cheddar", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Italian Piave", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Fresh Mozzarella", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true},
+  {"name": "Pepperjack", "section": "Cheese", "displayPrice": "Mkt Price", "numericPrice": "0", "isLcard": true}
+];
 var BUTCHER = [{"name": "Prime Dry Aged Porterhouse", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime T-Bone", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Bone-In Rib Eye", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Boneless Prime Rib Eye", "section": "Steaks", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Dry Aged Shell Steak", "section": "Steaks", "displayPrice": "$49.00", "numericPrice": "49.00"}, {"name": "Prime Sirloin Steak", "section": "Steaks", "displayPrice": "$32.00", "numericPrice": "32.00"}, {"name": "Prime Filet Mignon", "section": "Steaks", "displayPrice": "$34.50", "numericPrice": "34.50"}, {"name": "Skirt Steak (Prime)", "section": "Steaks", "displayPrice": "$45.00", "numericPrice": "45.00"}, {"name": "Flank Steak (Prime)", "section": "Steaks", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Western London Broil", "section": "Steaks", "displayPrice": "$29.00", "numericPrice": "29.00"}, {"name": "London Broil (Prime Top Round)", "section": "Steaks", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Pepper Steak (Prime)", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Marinated Beef Strips", "section": "Steaks", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Bone-In Prime Rib", "section": "Roasts", "displayPrice": "$147.00", "numericPrice": "147.00"}, {"name": "Boneless Prime Rib", "section": "Roasts", "displayPrice": "$59.00", "numericPrice": "59.00"}, {"name": "Prime Filet Roast", "section": "Roasts", "displayPrice": "$69.00", "numericPrice": "69.00"}, {"name": "Roast Beef (Prime Top Round)", "section": "Roasts", "displayPrice": "$57.00", "numericPrice": "57.00"}, {"name": "Prime French Pot Roast", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Prime Brisket", "section": "Roasts", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Silver Tip (Prime)", "section": "Roasts", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Eye Round (Prime)", "section": "Roasts", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Bottom Round Prime", "section": "Roasts", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Ground Beef (Prime)", "section": "Ground", "displayPrice": "$15.00", "numericPrice": "15.00"}, {"name": "Box of Prime Burgers", "section": "Ground", "displayPrice": "$39.00", "numericPrice": "39.00"}, {"name": "Stew Beef (Prime)", "section": "Ground", "displayPrice": "$18.00", "numericPrice": "18.00"}, {"name": "Whole Chicken (All Natural)", "section": "Chicken", "displayPrice": "$19.00", "numericPrice": "19.00"}, {"name": "Boneless / Skinless Chicken Breast", "section": "Chicken", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Legs &amp; Thighs", "section": "Chicken", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "Wings", "section": "Chicken", "displayPrice": "$7.00", "numericPrice": "7.00"}, {"name": "Chicken Sausage", "section": "Chicken", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Boneless Turkey Breast (All Natural)", "section": "Turkey", "displayPrice": "$17.00", "numericPrice": "17.00"}, {"name": "Bone-In Turkey Breast", "section": "Turkey", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Top Round Veal Cutlets", "section": "Veal", "displayPrice": "$36.00", "numericPrice": "36.00"}, {"name": "Osso Bucco", "section": "Veal", "displayPrice": "$35.00", "numericPrice": "35.00"}, {"name": "Veal For Stew", "section": "Veal", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Bone-In Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$21.00", "numericPrice": "21.00"}, {"name": "Boneless Berkshire Pork Chop", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Bone-In Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Boneless Berkshire Pork Roast", "section": "Berkshire Pork", "displayPrice": "$28.80", "numericPrice": "28.80"}, {"name": "Pork Tenderloin", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Pork Tenderloin Cutlets", "section": "Berkshire Pork", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Pork Belly (Boneless)", "section": "Berkshire Pork", "displayPrice": "$14.00", "numericPrice": "14.00"}, {"name": "Pork Bracioles", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Baby Back Ribs", "section": "Berkshire Pork", "displayPrice": "$9.00", "numericPrice": "9.00"}, {"name": "St. Louis Ribs", "section": "Berkshire Pork", "displayPrice": "$8.00", "numericPrice": "8.00"}, {"name": "Bone-In Pork Butt", "section": "Berkshire Pork", "displayPrice": "$7.98", "numericPrice": "7.98"}, {"name": "Boneless Pork Butt", "section": "Berkshire Pork", "displayPrice": "$4.99", "numericPrice": "4.99"}, {"name": "Fresh Ham Bone-In", "section": "Berkshire Pork", "displayPrice": "$3.99", "numericPrice": "3.99"}, {"name": "Fresh Ham Boneless", "section": "Berkshire Pork", "displayPrice": "$17.97", "numericPrice": "17.97"}, {"name": "Sausage", "section": "Berkshire Pork", "displayPrice": "$10.00", "numericPrice": "10.00"}, {"name": "Chevalatta (Ring Sausage)", "section": "Berkshire Pork", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Baked Potato Sausage", "section": "Berkshire Pork", "displayPrice": "$12.00", "numericPrice": "12.00"}, {"name": "Double Smoked Bacon", "section": "Berkshire Pork", "displayPrice": "$24.00", "numericPrice": "24.00"}, {"name": "Lamb Chops \u2014 Rib", "section": "Lamb", "displayPrice": "$42.00", "numericPrice": "42.00"}, {"name": "Bone-In Leg of Lamb", "section": "Lamb", "displayPrice": "$22.00", "numericPrice": "22.00"}, {"name": "Boneless American Leg of Lamb", "section": "Lamb", "displayPrice": "$26.00", "numericPrice": "26.00"}, {"name": "Lamb Shanks", "section": "Lamb", "displayPrice": "$20.00", "numericPrice": "20.00"}, {"name": "Ground Lamb", "section": "Lamb", "displayPrice": "$16.00", "numericPrice": "16.00"}, {"name": "Salmon Fillet", "section": "Fish", "displayPrice": "$12.99/lb", "numericPrice": "12.99"}, {"name": "Tilapia Fillet", "section": "Fish", "displayPrice": "$7.99/lb", "numericPrice": "7.99"}, {"name": "Flounder / Sole", "section": "Fish", "displayPrice": "$9.99/lb", "numericPrice": "9.99"}, {"name": "Swordfish Steak", "section": "Fish", "displayPrice": "$14.99/lb", "numericPrice": "14.99"}, {"name": "Tuna Steak", "section": "Fish", "displayPrice": "$15.99/lb", "numericPrice": "15.99"}, {"name": "Jumbo Shrimp (16-20 ct)", "section": "Shellfish", "displayPrice": "$13.99/lb", "numericPrice": "13.99"}, {"name": "Large Shrimp (21-25 ct)", "section": "Shellfish", "displayPrice": "$11.99/lb", "numericPrice": "11.99"}, {"name": "Sea Scallops", "section": "Shellfish", "displayPrice": "$18.99/lb", "numericPrice": "18.99"}, {"name": "Lump Crab Meat", "section": "Shellfish", "displayPrice": "$19.99/lb", "numericPrice": "19.99"}, {"name": "Stuffed Clams", "section": "Shellfish", "displayPrice": "$2.99 ea", "numericPrice": "2.99"}, {"name": "Stuffed Shrimp", "section": "Shellfish", "displayPrice": "$3.49 ea", "numericPrice": "3.49"}];
 var CATERING = [{"id": "ca1", "name": "Shrimp Cocktail Platter", "course": "apps", "courseLabel": "Appetizers", "pSmall": 89.0, "pLarge": 179.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca2", "name": "Cold Antipasto Platter", "course": "apps", "courseLabel": "Appetizers", "pSmall": 89.0, "pLarge": 179.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca12", "name": "Tomato Basil Mozzarella", "course": "apps", "courseLabel": "Appetizers", "pSmall": 79.0, "pLarge": 149.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca13", "name": "Fruit & Melon Platter", "course": "apps", "courseLabel": "Appetizers", "pSmall": 79.0, "pLarge": 149.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca14", "name": "Cheese & Grapes Platter", "course": "apps", "courseLabel": "Appetizers", "pSmall": 79.0, "pLarge": 149.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca5", "name": "Imported Brie & Grapes", "course": "apps", "courseLabel": "Appetizers", "pSmall": 79.0, "pLarge": 149.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca3", "name": "Babylon Hot Wings", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca4", "name": "Spinach Dip & Crudit\u00e9s", "course": "apps", "courseLabel": "Appetizers", "pSmall": 99.0, "pLarge": 99.0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca6", "name": "Stuffed Button Mushrooms", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca7", "name": "Baked Clams Oreganata", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca8", "name": "Baked Clams Casino", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca9", "name": "Mini Crab Cakes", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca10", "name": "Dragon Stix", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca11", "name": "Pigs in a Blanket", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca15", "name": "Coconut Shrimp", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ca16", "name": "Grilled Eggplant Caprese", "course": "apps", "courseLabel": "Appetizers", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp1", "name": "Penne a la Vodka", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp2", "name": "Baked Ziti", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp3", "name": "Three Cheese Lasagna", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp4", "name": "Fileto Di Pomodori", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp5", "name": "Eggplant Parmigiana", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp6", "name": "Eggplant Rollatini", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp7", "name": "Stuffed Jumbo Shells", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp8", "name": "Baked Mac & Cheese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp9", "name": "Pasta Aglio e Olio", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp10", "name": "Pasta Primavera", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp11", "name": "Pasta & Broccoli", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cp12", "name": "Cavatelli Bolognese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo1", "name": "Chicken Parmigiana", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo2", "name": "Chicken Marsala", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo3", "name": "Chicken Francese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo4", "name": "Marigold Chicken", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo5", "name": "Chicken Sorrento", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo6", "name": "Roasted Chicken", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo7", "name": "Turkey Breast Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cpo8", "name": "Chicken Rollatini", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv1", "name": "Veal Marsala", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv2", "name": "Veal Francese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv3", "name": "Veal Sorrento", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv4", "name": "Pork Paranno", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv5", "name": "Sausage & Peppers", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cv6", "name": "Party Ham Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf1", "name": "Flounder Francese", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf2", "name": "Flounder Puttanesca", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf3", "name": "Shrimp Parmigiana", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf4", "name": "Shrimp Scampi", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cf5", "name": "Grilled & Baked Salmon", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe1", "name": "London Broil Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe2", "name": "Filet Mignon Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe3", "name": "Prime Roast Beef Platter", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe4", "name": "BBQ Style Ribs", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cbe5", "name": "Meatballs", "course": "entree", "courseLabel": "Entr\u00e9es", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs1", "name": "Roasted Red Potatoes", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs2", "name": "Mashed Potatoes", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs3", "name": "Broccoli Rabe", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs4", "name": "Roasted Carrots", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs5", "name": "String Bean Almondine", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs6", "name": "Wild Rice Medley", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs7", "name": "Cauliflower Alfredo", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs8", "name": "Baked Mac & Cheese", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs9", "name": "Garden Salad", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs10", "name": "Greek Salad", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs11", "name": "Caesar Salad", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "cs12", "name": "Tossed Salad", "course": "sides", "courseLabel": "Salads & Sides", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch1", "name": "Chicken Parmigiana", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch2", "name": "Eggplant Rollatini", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch3", "name": "Stuffed Cabbage", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch4", "name": "Meatballs", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch5", "name": "Roasted Half Chicken", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch6", "name": "Baked Mac & Cheese", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch7", "name": "Stuffed Peppers", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}, {"id": "ch8", "name": "Stuffed Mushrooms", "course": "prepared", "courseLabel": "Hot Food", "pSmall": 0, "pLarge": 0, "labelSmall": "For 14", "labelLarge": "For 18", "fieldSmall": "price14", "fieldLarge": "price18"}];
 var DAYS = ['Tuesday \u2013 Saturday', 'Sunday', 'Monday'];
@@ -355,7 +390,13 @@ function applyChanges(html) {
     var allItems = DELI.concat(BUTCHER);
     for (var j = 0; j < allItems.length; j++) { if (allItems[j].name === name) { orig = allItems[j]; break; } }
     if (orig) {
-      html = html.split('class="mi-price">' + orig.displayPrice + '</div>').join('class="mi-price">' + newDisp + '</div>');
+      if (orig.isLcard) {
+        // lcard items (cold cuts, cheese) — update lcard-price display
+        html = html.split('class="lcard-price">' + orig.displayPrice + '</div>').join('class="lcard-price">' + newDisp + '</div>');
+      } else {
+        // mrow items (butcher, heroes) — update mi-price display
+        html = html.split('class="mi-price">' + orig.displayPrice + '</div>').join('class="mi-price">' + newDisp + '</div>');
+      }
       if (!isNaN(num)) {
         var onclickName = name.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
         html = html.split("openOrderSheet('" + onclickName + "'," + orig.numericPrice + ",").join("openOrderSheet('" + onclickName + "'," + num + ",");
@@ -443,15 +484,15 @@ function deployAll() {
           .then(function(toolHTML){
             var toolEnc; try { toolEnc = btoa(unescape(encodeURIComponent(toolHTML))); } catch(e) { toolEnc = btoa(toolHTML); }
             pushFile('BVMM_push_live.html', toolEnc, function(ok2) {
-              setStep('s3','ok','✅ greencrk.com live in ~30 seconds');
+              setStep('s3','ok','✅ Pushed! Counting down to live...');
               priceChanges = {}; cateringChanges = {}; hoursChanged = false;
               if (document.getElementById('bannerOn')) document.getElementById('bannerOn').checked = false;
               if (document.getElementById('bannerTxt')) document.getElementById('bannerTxt').value = '';
               updatePreview(); buildPriceList('deli-list', DELI, 'd'); buildPriceList('butcher-list', BUTCHER, 'b'); buildCateringList(); updateBar();
-              btn.disabled = false; btn.textContent = 'Live!';
+              startDeployCountdown(btn);
             });
           })
-          .catch(function(){ btn.disabled=false; btn.textContent='Live!'; });
+          .catch(function(){ startDeployCountdown(btn); });
       });
     })
     .catch(function(e) { setStep('s1','err','Could not fetch site: '+e.message); btn.disabled=false; btn.textContent='Try Again'; });
@@ -465,6 +506,28 @@ function pushFile(filename, content, cb) {
   xhr.send(JSON.stringify({action:'deploy',filename:filename,content:content}));
 }
 
+function startDeployCountdown(btn) {
+  var secs = 30;
+  btn.disabled = true;
+  btn.className = 'btn counting';
+  btn.textContent = '⏳ Live in ' + secs + 's…';
+  var iv = setInterval(function() {
+    secs--;
+    if (secs > 0) {
+      btn.textContent = '⏳ Live in ' + secs + 's…';
+    } else {
+      clearInterval(iv);
+      btn.disabled = false;
+      btn.className = 'btn ready';
+      btn.textContent = '✅ Site is Live!';
+      setTimeout(function() {
+        btn.className = 'btn success';
+        btn.textContent = '⬆ Push greencrk.com Live';
+      }, 3000);
+    }
+  }, 1000);
+}
+
 function setStep(id,type,text) {
   var el=document.getElementById(id); el.className='step'+(type?' show '+type:''); el.textContent=text;
 }
@@ -476,40 +539,57 @@ buildCateringList();
 buildHoursList();
 
 // SQUARE SANDBOX
+var sqIsSandbox = false;
+
+function sqSetToggle(active) {
+  sqIsSandbox = active;
+  var track = document.getElementById('sq-track');
+  var thumb = document.getElementById('sq-thumb');
+  var label = document.getElementById('sq-toggle-label');
+  var status = document.getElementById('sq-status');
+  if (!track) return;
+  if (active) {
+    track.style.background = '#e05a00';
+    track.style.borderColor = '#e05a00';
+    thumb.style.left = '22px';
+    thumb.style.background = '#fff';
+    label.textContent = 'ON';
+    label.style.color = '#e05a00';
+    status.textContent = '🧪 Testing — fake money';
+    status.style.color = '#e05a00';
+  } else {
+    track.style.background = 'rgba(92,58,45,.12)';
+    track.style.borderColor = 'rgba(92,58,45,.18)';
+    thumb.style.left = '2px';
+    thumb.style.background = '#C6A897';
+    label.textContent = 'OFF';
+    label.style.color = 'rgba(92,58,45,.35)';
+    status.textContent = '🟢 Live mode';
+    status.style.color = '#4a7045';
+  }
+}
+
+function sqToggle() { sqDeploy(!sqIsSandbox); }
+
 function sqCheckStatus() {
   fetch('https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?t=' + Date.now())
     .then(function(r) { return r.text(); })
     .then(function(html) {
-      var isSandbox = html.indexOf('sandbox-sq0idb') > -1;
-      var el = document.getElementById('sq-status');
-      if (!el) return;
-      if (isSandbox) {
-        el.textContent = '🟠 SANDBOX ACTIVE — fake money mode';
-        el.style.color = '#e05a00';
-        document.getElementById('sqSandboxBtn').style.display = 'none';
-        document.getElementById('sqRestoreBtn').style.display = 'block';
-      } else {
-        el.textContent = '🟢 Live mode — real credentials';
-        el.style.color = '#4a7045';
-        document.getElementById('sqSandboxBtn').style.display = 'block';
-        document.getElementById('sqRestoreBtn').style.display = 'none';
-      }
+      sqSetToggle(html.indexOf('sandbox-sq0idb') > -1);
     })
     .catch(function() {
       var el = document.getElementById('sq-status');
-      if (el) el.textContent = 'Could not check status';
+      if (el) { el.textContent = 'Could not check'; }
     });
 }
 
 function sqDeploy(activate) {
   var banner = '<!-- SB --><div style="position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#e05a00;color:#fff;text-align:center;padding:10px;font-size:.8rem;font-weight:700;">🧪 SQUARE SANDBOX — FAKE MONEY — NOT LIVE</div><!-- /SB -->';
   var stepEl = document.getElementById('sq-step');
-  var sbBtn = document.getElementById('sqSandboxBtn');
-  var rsBtn = document.getElementById('sqRestoreBtn');
+  var row = document.getElementById('sq-toggle-row');
   stepEl.className = 'step show info';
-  stepEl.textContent = 'Fetching live site...';
-  sbBtn.disabled = true;
-  rsBtn.disabled = true;
+  stepEl.textContent = activate ? 'Turning on testing...' : 'Turning off testing...';
+  if (row) row.style.pointerEvents = 'none';
   fetch('https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?t=' + Date.now())
     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
     .then(function(siteHtml) {
@@ -524,7 +604,6 @@ function sqDeploy(activate) {
         siteHtml = siteHtml.replace("var SQ_LOCATION_ID  = 'LQPN20RWZKZEA'", "var SQ_LOCATION_ID  = 'YOUR_SQ_LOCATION_ID'");
         siteHtml = siteHtml.replace(/<!-- SB -->[\s\S]*?<!-- \/SB -->/, '');
       }
-      stepEl.textContent = activate ? 'Activating...' : 'Restoring...';
       var encoded;
       try { encoded = btoa(unescape(encodeURIComponent(siteHtml))); } catch(e) { encoded = btoa(siteHtml); }
       var xhr = new XMLHttpRequest();
@@ -536,8 +615,9 @@ function sqDeploy(activate) {
           var res = JSON.parse(xhr.responseText);
           if (res.ok) {
             stepEl.className = 'step show ok';
-            stepEl.textContent = (activate ? 'Sandbox active!' : 'Restored!') + ' Wait 30s then open the site.';
-            setTimeout(sqCheckStatus, 5000);
+            stepEl.textContent = activate ? '🧪 Testing ON — wait 30s then open site.' : '✅ Live mode — wait 30s then open site.';
+            sqSetToggle(activate);
+            setTimeout(sqCheckStatus, 8000);
           } else {
             stepEl.className = 'step show err';
             stepEl.textContent = 'Error: ' + (res.error || 'Unknown');
@@ -546,23 +626,18 @@ function sqDeploy(activate) {
           stepEl.className = 'step show err';
           stepEl.textContent = 'Bad response';
         }
-        sbBtn.disabled = false;
-        rsBtn.disabled = false;
+        if (row) row.style.pointerEvents = '';
       };
-      xhr.onerror = function() { stepEl.className = 'step show err'; stepEl.textContent = 'Network error'; sbBtn.disabled = false; rsBtn.disabled = false; };
-      xhr.ontimeout = function() { stepEl.className = 'step show err'; stepEl.textContent = 'Timed out'; sbBtn.disabled = false; rsBtn.disabled = false; };
+      xhr.onerror = function() { stepEl.className='step show err'; stepEl.textContent='Network error'; if(row) row.style.pointerEvents=''; };
+      xhr.ontimeout = function() { stepEl.className='step show err'; stepEl.textContent='Timed out'; if(row) row.style.pointerEvents=''; };
       xhr.send(JSON.stringify({ action: 'deploy', filename: 'index.html', content: encoded }));
     })
     .catch(function(e) {
       stepEl.className = 'step show err';
       stepEl.textContent = 'Could not fetch: ' + e.message;
-      sbBtn.disabled = false;
-      rsBtn.disabled = false;
+      if (row) row.style.pointerEvents = '';
     });
 }
-
-function sqSandbox() { sqDeploy(true); }
-function sqRestore() { sqDeploy(false); }
 
 sqCheckStatus();
 </script>
