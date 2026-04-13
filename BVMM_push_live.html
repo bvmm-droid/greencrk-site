@@ -93,7 +93,7 @@ h2 span{color:#A9B7A0}
   <div class="card">
     <h2>BVMM <span>Manager</span></h2>
     <div class="tip">📌 <strong>Bookmark this page</strong> — tap Share then <strong>Add to Home Screen</strong></div>
-    <div id="last-deployed" style="font-size:.66rem;color:rgba(92,58,45,.4);margin-bottom:10px;text-align:center">Last pushed: just now</div>
+    <div id="last-deployed" style="font-size:.66rem;color:rgba(92,58,45,.4);margin-bottom:10px;text-align:center">Last pushed: 11m ago</div>
     <button class="btn" id="deployBtn" onclick="deployAll()" disabled="">Pushing...</button>
     <div id="deploy-rows" style="margin-top: 10px; display: block;">
       <div class="file-row"><span class="fn">greencrk.com</span><span class="fs ok" id="fs-site">- 2f69224</span></div>
@@ -113,8 +113,8 @@ h2 span{color:#A9B7A0}
     <div class="qa-section">
       <p class="qa-label">Update This Tool</p>
       <p style="font-size:.68rem;color:rgba(92,58,45,.45);margin-bottom:10px;line-height:1.5;">When Claude gives you updates, tap here to push them live.</p>
-      <button class="qa-btn" onclick="updateTool()" id="updateToolBtn">📦 Push Updated Tool to Server</button>
-      <div id="update-step" class="step" style="margin-top:6px;"></div>
+      <button class="qa-btn" onclick="updateTool()" id="updateToolBtn" disabled="">📦 Push Updated Tool to Server</button>
+      <div id="update-step" class="step show info" style="margin-top:6px;">Encoding tool...</div>
     </div>
   </div>
 
