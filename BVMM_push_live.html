@@ -285,7 +285,7 @@ var priceChanges = {};
 var cateringChanges = {};
 var hoursChanged = false;
 
-// ── TABS ─────────────────────────────────────────────
+// -- TABS ---------------------------------------------
 function showTab(name) {
   ['deploy','deli','butcher','catering','hours','specials','claude','files'].forEach(function(n) {
     document.getElementById('tab-' + n).classList.toggle('active', n === name);
@@ -293,7 +293,7 @@ function showTab(name) {
   });
 }
 
-// ── PRICE LIST BUILDER ───────────────────────────────
+// -- PRICE LIST BUILDER -------------------------------
 function buildPriceList(containerId, items, prefix) {
   var html = '';
   var lastSec = '';
@@ -327,7 +327,7 @@ function buildPriceList(containerId, items, prefix) {
   }
 }
 
-// ── CATERING LIST BUILDER ────────────────────────────
+// -- CATERING LIST BUILDER ----------------------------
 function buildCateringList() {
   var html = '';
   var lastCourse = '';
@@ -385,7 +385,7 @@ function buildCateringList() {
   }
 }
 
-// ── FILTER ───────────────────────────────────────────
+// -- FILTER -------------------------------------------
 function filterList(containerId, q) {
   q = q.toLowerCase();
   var rows = document.querySelectorAll('#' + containerId + ' .item-row');
@@ -403,7 +403,7 @@ function filterList(containerId, q) {
   }
 }
 
-// ── HOURS ────────────────────────────────────────────
+// -- HOURS --------------------------------------------
 function buildHoursList() {
   var html = '';
   for (var i = 0; i < DAYS.length; i++) {
@@ -429,7 +429,7 @@ function buildHoursList() {
   }
 }
 
-// ── BANNER ───────────────────────────────────────────
+// -- BANNER -------------------------------------------
 function updatePreview() {
   var on = document.getElementById('bannerOn') && document.getElementById('bannerOn').checked;
   var txt = document.getElementById('bannerTxt') ? document.getElementById('bannerTxt').value.trim() : '';
@@ -438,10 +438,10 @@ function updatePreview() {
   updateBar();
 }
 
-// ── QUICK ACTIONS ────────────────────────────────────
+// -- QUICK ACTIONS ------------------------------------
 function quickClose() {
   document.getElementById('bannerOn').checked = true;
-  document.getElementById('bannerTxt').value = "We\'re closed today — see you tomorrow!";
+  document.getElementById('bannerTxt').value = "We\'re closed today - see you tomorrow!";
   updatePreview(); showTab('specials');
 }
 function quickSpecial() {
@@ -459,7 +459,7 @@ function quickClear() {
   updatePreview();
 }
 
-// ── UPDATE BAR ───────────────────────────────────────
+// -- UPDATE BAR ---------------------------------------
 function updateBar() {
   var n = Object.keys(priceChanges).length;
   var catN = Object.keys(cateringChanges).reduce(function(sum, id) {
@@ -474,7 +474,7 @@ function updateBar() {
   document.getElementById('chgCount').textContent = n + ' change' + (n !== 1 ? 's' : '') + ' ready to push';
 }
 
-// ── APPLY CHANGES ────────────────────────────────────
+// -- APPLY CHANGES ------------------------------------
 function applyChanges(html) {
   // Butcher/Deli prices
   var names = Object.keys(priceChanges);
@@ -551,7 +551,7 @@ function applyChanges(html) {
   return html;
 }
 
-// ── DEPLOY ───────────────────────────────────────────
+// -- DEPLOY -------------------------------------------
 function fst(id, cls, txt) {
   var el = document.getElementById(id); if (!el) return;
   el.className = 'fs ' + cls; el.textContent = txt;
@@ -567,7 +567,7 @@ function deployAll() {
   document.getElementById('deploy-rows').style.display = 'block';
   document.getElementById('openSiteBtn').style.display = 'none';
   document.getElementById('s1').className = 'step';
-  fst('fs-site','going','Pushing...'); fst('fs-mgr','','—');
+  fst('fs-site','going','Pushing...'); fst('fs-mgr','','-');
   fetch(RAW + '?nocache=' + Date.now())
     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
     .then(function(siteHTML) {
@@ -576,14 +576,14 @@ function deployAll() {
       var encoded; try { encoded = btoa(unescape(encodeURIComponent(modified))); } catch(e) { encoded = btoa(modified); }
       pushFile('index.html', encoded, function(ok, msg) {
         if (!ok) { fst('fs-site','err','Failed'); setStep('s1','err','Error: '+msg); btn.disabled=false; btn.textContent='Try Again'; return; }
-        fst('fs-site','ok','✓ '+msg);
+        fst('fs-site','ok','- '+msg);
         localStorage.setItem('bvmm_last_deployed', Date.now());
         var ldEl = document.getElementById('last-deployed'); if(ldEl) ldEl.textContent = 'Last pushed: just now';
         fst('fs-mgr','going','Pushing...');
         var toolHTML = document.documentElement.outerHTML;
         var toolEnc; try { toolEnc = btoa(unescape(encodeURIComponent(toolHTML))); } catch(e) { toolEnc = btoa(toolHTML); }
         pushFile('BVMM_push_live.html', toolEnc, function(ok2, msg2) {
-          fst('fs-mgr', ok2 ? 'ok' : 'err', ok2 ? '✓ '+msg2 : 'Failed');
+          fst('fs-mgr', ok2 ? 'ok' : 'err', ok2 ? '- '+msg2 : 'Failed');
           // Sync arrays with deployed prices
           Object.keys(priceChanges).forEach(function(name) {
             var all = DELI.concat(BUTCHER);
@@ -621,15 +621,15 @@ function startDeployCountdown(btn) {
   document.getElementById('openSiteBtn').style.display = 'block';
   var secs = 30;
   btn.disabled = true; btn.className = 'btn counting';
-  btn.textContent = '⏳ Live in ' + secs + 's…';
+  btn.textContent = '- Live in ' + secs + 's-';
   var iv = setInterval(function() {
     secs--;
-    if (secs > 0) { btn.textContent = '⏳ Live in ' + secs + 's…'; }
+    if (secs > 0) { btn.textContent = '- Live in ' + secs + 's-'; }
     else {
       clearInterval(iv);
       btn.disabled = false; btn.className = 'btn ready';
-      btn.textContent = '✅ Site is Live!';
-      setTimeout(function() { btn.className = 'btn success'; btn.textContent = '⬆ Push greencrk.com Live'; }, 3000);
+      btn.textContent = '- Site is Live!';
+      setTimeout(function() { btn.className = 'btn success'; btn.textContent = '- Push greencrk.com Live'; }, 3000);
     }
   }, 1000);
 }
@@ -640,14 +640,14 @@ function setStep(id,type,text) {
 
 
 
-// ── ROLLBACK ─────────────────────────────────────────
+// -- ROLLBACK -----------------------------------------
 var lastGoodSite = null;
 
 function saveRollback(html) { lastGoodSite = html; }
 
 function rollback() {
   var stepEl = document.getElementById('s1');
-  if (!lastGoodSite) { stepEl.className='step show err'; stepEl.textContent='No backup yet — push the site once first.'; return; }
+  if (!lastGoodSite) { stepEl.className='step show err'; stepEl.textContent='No backup yet - push the site once first.'; return; }
   // Inline confirm
   var existing = document.getElementById('rollback-confirm');
   if (existing) { existing.remove(); return; }
@@ -665,12 +665,12 @@ function doRollback() {
   stepEl.className = 'step show info'; stepEl.textContent = 'Rolling back...';
   var encoded; try { encoded = btoa(unescape(encodeURIComponent(lastGoodSite))); } catch(e) { encoded = btoa(lastGoodSite); }
   pushFile('index.html', encoded, function(ok, msg) {
-    if (ok) { stepEl.className='step show ok'; stepEl.textContent='✅ Rolled back! '+msg+' — wait 30s.'; }
+    if (ok) { stepEl.className='step show ok'; stepEl.textContent='- Rolled back! '+msg+' - wait 30s.'; }
     else { stepEl.className='step show err'; stepEl.textContent='Rollback failed: '+msg; }
   });
 }
 
-// ── BANNER-ONLY PUSH ─────────────────────────────────
+// -- BANNER-ONLY PUSH ---------------------------------
 function pushBannerOnly() {
   var btn = document.getElementById('bannerPushBtn');
   var stepEl = document.getElementById('banner-step');
@@ -694,15 +694,15 @@ function pushBannerOnly() {
       }
       var encoded; try { encoded = btoa(unescape(encodeURIComponent(html))); } catch(e) { encoded = btoa(html); }
       pushFile('index.html', encoded, function(ok, msg) {
-        btn.disabled = false; btn.textContent = '📢 Push Banner Live';
-        if (ok) { stepEl.className='step show ok'; stepEl.textContent='✅ Banner live! '+msg+' — wait 30s.'; }
+        btn.disabled = false; btn.textContent = '- Push Banner Live';
+        if (ok) { stepEl.className='step show ok'; stepEl.textContent='- Banner live! '+msg+' - wait 30s.'; }
         else { stepEl.className='step show err'; stepEl.textContent='Failed: '+msg; }
       });
     })
-    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Error: '+e.message; btn.disabled=false; btn.textContent='📢 Push Banner Live'; });
+    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Error: '+e.message; btn.disabled=false; btn.textContent='- Push Banner Live'; });
 }
 
-// ── UNSAVED CHANGES WARNING ───────────────────────────
+// -- UNSAVED CHANGES WARNING ---------------------------
 window.addEventListener('beforeunload', function(e) {
   var n = Object.keys(priceChanges).length;
   var catN = Object.keys(cateringChanges).reduce(function(s,id){return s+Object.keys(cateringChanges[id]).length;},0);
@@ -712,7 +712,7 @@ window.addEventListener('beforeunload', function(e) {
   }
 });
 
-// ── INIT ─────────────────────────────────────────────
+// -- INIT ---------------------------------------------
 buildPriceList('deli-list', DELI, 'd');
 buildPriceList('butcher-list', BUTCHER, 'b');
 buildCateringList();
@@ -735,14 +735,14 @@ function updateTool() {
     pushFile('BVMM_push_live.html', encoded, function(ok1, msg1) {
       if (!ok1) { stepEl.className='step show err'; stepEl.textContent='Error: '+msg1; btn.disabled=false; return; }
       stepEl.className = 'step show ok';
-      stepEl.textContent = '✅ Tool updated! ' + (msg1||'');
-      btn.disabled = false; btn.textContent = '✅ Done!';
+      stepEl.textContent = '- Tool updated! ' + (msg1||'');
+      btn.disabled = false; btn.textContent = '- Done!';
       setTimeout(function() { btn.innerHTML = '&#x1F4E6; Push Updated Tool to Server'; }, 3000);
     });
   }, 50);
 }
 
-// ── BACKUP ───────────────────────────────────────────
+// -- BACKUP -------------------------------------------
 function backupSite(btnEl) {
   var orig = btnEl ? btnEl.textContent : '';
   if (btnEl) { btnEl.disabled=true; btnEl.textContent='Downloading...'; }
@@ -754,7 +754,7 @@ function backupSite(btnEl) {
       URL.revokeObjectURL(url);
       if (btnEl) { btnEl.disabled=false; btnEl.textContent=orig; }
     }).catch(function(e) {
-      if (btnEl) { btnEl.disabled=false; btnEl.textContent='Failed — try again'; setTimeout(function(){btnEl.textContent=orig;},3000); }
+      if (btnEl) { btnEl.disabled=false; btnEl.textContent='Failed - try again'; setTimeout(function(){btnEl.textContent=orig;},3000); }
     });
 }
 
@@ -766,7 +766,7 @@ function downloadManager() {
   URL.revokeObjectURL(url);
 }
 
-// ── CLAUDE PATCH ─────────────────────────────────────
+// -- CLAUDE PATCH -------------------------------------
 function applyPatch() {
   var raw = document.getElementById('patchInput').value.trim();
   var stepEl = document.getElementById('patch-step');
@@ -788,7 +788,7 @@ function applyPatch() {
         if (html.indexOf(op.find) === -1) {
           stepEl.className='step show err';
           stepEl.textContent='Could not find: "' + op.find.substring(0,60) + '..."';
-          btn.disabled=false; btn.textContent='⚡ Apply Patch & Push Live'; return;
+          btn.disabled=false; btn.textContent='- Apply Patch & Push Live'; return;
         }
         html = html.split(op.find).join(op.replace || '');
         applied++;
@@ -796,16 +796,16 @@ function applyPatch() {
       stepEl.textContent = 'Pushing ' + applied + ' change' + (applied!==1?'s':'') + '...';
       var encoded; try { encoded = btoa(unescape(encodeURIComponent(html))); } catch(e) { encoded = btoa(html); }
       pushFile('index.html', encoded, function(ok, msg) {
-        if (!ok) { stepEl.className='step show err'; stepEl.textContent='Push failed: '+msg; btn.disabled=false; btn.textContent='⚡ Apply Patch & Push Live'; return; }
-        stepEl.className='step show ok'; stepEl.textContent='✅ Patched & live! ' + (msg||'') + ' — wait 30s.';
+        if (!ok) { stepEl.className='step show err'; stepEl.textContent='Push failed: '+msg; btn.disabled=false; btn.textContent='- Apply Patch & Push Live'; return; }
+        stepEl.className='step show ok'; stepEl.textContent='- Patched & live! ' + (msg||'') + ' - wait 30s.';
         document.getElementById('patchInput').value = '';
-        btn.disabled=false; btn.textContent='⚡ Apply Patch & Push Live';
+        btn.disabled=false; btn.textContent='- Apply Patch & Push Live';
       });
     })
-    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Error: '+e.message; btn.disabled=false; btn.textContent='⚡ Apply Patch & Push Live'; });
+    .catch(function(e) { stepEl.className='step show err'; stepEl.textContent='Error: '+e.message; btn.disabled=false; btn.textContent='- Apply Patch & Push Live'; });
 }
 
-// ── FILE UPLOAD ───────────────────────────────────────
+// -- FILE UPLOAD ---------------------------------------
 var selectedFile = null;
 function fileSelected() {
   var input = document.getElementById('fileInput');
@@ -816,7 +816,7 @@ function fileSelected() {
     document.getElementById('upload-step').textContent = 'File too large (' + (selectedFile.size/1024/1024).toFixed(1) + ' MB). Max 3MB.';
     selectedFile = null; input.value = ''; return;
   }
-  document.getElementById('fileLabel').textContent = 'File selected ✓';
+  document.getElementById('fileLabel').textContent = 'File selected -';
   document.getElementById('file-name-row').style.display = 'block';
   document.getElementById('selectedFileName').textContent = selectedFile.name;
   document.getElementById('selectedFileSize').textContent = (selectedFile.size / 1024).toFixed(1) + ' KB';
@@ -836,9 +836,9 @@ function uploadFile() {
     var b64 = btoa(binary);
     stepEl.textContent = 'Pushing ' + selectedFile.name + '...';
     pushFile(selectedFile.name, b64, function(ok, msg) {
-      if (!ok) { stepEl.className='step show err'; stepEl.textContent='Failed: '+msg; btn.disabled=false; btn.textContent='⬆ Push to Server'; return; }
-      stepEl.className='step show ok'; stepEl.textContent='✅ ' + selectedFile.name + ' is live! ' + (msg||'');
-      btn.disabled=false; btn.textContent='⬆ Push to Server';
+      if (!ok) { stepEl.className='step show err'; stepEl.textContent='Failed: '+msg; btn.disabled=false; btn.textContent='- Push to Server'; return; }
+      stepEl.className='step show ok'; stepEl.textContent='- ' + selectedFile.name + ' is live! ' + (msg||'');
+      btn.disabled=false; btn.textContent='- Push to Server';
       selectedFile = null;
       document.getElementById('fileInput').value = '';
       document.getElementById('fileLabel').textContent = 'Tap to choose a file';
@@ -863,7 +863,7 @@ function uploadFile() {
     el.textContent = 'Not yet pushed this session';
   }
 })();
-// ── AI CHAT ──────────────────────────────────────────
+// -- AI CHAT ------------------------------------------
 function aiChat() {
   var req = document.getElementById('aiInput').value.trim();
   if (!req) { 
@@ -920,7 +920,7 @@ function aiChat() {
 '
         +'- For hours: find class="hours-time">current time</span>
 '
-        +'- Make changes minimal — only what was asked
+        +'- Make changes minimal - only what was asked
 '
         +'- If unclear or not found, return empty patches and explain in summary
 
@@ -932,10 +932,10 @@ function aiChat() {
       xhr.setRequestHeader('Content-Type','application/json');
       xhr.timeout = 45000;
       xhr.onload = function(){
-        btn.disabled=false; btn.textContent='✨ Ask AI';
+        btn.disabled=false; btn.textContent='- Ask AI';
         try {
           var res = JSON.parse(xhr.responseText);
-          if (!res.ok){ statusEl.className='step show err'; statusEl.textContent='AI error: '+(res.error||'Unknown — is the worker updated?'); return; }
+          if (!res.ok){ statusEl.className='step show err'; statusEl.textContent='AI error: '+(res.error||'Unknown - is the worker updated?'); return; }
           var raw = res.content.replace(/```json|```/g,'').trim();
           var parsed = JSON.parse(raw);
           statusEl.className='step';
@@ -953,8 +953,8 @@ function aiChat() {
           statusEl.className='step show err'; statusEl.textContent='Could not read AI response: '+e.message;
         }
       };
-      xhr.onerror=function(){ btn.disabled=false; btn.textContent='✨ Ask AI'; statusEl.className='step show err'; statusEl.textContent='Network error'; };
-      xhr.ontimeout=function(){ btn.disabled=false; btn.textContent='✨ Ask AI'; statusEl.className='step show err'; statusEl.textContent='Timed out — try again'; };
+      xhr.onerror=function(){ btn.disabled=false; btn.textContent='- Ask AI'; statusEl.className='step show err'; statusEl.textContent='Network error'; };
+      xhr.ontimeout=function(){ btn.disabled=false; btn.textContent='- Ask AI'; statusEl.className='step show err'; statusEl.textContent='Timed out - try again'; };
       xhr.send(JSON.stringify({
         action:'ai',
         messages:[
@@ -966,7 +966,7 @@ Site HTML:
         ]
       }));
     })
-    .catch(function(e){ btn.disabled=false; btn.textContent='✨ Ask AI'; statusEl.className='step show err'; statusEl.textContent='Error: '+e.message; });
+    .catch(function(e){ btn.disabled=false; btn.textContent='- Ask AI'; statusEl.className='step show err'; statusEl.textContent='Error: '+e.message; });
 }
 
 function aiConfirm() {
@@ -989,7 +989,7 @@ function aiConfirm() {
   var encoded; try{ encoded=btoa(unescape(encodeURIComponent(html))); }catch(e){ encoded=btoa(html); }
   pushFile('index.html', encoded, function(ok,msg){
     if(!ok){ statusEl.className='step show err'; statusEl.textContent='Push failed: '+msg; return; }
-    statusEl.className='step show ok'; statusEl.textContent='✅ Live! '+msg+' — wait 30s.';
+    statusEl.className='step show ok'; statusEl.textContent='- Live! '+msg+' - wait 30s.';
     localStorage.setItem('bvmm_last_deployed', Date.now());
     var ldEl=document.getElementById('last-deployed'); if(ldEl) ldEl.textContent='Last pushed: just now';
     document.getElementById('aiInput').value='';
