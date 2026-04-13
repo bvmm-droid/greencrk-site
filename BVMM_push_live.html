@@ -6,7 +6,7 @@
 <title>BVMM Manager</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#F4F1EB;color:#2C1810;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;display:none}
+body{background:#F4F1EB;color:#2C1810;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
 .tabs{position:relative;display:flex;background:#2C1810;padding:6px 8px 0;gap:3px;position:sticky;top:0;z-index:100;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs::after{content:"";position:absolute;right:0;top:0;bottom:0;width:24px;background:linear-gradient(to right,transparent,rgba(44,24,16,.9));pointer-events:none}
 .tab{flex:0 0 56px;min-width:56px;padding:9px 2px;font-size:.55rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:8px 8px 0 0;cursor:pointer;line-height:1.3;text-align:center}
 .tab.active{background:#F4F1EB;color:#2C1810}
@@ -650,34 +650,7 @@ function setStep(id,type,text) {
   var el=document.getElementById(id); el.className='step'+(type?' show '+type:''); el.textContent=text;
 }
 
-// ── PIN PROTECTION ───────────────────────────────────
-(function() {
-  var stored = sessionStorage.getItem('bvmm_auth');
-  if (stored === 'ok') { document.body.style.display = ''; return; }
-  // Show PIN screen — body stays hidden, show a custom PIN UI
-  document.body.style.display = '';
-  document.body.innerHTML = '<div id="pin-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#F4F1EB;gap:16px;padding:32px">'
-    + '<div style="font-size:1.1rem;font-weight:700;color:#2C1810">BVMM Manager</div>'
-    + '<div style="font-size:.75rem;color:rgba(92,58,45,.5)">Enter PIN to continue</div>'
-    + '<input id="pin-input" type="password" inputmode="numeric" maxlength="4" autocomplete="off" style="width:120px;text-align:center;padding:14px;border:1.5px solid rgba(92,58,45,.2);border-radius:12px;font-size:1.4rem;letter-spacing:.3em;background:#FDFAF6;color:#2C1810;outline:none" placeholder="••••">'
-    + '<button id="pin-btn" style="background:#5C3A2D;color:#F4F1EB;border:none;border-radius:12px;padding:14px 32px;font-size:.85rem;font-weight:700;cursor:pointer;width:160px" onclick="checkPin()">Unlock</button>'
-    + '<div id="pin-err" style="font-size:.72rem;color:#8B3A2D;min-height:18px"></div>'
-    + '</div>';
-  var inp = document.getElementById('pin-input');
-  inp.focus();
-  inp.addEventListener('keydown', function(e){ if(e.key==='Enter') checkPin(); });
-})();
-function checkPin() {
-  var val = document.getElementById('pin-input').value;
-  if (val === '8585') {
-    sessionStorage.setItem('bvmm_auth', 'ok');
-    location.reload();
-  } else {
-    document.getElementById('pin-err').textContent = 'Incorrect PIN. Try again.';
-    document.getElementById('pin-input').value = '';
-    document.getElementById('pin-input').focus();
-  }
-}
+
 
 // ── ROLLBACK ─────────────────────────────────────────
 var lastGoodSite = null;
