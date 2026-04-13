@@ -3170,7 +3170,7 @@ nav.scrolled {
   <div class="cart-items" id="cartItems">
     <div class="cart-empty">
       <div class="cart-empty-icon">🥩</div>
-      <div>Your order is empty.<br>Add items from the menu above.</div>
+      <div>Your order is empty.<br>Tap any item to add it.</div>
     </div>
   </div>
 
@@ -4026,7 +4026,7 @@ function cItemHTML(item){
   }
   // Margin badge (visible only in admin mode via CSS)
   var tier=item.marginTier||'medium';
-  var tierEmoji=tier==='high'?'ð¢':tier==='low'?'ð´':'ð¡';
+  var tierEmoji=tier==='high'?'🟢':tier==='low'?'🔴':'🟡';
   var tierLabel=tier==='high'?'High':tier==='low'?'Low':'Med';
   var marginBadge='<span class="c-margin-badge '+tier+'">'+tierEmoji+' '+tierLabel+' · '+(item.marginPct||65)+'%</span>';
   // Star for high-margin items (admin-visible only via CSS)
@@ -4317,7 +4317,7 @@ function ogRenderCart(){
   var container=document.getElementById('cartItems');
   container.innerHTML='';
   if(ids.length===0){
-    container.innerHTML='<div class="cart-empty"><div class="cart-empty-icon">ð¥©</div><div>Your order is empty.<br>Add items from the gallery above.</div></div>';
+    container.innerHTML='<div class="cart-empty"><div class="cart-empty-icon">🥩</div><div>Your order is empty.<br>Tap any item to add it.</div></div>';
   } else {
     ids.forEach(function(id){
       var item=ogData[id];
@@ -4488,7 +4488,7 @@ function initLunchDay(){
   var isOpen=isOpenDay&&hour>=10&&hour<closeHour;
   var closeTime=day===0?'3pm':'5pm';
   if(day===1){
-    banner.innerHTML='<div class="lunch-day-banner">ð <span><strong>We\'re closed today.</strong> Stop by any other day of the week.</span></div>';
+    banner.innerHTML='<div class="lunch-day-banner">🔒 <span><strong>We\'re closed today.</strong> Stop by any other day of the week.</span></div>';
   } else if(isOpen){
     banner.innerHTML='<div class="lunch-day-banner">✅ <span><strong>We\'re open now</strong> — come on in.</span></div>';
     // Highlight 3 "today's picks" deterministically by day
@@ -4496,7 +4496,7 @@ function initLunchDay(){
     var picks=[day*3%cards.length,(day*3+7)%cards.length,(day*3+14)%cards.length];
     picks.forEach(function(i){if(cards[i]) cards[i].classList.add('today-pick');});
   } else if(isOpenDay){
-    banner.innerHTML='<div class="lunch-day-banner">ð <span><strong>We\'re closed right now</strong> — see you next time.</span></div>';
+    banner.innerHTML='<div class="lunch-day-banner">🔒 <span><strong>We\'re closed right now</strong> — see you next time.</span></div>';
   }
 }
 
@@ -5004,7 +5004,22 @@ document.addEventListener('DOMContentLoaded', function(){
   </div>
 </footer>
 
-<script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ r.unregister(); });
+  });
+  caches.keys().then(function(keys){
+    keys.forEach(function(k){ if(k.indexOf('bvmm')>-1) caches.delete(k); });
+  });
+}
+</script>
+
+
+
+
+
+
 </body>
 </html>
 
@@ -5329,7 +5344,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="cart-items" id="cartItems">
     <div class="cart-empty">
       <div class="cart-empty-icon">🥩</div>
-      <div>Your order is empty.<br>Add items from the menu above.</div>
+      <div>Your order is empty.<br>Tap any item to add it.</div>
     </div>
   </div>
 
@@ -6215,7 +6230,7 @@ function cItemHTML(item){
   }
   // Margin badge (visible only in admin mode via CSS)
   var tier=item.marginTier||'medium';
-  var tierEmoji=tier==='high'?'ð¢':tier==='low'?'ð´':'ð¡';
+  var tierEmoji=tier==='high'?'🟢':tier==='low'?'🔴':'🟡';
   var tierLabel=tier==='high'?'High':tier==='low'?'Low':'Med';
   var marginBadge='<span class="c-margin-badge '+tier+'">'+tierEmoji+' '+tierLabel+' · '+(item.marginPct||65)+'%</span>';
   // Star for high-margin items (admin-visible only via CSS)
@@ -6507,7 +6522,7 @@ function ogRenderCart(){
   var container=document.getElementById('cartItems');
   container.innerHTML='';
   if(ids.length===0){
-    container.innerHTML='<div class="cart-empty"><div class="cart-empty-icon">ð¥©</div><div>Your order is empty.<br>Add items from the gallery above.</div></div>';
+    container.innerHTML='<div class="cart-empty"><div class="cart-empty-icon">🥩</div><div>Your order is empty.<br>Tap any item to add it.</div></div>';
   } else {
     ids.forEach(function(id){
       var item=ogData[id];
@@ -6678,7 +6693,7 @@ function initLunchDay(){
   var isOpen=isOpenDay&&hour>=10&&hour<closeHour;
   var closeTime=day===0?'3pm':'5pm';
   if(day===1){
-    banner.innerHTML='<div class="lunch-day-banner">ð <span><strong>We\'re closed today.</strong> Stop by any other day of the week.</span></div>';
+    banner.innerHTML='<div class="lunch-day-banner">🔒 <span><strong>We\'re closed today.</strong> Stop by any other day of the week.</span></div>';
   } else if(isOpen){
     banner.innerHTML='<div class="lunch-day-banner">✅ <span><strong>We\'re open now</strong> — come on in.</span></div>';
     // Highlight 3 "today's picks" deterministically by day
@@ -6686,7 +6701,7 @@ function initLunchDay(){
     var picks=[day*3%cards.length,(day*3+7)%cards.length,(day*3+14)%cards.length];
     picks.forEach(function(i){if(cards[i]) cards[i].classList.add('today-pick');});
   } else if(isOpenDay){
-    banner.innerHTML='<div class="lunch-day-banner">ð <span><strong>We\'re closed right now</strong> — see you next time.</span></div>';
+    banner.innerHTML='<div class="lunch-day-banner">🔒 <span><strong>We\'re closed right now</strong> — see you next time.</span></div>';
   }
 }
 
@@ -7748,7 +7763,16 @@ document.addEventListener('DOMContentLoaded', function(){
   </div>
 </footer>
 
-<script>if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');}</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ r.unregister(); });
+  });
+  caches.keys().then(function(keys){
+    keys.forEach(function(k){ if(k.indexOf('bvmm')>-1) caches.delete(k); });
+  });
+}
+</script>
   <script src="/ai-config.js"></script> 
 </body>
 </html>
@@ -7859,5 +7883,342 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 })();
 </script>
+
+<style>
+/* ═══════════ BVMM COMPREHENSIVE FIX v3 ═══════════ */
+
+/* Cart close button — dark & visible */
+.cart-close {
+  background: rgba(92,58,45,.12) !important;
+  color: var(--white) !important;
+  border: 1.5px solid rgba(92,58,45,.25) !important;
+  border-radius: 50% !important;
+  width: 34px !important; height: 34px !important;
+  font-size: .95rem !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  cursor: pointer !important; flex-shrink: 0 !important;
+}
+.cart-close:active { background: rgba(92,58,45,.22) !important; }
+
+/* Order sheet close button */
+.os-close-btn {
+  position: absolute; top: 14px; right: 14px;
+  background: rgba(255,255,255,.15);
+  border: 1.5px solid rgba(255,255,255,.3);
+  color: #fff; font-size: .95rem;
+  width: 32px; height: 32px; border-radius: 50%;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  z-index: 10; line-height: 1;
+}
+.os-close-btn:active { background: rgba(255,255,255,.28); }
+.order-sheet { position: relative !important; }
+
+/* View cart toast */
+#bvmm-view-cart-toast {
+  position: fixed; bottom: 96px; left: 50%;
+  transform: translateX(-50%);
+  background: #5C3A2D; color: #F4F1EB;
+  padding: 11px 22px; border-radius: 100px;
+  font-size: .78rem; font-weight: 700;
+  z-index: 9998; opacity: 0;
+  transition: opacity .25s ease;
+  pointer-events: none; white-space: nowrap;
+  box-shadow: 0 4px 24px rgba(0,0,0,.35);
+  letter-spacing: .03em;
+}
+#bvmm-view-cart-toast.show {
+  pointer-events: auto; cursor: pointer; opacity: 1;
+}
+
+/* Search result add button */
+.search-result-item { position: relative; }
+.sr-add-btn {
+  background: var(--mint); color: #fff;
+  border: none; border-radius: 100px;
+  padding: 5px 12px; font-size: .65rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  letter-spacing: .05em;
+}
+.sr-add-btn:active { opacity: .8; }
+</style>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// BVMM COMPREHENSIVE FIX v3
+// ═══════════════════════════════════════════════════════
+(function() {
+
+  // ── UTIL: get ALL elements matching a selector (handles duplicate IDs) ──
+  function getAll(sel) { return Array.from(document.querySelectorAll(sel)); }
+
+  // ── FIX 1: Square API base auto-detect ──
+  function syncSquareEndpoint() {
+    if (typeof SQ_ACCESS_TOKEN === 'undefined' || typeof SQ_API_BASE === 'undefined') return;
+    SQ_API_BASE = SQ_ACCESS_TOKEN.indexOf('sandbox') !== -1
+      ? 'https://connect.squareupsandbox.com/v2'
+      : 'https://connect.squareup.com/v2';
+  }
+  syncSquareEndpoint();
+
+  // ── FIX 2: Add close (✕) button to EVERY order sheet ──
+  function addOrderSheetCloseBtns() {
+    getAll('.order-sheet').forEach(function(sheet) {
+      if (sheet.querySelector('.os-close-btn')) return;
+      var btn = document.createElement('button');
+      btn.className = 'os-close-btn';
+      btn.innerHTML = '&#x2715;';
+      btn.setAttribute('aria-label', 'Close');
+      btn.onclick = function(e) { e.stopPropagation(); closeOrderSheet(); };
+      sheet.appendChild(btn);
+    });
+  }
+
+  // ── FIX 3: View-cart toast ──
+  function setupViewCartToast() {
+    if (document.getElementById('bvmm-view-cart-toast')) return;
+    var t = document.createElement('div');
+    t.id = 'bvmm-view-cart-toast';
+    t.onclick = function() { t.classList.remove('show'); if (typeof ogOpenCart === 'function') ogOpenCart(); };
+    document.body.appendChild(t);
+  }
+  function showViewCartToast(itemName, qty) {
+    var t = document.getElementById('bvmm-view-cart-toast');
+    if (!t) return;
+    var total = 0;
+    if (typeof ogCart !== 'undefined') Object.values(ogCart).forEach(function(q){ total += q; });
+    t.textContent = qty + ' \u00d7 ' + itemName + ' added \u2014 View Cart (' + total + ') \u2192';
+    t.classList.add('show');
+    clearTimeout(t._t);
+    t._t = setTimeout(function(){ t.classList.remove('show'); }, 3500);
+  }
+
+  // ── FIX 4: Unified ogCart updater — updates ALL duplicate cart elements ──
+  function renderAllCarts() {
+    if (typeof ogRenderCart === 'function') ogRenderCart();
+    // Sync any duplicate cart elements
+    var first = document.querySelector('#ogCart #cartItems');
+    if (!first) return;
+    var allCartItems = getAll('#cartItems');
+    var allBadges    = getAll('#cartBadge');
+    var allTotals    = getAll('#cartTotal');
+    var allFabBadges = getAll('#fabBadge');
+    var allFabTotals = getAll('#fabTotal');
+    if (allCartItems.length > 1) {
+      for (var i = 1; i < allCartItems.length; i++) {
+        allCartItems[i].innerHTML = first.innerHTML;
+      }
+    }
+    var badge = allBadges[0] ? allBadges[0].textContent : '0 items';
+    var total = allTotals[0] ? allTotals[0].textContent : '$0.00';
+    for (var j = 1; j < allBadges.length; j++) allBadges[j].textContent = badge;
+    for (var k = 1; k < allTotals.length; k++) allTotals[k].textContent = total;
+  }
+
+  // ── FIX 5: Bridge osAddToCart → ogCart ──
+  function patchOsAddToCart() {
+    if (typeof osAddToCart === 'undefined') return;
+    window.osAddToCart = function() {
+      if (!osCurrentItem) return;
+      var name  = osCurrentItem.name;
+      var price = parseFloat(osCurrentItem.price) || 0;
+      var cat   = osCurrentItem.cat || 'Item';
+      var qty   = parseInt(osQty) || 1;
+      var id    = 'os_' + name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+      if (typeof ogData !== 'undefined')
+        ogData[id] = { id: id, name: name, price: price, unit: '', cat: cat };
+
+      if (typeof ogCart !== 'undefined')
+        ogCart[id] = (ogCart[id] || 0) + qty;
+
+      osCartItems[name] = (osCartItems[name] || 0) + qty;
+
+      renderAllCarts();
+      showViewCartToast(name, qty);
+      closeOrderSheet();
+    };
+  }
+
+  // ── FIX 6: ogOpenCart/ogCloseCart — open/close ALL matching drawers ──
+  function patchCartDrawer() {
+    if (typeof ogOpenCart === 'undefined') return;
+    window.ogOpenCart = function() {
+      getAll('#ogCart').forEach(function(el){ el.classList.add('open'); });
+      getAll('#ogOverlay').forEach(function(el){ el.classList.add('show'); });
+      renderAllCarts();
+    };
+    window.ogCloseCart = function() {
+      getAll('#ogCart').forEach(function(el){ el.classList.remove('open'); });
+      getAll('#ogOverlay').forEach(function(el){ el.classList.remove('show'); });
+    };
+  }
+
+  // ── FIX 7: ogShowOrderForm — check unified ogCart ──
+  function patchShowOrderForm() {
+    if (typeof ogShowOrderForm === 'undefined') return;
+    window.ogShowOrderForm = function() {
+      if (!Object.keys(ogCart || {}).length) {
+        if (typeof showToast === 'function') showToast('Add items to your order first!');
+        return;
+      }
+      getAll('#cartSummary').forEach(function(el){ el.style.display = 'none'; });
+      getAll('#cartOrderForm').forEach(function(el){ el.classList.add('show'); });
+      getAll('#cofConfirm').forEach(function(el){ el.classList.remove('show'); });
+      getAll('#cofForm').forEach(function(el){ el.style.display = ''; });
+    };
+    window.ogHideOrderForm = function() {
+      getAll('#cartSummary').forEach(function(el){ el.style.display = ''; });
+      getAll('#cartOrderForm').forEach(function(el){ el.classList.remove('show'); });
+    };
+  }
+
+  // ── FIX 8: Square for regular cart items ──
+  window.createSquareOrderFromCart = function(items, name, phone, notes, pickup) {
+    syncSquareEndpoint();
+    return fetch(SQ_API_BASE + '/orders', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + SQ_ACCESS_TOKEN,
+        'Content-Type': 'application/json',
+        'Square-Version': '2024-01-18'
+      },
+      body: JSON.stringify({
+        idempotency_key: 'bvmm-' + Date.now() + '-' + Math.random().toString(36).substr(2,9),
+        order: {
+          location_id: SQ_LOCATION_ID,
+          reference_id: 'BVMM-' + Date.now(),
+          line_items: items.map(function(i){
+            return {
+              name: i.name,
+              quantity: String(i.qty),
+              base_price_money: { amount: Math.round(i.price * 100), currency: 'USD' }
+            };
+          }),
+          metadata: { customer_name: name, customer_phone: phone, notes: notes||'', pickup_time: pickup||'' }
+        }
+      })
+    }).then(function(r){ return r.json().then(function(d){
+      if (!r.ok) throw new Error(d.errors&&d.errors[0]?d.errors[0].detail:'Square error');
+      return d.order;
+    }); });
+  };
+
+  function patchSubmitOrder() {
+    if (typeof ogSubmitOrder === 'undefined') return;
+    var _orig = ogSubmitOrder;
+    window.ogSubmitOrder = function() {
+      syncSquareEndpoint();
+      var sqReady = typeof SQ_ACCESS_TOKEN !== 'undefined' &&
+                   SQ_ACCESS_TOKEN && SQ_ACCESS_TOKEN !== 'YOUR_SQ_ACCESS_TOKEN';
+      var catItems = typeof MENU !== 'undefined' && typeof cState !== 'undefined'
+        ? MENU.filter(function(i){ return cState.selected[i.id]; }) : [];
+      var regularItems = Object.keys(ogCart||{}).filter(function(id){
+        return id.indexOf('os_') === 0 && ogData[id] && ogData[id].price > 0;
+      }).map(function(id){
+        return { name: ogData[id].name, price: ogData[id].price, qty: ogCart[id] };
+      });
+
+      if (sqReady && regularItems.length && !catItems.length) {
+        var n = (document.getElementById('cofName')||{value:''}).value;
+        var p = (document.getElementById('cofPhone')||{value:''}).value;
+        var pu = (document.getElementById('cofPickup')||{value:''}).value;
+        var no = (document.getElementById('cofNotes')||{value:''}).value;
+        var btn = document.getElementById('cofSubmitBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Sending to Square\u2026'; }
+        createSquareOrderFromCart(regularItems, n, p, no, pu)
+          .then(function(order){ console.log('Square order:', order.id); })
+          .catch(function(e){ console.warn('Square fallback:', e.message); })
+          .finally(function(){
+            if (btn) { btn.disabled = false; btn.textContent = 'Send Order Request \u2192'; }
+            _orig();
+          });
+        return;
+      }
+      _orig();
+    };
+  }
+
+  // ── FIX 9: Search results — add "Add" button ──
+  function patchSearchResults() {
+    if (typeof gSearch === 'undefined') return;
+    var _orig = gSearch;
+    window.gSearch = function(q) {
+      _orig(q);
+      // Enhance search result items with Add buttons
+      var list = document.getElementById('searchResultsList');
+      if (!list || !q.trim()) return;
+      list.querySelectorAll('.search-result-item').forEach(function(item) {
+        if (item.querySelector('.sr-add-btn')) return;
+        var el = item._bvmmEl;
+        if (!el) return;
+        var btn = document.createElement('button');
+        btn.className = 'sr-add-btn';
+        btn.textContent = '+ Add';
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          var onclick = el.getAttribute('onclick') || '';
+          var m = onclick.match(/openOrderSheet\(([^)]+)\)/);
+          if (m) {
+            try { eval('openOrderSheet(' + m[1] + ')'); }
+            catch(err) { console.warn('Could not parse openOrderSheet:', err); }
+          }
+        };
+        item.appendChild(btn);
+      });
+    };
+    // Patch result builder to store element reference
+    var _origBuild = gSearch;
+    // Re-patch the result DOM builder
+    var realPatch = function(q) {
+      _orig(q);
+      var list = document.getElementById('searchResultsList');
+      if (!list || !q) return;
+      var items = list.querySelectorAll('.search-result-item');
+      var srcEls = [];
+      document.querySelectorAll('.lcard:not(.search-hidden)').forEach(function(c){ srcEls.push(c); });
+      document.querySelectorAll('.mrow:not(.search-hidden)').forEach(function(r){ srcEls.push(r); });
+      items.forEach(function(item, i) {
+        if (item.querySelector('.sr-add-btn')) return;
+        var srcEl = srcEls[i];
+        if (!srcEl) return;
+        var onclick = srcEl.getAttribute('onclick') || '';
+        var m = onclick.match(/openOrderSheet\(([^)]+)\)/);
+        if (!m) return;
+        var btn = document.createElement('button');
+        btn.className = 'sr-add-btn';
+        btn.textContent = '+ Add';
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          try { eval('openOrderSheet(' + m[1] + ')'); }
+          catch(er) {}
+        };
+        item.appendChild(btn);
+      });
+    };
+    window.gSearch = realPatch;
+  }
+
+  // ── APPLY ALL ──
+  function applyAll() {
+    syncSquareEndpoint();
+    setupViewCartToast();
+    addOrderSheetCloseBtns();
+    patchOsAddToCart();
+    patchCartDrawer();
+    patchShowOrderForm();
+    patchSubmitOrder();
+    patchSearchResults();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAll);
+  } else {
+    applyAll();
+  }
+
+})();
+</script>
+
 </body>
 </html>
