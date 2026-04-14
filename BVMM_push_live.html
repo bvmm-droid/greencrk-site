@@ -1073,12 +1073,24 @@ function deployAll() {
     .catch(function(e) { fst('fs-site','err','Failed'); setStep('s1','err','Could not fetch: '+e.message); btn.disabled=false; btn.textContent='Try Again'; });
 }
 
-function pushFile(filename, content, cb) {
+function pushFile(filename, content, cb, isRetry) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', WORKER, true); xhr.setRequestHeader('Content-Type','application/json'); xhr.timeout = 90000;
-  xhr.onload = function() { try { var r=JSON.parse(xhr.responseText); if(r.ok) cb(true,r.commit||'ok'); else cb(false,r.error||'Error'); } catch(e){cb(false,'Bad response');} };
-  xhr.onerror = function(){cb(false,'Network error');}; xhr.ontimeout = function(){cb(false,'Timed out');};
-  xhr.send(JSON.stringify({action:'deploy',filename:filename,content:content}));
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.ok) { cb(true, r.commit||'ok'); return; }
+      // If SHA mismatch, wait 2s and retry once
+      if (!isRetry && r.error && r.error.indexOf('expected') >= 0) {
+        setTimeout(function() { pushFile(filename, content, cb, true); }, 2000);
+        return;
+      }
+      cb(false, r.error||'Error');
+    } catch(e) { cb(false,'Bad response'); }
+  };
+  xhr.onerror = function(){cb(false,'Network error');};
+  xhr.ontimeout = function(){cb(false,'Timed out');};
+  xhr.send(JSON.stringify({action:'deploy', filename:filename, content:content}));
 }
 
 function startDeployCountdown(btn) {
@@ -1667,7 +1679,7 @@ function checkMarketPrices() {
 var API_KEYS_CONFIG = [
   { id: 'pexels',    label: 'Pexels',     desc: 'Powers image search in the Images tab',           url: 'https://www.pexels.com/api/',           placeholder: 'Paste your Pexels API key' },
   { id: 'unsplash',  label: 'Unsplash',   desc: 'High-quality photo search for your site',         url: 'https://unsplash.com/developers',       placeholder: 'Paste your Unsplash Access Key' },
-  { id: 'openai',    label: 'OpenAI',     desc: 'Powers the AI assistant (Ask AI tab)',             url: 'https://platform.openai.com/api-keys',  placeholder: 'Paste your OpenAI API key' },
+  { id: 'openai',    label: 'Claude (Anthropic)', desc: 'Powers the AI assistant (Ask AI tab)',             url: 'https://console.anthropic.com/settings/keys',  placeholder: 'Paste your Claude API key (sk-ant-...)' },
   { id: 'github',    label: 'GitHub Token', desc: 'Deploys files to greencrk.com',                url: 'https://github.com/settings/tokens',    placeholder: 'Paste your GitHub personal access token' },
 ];
 
