@@ -109,7 +109,7 @@ h2 span{color:#A9B7A0}
     <div class="qa-section">
       <p class="qa-label">Quick Actions</p>
       <button class="qa-btn" onclick="quickClose()">🔒 Mark Closed Today</button>
-      <button class="qa-btn" onclick="quickSpecial()">⭐ Set Today\'s Special</button>
+      <button class="qa-btn" onclick="quickSpecial()">⭐ Set Today's Special</button>
       <button class="qa-btn" onclick="quickClear()">✕ Clear All Notices</button>
     </div>
     </div>
@@ -1054,11 +1054,15 @@ function sqDeploy(activate) {
 sqCheckStatus();
 
 // -- IMAGES TAB ----------------------------------------
-var imagesLoaded = false;
-
 function loadImages() {
-  if (imagesLoaded) return;
-  imagesLoaded = true;
+  document.getElementById('img-grid-old').innerHTML = '';
+  document.getElementById('img-grid-new').innerHTML = '';
+  document.getElementById('dlOldBtn').style.display = 'none';
+  document.getElementById('dlNewBtn').style.display = 'none';
+  var so = document.getElementById('img-status-old');
+  var sn = document.getElementById('img-status-new');
+  so.style.display = ''; sn.style.display = '';
+  so.textContent = 'Loading...'; sn.textContent = 'Loading...';
   fetchSiteImages('https://www.babylonvillagemeatmarket.com/', 'old', 'https://www.babylonvillagemeatmarket.com');
   fetchSiteImages('https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html', 'new', 'https://greencrk.com');
 }
@@ -1139,5 +1143,6 @@ function downloadAll(key) {
   });
 }
 
+</script>
 </body>
 </html>
