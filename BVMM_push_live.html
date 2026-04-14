@@ -310,6 +310,13 @@ body{background:#F5F0E8;color:#1A0A04;font-family:-apple-system,BlinkMacSystemFo
   <!-- DIRECT SEARCH -->
   <div class="card">
     <div class="section-label">🔍 Search Photos</div>
+    <!-- Source selector -->
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button onclick="setImgSource('all')" id="src-all" class="sub-btn active" style="font-size:.65rem">🌐 All Sources</button>
+      <button onclick="setImgSource('google')" id="src-google" class="sub-btn" style="font-size:.65rem">Google</button>
+      <button onclick="setImgSource('pexels')" id="src-pexels" class="sub-btn" style="font-size:.65rem">Pexels</button>
+      <button onclick="setImgSource('unsplash')" id="src-unsplash" class="sub-btn" style="font-size:.65rem">Unsplash</button>
+    </div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input id="imgSearchInput" type="text" placeholder="ribeye steak raw, salmon fillet, butcher shop..." style="flex:1;padding:10px 12px;border:1.5px solid #e5e5e5;border-radius:10px;font-size:.78rem;background:#f8f8f8;color:#111" onkeydown="if(event.key==='Enter')searchImages(this.value)">
       <button onclick="searchImages(document.getElementById('imgSearchInput').value)" style="background:#111;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:.75rem;font-weight:800;cursor:pointer">Go</button>
@@ -1737,6 +1744,16 @@ function saveKeyFromInput(id) {
 buildApiKeysList();
 
 // ── IMAGE SEARCH ─────────────────────────────────────
+var imgSource = 'all'; // 'all', 'google', 'pexels', 'unsplash'
+
+function setImgSource(src) {
+  imgSource = src;
+  ['all','google','pexels','unsplash'].forEach(function(s) {
+    var btn = document.getElementById('src-' + s);
+    if (btn) btn.classList.toggle('active', s === src);
+  });
+}
+
 function searchImages(query) {
   var resultsEl = document.getElementById('imgSearchResults');
   var statusEl = document.getElementById('imgSearchStatus');
@@ -1748,43 +1765,59 @@ function searchImages(query) {
 
   var promises = [];
 
-  // Pexels via server-side key
-  promises.push(
-    fetch(WORKER, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'pexels', query: query })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (!d.ok) return [];
-      return (d.photos || []).map(function(p) {
-        return { src: p.src.medium, full: p.src.large, thumb: p.src.small, credit: p.photographer, source: 'Pexels' };
-      });
-    })
-    .catch(function() { return []; })
-  );
+  if (imgSource === 'all' || imgSource === 'google') {
+    promises.push(
+      fetch(WORKER, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'google-images', query: query }) })
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.ok) return [];
+        return (d.photos||[]).map(function(p){
+          return {src:p.src.medium, full:p.src.large, thumb:p.src.small, credit:p.photographer, source:'Google'};
+        });
+      }).catch(function(){return[];})
+    );
+  }
 
-  // Unsplash via server-side key
-  promises.push(
-    fetch(WORKER, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'unsplash', query: query })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (!d.ok) return [];
-      return (d.photos || []).map(function(p) {
-        return { src: p.src.medium, full: p.src.large, thumb: p.src.small, credit: p.photographer, source: 'Unsplash' };
-      });
-    })
-    .catch(function() { return []; })
-  );
+  if (imgSource === 'all' || imgSource === 'pexels') {
+    promises.push(
+      fetch(WORKER, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'pexels', query: query }) })
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.ok) return [];
+        return (d.photos||[]).map(function(p){
+          return {src:p.src.medium, full:p.src.large, thumb:p.src.small, credit:p.photographer, source:'Pexels'};
+        });
+      }).catch(function(){return[];})
+    );
+  }
+
+  if (imgSource === 'all' || imgSource === 'unsplash') {
+    promises.push(
+      fetch(WORKER, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'unsplash', query: query }) })
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.ok) return [];
+        return (d.photos||[]).map(function(p){
+          return {src:p.src.medium, full:p.src.large, thumb:p.src.small, credit:p.photographer, source:'Unsplash'};
+        });
+      }).catch(function(){return[];})
+    );
+  }
 
   Promise.all(promises).then(function(results) {
     var all = [];
+    var seenUrls = {};
     results.forEach(function(r) { all = all.concat(r); });
+    // Deduplicate by URL
+    all = all.filter(function(img) {
+      var key = (img.src||'').split('?')[0];
+      if (seenUrls[key]) return false;
+      seenUrls[key] = true;
+      return true;
+    });
     statusEl.style.display = 'none';
     if (!all.length) { statusEl.style.display = 'block'; statusEl.textContent = 'No results found. Try different words.'; return; }
     all.forEach(function(img) {
