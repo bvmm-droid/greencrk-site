@@ -1830,10 +1830,15 @@ function searchImages(query) {
       overlay.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;opacity:0;transition:.2s';
       overlay.innerHTML = '<span style="font-size:.62rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(192,57,43,.85);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span>';
       wrap.appendChild(el); wrap.appendChild(badge); wrap.appendChild(overlay);
-      wrap.ontouchstart = function() { overlay.style.opacity = '1'; };
+      var touchStartX, touchStartY;
+      wrap.ontouchstart = function(e) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; overlay.style.opacity = '1'; };
+      wrap.ontouchmove = function() { overlay.style.opacity = '0'; };
       wrap.ontouchend = function(e) {
         overlay.style.opacity = '0';
         var t = e.changedTouches[0];
+        var dx = Math.abs(t.clientX - touchStartX);
+        var dy = Math.abs(t.clientY - touchStartY);
+        if (dx > 8 || dy > 8) return;
         var target = document.elementFromPoint(t.clientX, t.clientY);
         if (target && target.textContent.indexOf('ADD TO SITE') !== -1) addImageToSite(img.src);
         else saveSingleImage(img.src);
@@ -2526,10 +2531,13 @@ function renderImages(imgs, key) {
     overlay.innerHTML = '<span style="font-size:1.1rem;color:#fff;font-weight:700;font-size:.6rem">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.7);background:rgba(92,58,45,.7);padding:3px 7px;border-radius:6px;font-weight:700">+ ADD TO SITE</span>';
     wrap.appendChild(img);
     wrap.appendChild(overlay);
-    wrap.ontouchstart = function() { overlay.style.opacity = '1'; };
+    var ts2X, ts2Y;
+    wrap.ontouchstart = function(e) { ts2X = e.touches[0].clientX; ts2Y = e.touches[0].clientY; overlay.style.opacity = '1'; };
+    wrap.ontouchmove = function() { overlay.style.opacity = '0'; };
     wrap.ontouchend = function(e) {
       overlay.style.opacity = '0';
       var t = e.changedTouches[0];
+      if (Math.abs(t.clientX - ts2X) > 8 || Math.abs(t.clientY - ts2Y) > 8) return;
       var el = document.elementFromPoint(t.clientX, t.clientY);
       if (el && el.textContent.indexOf('ADD TO SITE') !== -1) {
         addImageToSite(src);
