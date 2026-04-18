@@ -290,115 +290,38 @@ body{background:#F5F0E8;color:#1A0A04;font-family:-apple-system,BlinkMacSystemFo
 
 <!-- ════ IMAGES ════ -->
 <div id="panel-images" class="panel">
-  <p class="sec-title">Image Library</p>
-  <p class="sec-sub">Search millions of photos or ask AI to find exactly what you need.</p>
 
-  <!-- AI DESCRIBE WHAT YOU WANT -->
-  <div class="card">
-    <div class="section-label">✨ Ask AI to Find a Photo</div>
-    <p style="font-size:.7rem;color:#888;margin-bottom:10px;line-height:1.5">Describe what you want in plain English — AI finds the best search terms automatically.</p>
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <input id="aiImgInput" type="text" placeholder="e.g. a beautiful dry aged porterhouse raw on a wooden board" style="flex:1;padding:10px 12px;border:1.5px solid #e5e5e5;border-radius:10px;font-size:.78rem;background:#f8f8f8;color:#111" onkeydown="if(event.key==='Enter')aiImageSearch()">
-      <button id="aiImgBtn" onclick="aiImageSearch()" style="background:#111;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:.75rem;font-weight:800;cursor:pointer;white-space:nowrap">Find Photos</button>
-    </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <input id="imgSearchInput" type="text" placeholder="ribeye, salmon, dry aged..." style="flex:1;padding:13px 15px;border:1.5px solid rgba(26,10,4,.12);border-radius:14px;font-size:.9rem;background:#fff;color:#1A0A04" onkeydown="if(event.key==='Enter')doImgSearch()">
+    <button onclick="doImgSearch()" style="background:#1A0A04;color:#fff;border:none;border-radius:14px;padding:13px 20px;font-size:.85rem;font-weight:800;cursor:pointer">Go</button>
   </div>
 
-  <!-- DIRECT SEARCH -->
-  <div class="card">
-    <div class="section-label">🔍 Search Photos</div>
-    <!-- Source selector -->
-    <div style="display:flex;gap:6px;margin-bottom:10px">
-      <button onclick="setImgSource('all')" id="src-all" class="sub-btn active" style="font-size:.65rem">🌐 All Sources</button>
-      <button onclick="setImgSource('google')" id="src-google" class="sub-btn" style="font-size:.65rem">Google</button>
-      <button onclick="setImgSource('pexels')" id="src-pexels" class="sub-btn" style="font-size:.65rem">Pexels</button>
-      <button onclick="setImgSource('unsplash')" id="src-unsplash" class="sub-btn" style="font-size:.65rem">Unsplash</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <input id="imgSearchInput" type="text" placeholder="ribeye steak raw, salmon fillet, butcher shop..." style="flex:1;padding:10px 12px;border:1.5px solid #e5e5e5;border-radius:10px;font-size:.78rem;background:#f8f8f8;color:#111" onkeydown="if(event.key==='Enter')searchImages(this.value)">
-      <button onclick="searchImages(document.getElementById('imgSearchInput').value)" style="background:#111;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:.75rem;font-weight:800;cursor:pointer">Go</button>
-    </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-      <button onclick="quickSearch('dry aged steak')" class="sub-btn">Dry Aged</button>
-      <button onclick="quickSearch('butcher shop meat counter')" class="sub-btn">Butcher</button>
-      <button onclick="quickSearch('fresh salmon fillet')" class="sub-btn">Salmon</button>
-      <button onclick="quickSearch('deli cold cuts platter')" class="sub-btn">Deli</button>
-      <button onclick="quickSearch('catering food platter party')" class="sub-btn">Catering</button>
-      <button onclick="quickSearch('raw ground beef prime')" class="sub-btn">Ground Beef</button>
-    </div>
-    <div id="imgSearchStatus" style="display:none;font-size:.72rem;color:#888;padding:8px 0;text-align:center"></div>
-    <div id="imgSearchResults" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    <button onclick="quickSearch('dry aged ribeye')" class="sub-btn">Dry Aged</button>
+    <button onclick="quickSearch('prime beef butcher')" class="sub-btn">Butcher</button>
+    <button onclick="quickSearch('salmon fillet fresh')" class="sub-btn">Salmon</button>
+    <button onclick="quickSearch('deli meat cold cuts')" class="sub-btn">Deli</button>
+    <button onclick="quickSearch('catering meat platter')" class="sub-btn">Catering</button>
+    <button onclick="quickSearch('ground beef prime')" class="sub-btn">Ground Beef</button>
+    <button onclick="quickSearch('wagyu beef marbled')" class="sub-btn">Wagyu</button>
+    <button onclick="quickSearch('lamb chops raw')" class="sub-btn">Lamb</button>
+    <button onclick="quickSearch('berkshire pork chop')" class="sub-btn">Pork</button>
+    <button onclick="quickSearch('whole raw chicken')" class="sub-btn">Chicken</button>
   </div>
 
-  <!-- BROWSE SITE -->
-  <div class="card" style="padding:0;overflow:hidden">
-    <div style="padding:12px 14px 10px;border-bottom:1px solid #eee">
-      <div class="section-label" style="margin-bottom:8px">Browse a Website</div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <input id="browserUrl" type="url" placeholder="babylonvillagemeatmarket.com" style="flex:1;padding:9px 12px;border-radius:10px;border:1.5px solid #e5e5e5;font-size:.76rem;background:#f8f8f8;color:#111" value="https://www.babylonvillagemeatmarket.com">
-        <button onclick="browserGo()" style="background:#111;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:.75rem;font-weight:800;cursor:pointer;white-space:nowrap">Go →</button>
-      </div>
-      <div id="browserNavRow" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"></div>
-    </div>
-    <div id="browserContent" style="min-height:60px;padding:12px 14px;font-size:.74rem;color:#555;line-height:1.8">
-      <p style="color:#bbb;text-align:center;padding:16px 0">Tap Go to browse</p>
-    </div>
-    <div style="padding:10px 14px;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center">
-      <span id="browserStatus" style="font-size:.65rem;color:#bbb">No page loaded</span>
-      <div style="display:flex;gap:6px">
-        <button onclick="toggleVisualEdit()" id="visEditBtn" style="background:#f0f0f0;color:#555;border:none;border-radius:10px;padding:9px 12px;font-size:.72rem;font-weight:700;cursor:pointer;display:none">✏️ Visual Edit</button>
-        <button onclick="grabPageImages()" id="grabBtn" style="background:#111;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:.75rem;font-weight:800;cursor:pointer" disabled="">⬇ Grab Images</button>
-      </div>
-    </div>
-    <div id="img-status-custom" style="font-size:.72rem;color:#888;text-align:center;padding:10px 14px;display:none"></div>
-    <div style="display:none;justify-content:space-between;align-items:center;padding:8px 14px" id="customResultHeader">
-      <span style="font-size:.68rem;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:.08em">Images Found</span>
-      <button class="qa-btn" id="dlCustomBtn" style="display:none;margin:0;padding:6px 12px;font-size:.65rem;width:auto" onclick="downloadAll('custom')">⬇ Save All</button>
-    </div>
-    <div id="img-grid-custom" style="padding:0 14px 14px"></div>
-  </div>
+  <div id="imgSearchStatus" style="display:none;font-size:.75rem;color:#888;text-align:center;padding:10px 0"></div>
+  <div id="imgSearchResults" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px"></div>
 
-  <!-- OLD SITE GALLERY -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div>
-        <div style="font-size:.82rem;font-weight:800">Old Site Gallery</div>
-        <div style="font-size:.65rem;color:#999">babylonvillagemeatmarket.com</div>
-      </div>
-      <button class="qa-btn" id="dlOldBtn" style="display: block; margin: 0px; padding: 6px 12px; font-size: 0.65rem; width: auto;" onclick="downloadAll('old')" data-imgs="[&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/bvmm+black-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/fullsizeoutput_14e_2048x-1920w.jpeg&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Pasta+%26+Eggplant-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/IMG_0103-1920w.jpeg&quot;,&quot;https://lirp.cdn-website.com/md/pexels/dms3rep/multi/opt/pexels-photo-4198024-1920w.jpeg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4815416849.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3079782475.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3085101902.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3092588446.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3109155526.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3117660886.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5013721820.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3487993238.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3182098090.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3194823471.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3222273216.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3226738295.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3226676692.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3226738538.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3230350013.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3227609731.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3241193474.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3238670162.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4558554563.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3916711876.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3261417775.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3283871227.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3292758663.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5308602426.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311686532.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311623467.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311696307.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311553484.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311809520.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311737489.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3323868603.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3415547471.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3415522240.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/522924576/5501452737.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/524345720/5594279792.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/524344715/5518188275.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4741555647.jpg&quot;,&quot;https://static-cdn.multiscreensite.com/ecommerce/store-placeholder.png&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3437982389.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3449348842.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3454912476.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/529685870/5560973677.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4807064549.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3487980895.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3500477221.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3576772333.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3692992631.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4992709033.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5133189237.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/638352595/5640563543.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5251352184.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4606400941.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4745612804.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4847403817.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5302483733.jpg&quot;,&quot;https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5302484221.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/IMG_0112-1920w.jpeg&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/8-d20617e2-00aa8a59-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/american+waygu-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/bvmm+steak-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/one+two+combo-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/who+does+it+better-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/steak+and+chimichurri-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/grass+fed_dartagnan-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/EA7F0258-6CE9-4C84-97DB-2D7222CF370F-1920w.jpeg&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/B1ABAD5B-1968-4CA6-A262-0B0D78CBF0C7-1920w.jpeg&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/FE2AB158-98E9-4B7B-9F97-543BE8CEBF75-1920w.jpeg&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/IMG_0079-1920w.jpeg&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/PNG+image-76B9B4A7AF5A-1-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/PNG+image-93A16AFC84DC-1-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/PNG+image-97ABE1A27D11-1-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/PNG+image-7DC094342B4A-1-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Screen+Shot+2022-11-08+at+4.08.10+PM-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Screen+Shot+2022-11-08+at+4.09.34+PM-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Screen+Shot+2022-11-08+at+4.08.41+PM-1920w.png&quot;,&quot;https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Screen+Shot+2022-11-08+at+4.07.38+PM-1920w.png&quot;]">⬇ Save All</button>
+      <div style="font-size:.82rem;font-weight:800">&#128193; Saved Photos</div>
+      <button onclick="loadSavedImages()" style="background:#1A0A04;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:.68rem;font-weight:700;cursor:pointer">Refresh</button>
     </div>
-    <div id="img-status-old" style="font-size: 0.72rem; color: rgb(153, 153, 153); text-align: center; padding: 16px 0px; display: none;">Loading...</div>
-    <div id="img-grid-old"><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/bvmm+black-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/fullsizeoutput_14e_2048x-1920w.jpeg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Pasta+%26+Eggplant-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/IMG_0103-1920w.jpeg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/md/pexels/dms3rep/multi/opt/pexels-photo-4198024-1920w.jpeg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4815416849.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3079782475.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3085101902.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3092588446.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3109155526.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3117660886.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5013721820.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3487993238.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3182098090.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3194823471.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3222273216.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3226738295.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3226676692.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3226738538.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3230350013.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3227609731.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3241193474.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3238670162.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4558554563.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3916711876.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3261417775.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3283871227.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3292758663.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5308602426.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311686532.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311623467.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311696307.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311553484.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311809520.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3311737489.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3323868603.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3415547471.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3415522240.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/522924576/5501452737.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/524345720/5594279792.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/524344715/5518188275.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4741555647.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://static-cdn.multiscreensite.com/ecommerce/store-placeholder.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3437982389.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3449348842.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3454912476.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/529685870/5560973677.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4807064549.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3487980895.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3500477221.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3576772333.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/3692992631.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4992709033.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5133189237.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/products/638352595/5640563543.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5251352184.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4606400941.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4745612804.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/4847403817.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5302483733.jpg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://d2j6dbq0eux0bg.cloudfront.net/images/17894557/5302484221.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/IMG_0112-1920w.jpeg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/8-d20617e2-00aa8a59-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/american+waygu-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/bvmm+steak-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/one+two+combo-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/who+does+it+better-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/steak+and+chimichurri-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/grass+fed_dartagnan-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/EA7F0258-6CE9-4C84-97DB-2D7222CF370F-1920w.jpeg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/B1ABAD5B-1968-4CA6-A262-0B0D78CBF0C7-1920w.jpeg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/FE2AB158-98E9-4B7B-9F97-543BE8CEBF75-1920w.jpeg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/IMG_0079-1920w.jpeg" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/PNG+image-76B9B4A7AF5A-1-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/PNG+image-93A16AFC84DC-1-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/PNG+image-97ABE1A27D11-1-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/PNG+image-7DC094342B4A-1-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Screen+Shot+2022-11-08+at+4.08.10+PM-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Screen+Shot+2022-11-08+at+4.09.34+PM-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Screen+Shot+2022-11-08+at+4.08.41+PM-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div><div style="position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px; background: rgba(26, 10, 4, 0.06); cursor: pointer;"><img src="https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/Screen+Shot+2022-11-08+at+4.07.38+PM-1920w.png" style="width: 100%; height: 100%; object-fit: cover;"><div style="position: absolute; inset: 0px; background: rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: 0; transition: 0.2s;"><span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span></div></div></div>
-  </div>
-
-  <!-- CURRENT SITE -->
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div>
-        <div style="font-size:.82rem;font-weight:800">Current Site Images</div>
-        <div style="font-size:.65rem;color:#999">greencrk.com</div>
-      </div>
-      <button class="qa-btn" id="dlNewBtn" style="display:none;margin:0;padding:6px 12px;font-size:.65rem;width:auto" onclick="downloadAll('new')">⬇ Save All</button>
-    </div>
-    <div id="img-status-new" style="font-size:.72rem;color:#999;text-align:center;padding:16px 0">No images found.</div>
-    <div id="img-grid-new"></div>
-  </div>
-
-  <button class="main-btn" onclick="loadImages()">🔄 Load Site Images</button>
-
-  <!-- SAVED IMAGES GALLERY -->
-  <div class="card" style="margin-top:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div>
-        <div style="font-size:.82rem;font-weight:800">📁 My Saved Images</div>
-        <div style="font-size:.65rem;color:#999">Photos you've added to your site</div>
-      </div>
-      <button onclick="loadSavedImages()" style="background:#1A0A04;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:.65rem;font-weight:700;cursor:pointer">Refresh</button>
-    </div>
-    <div id="saved-img-status" style="font-size:.72rem;color:#999;text-align:center;padding:12px 0">Tap Refresh to load your saved photos.</div>
+    <div id="saved-img-status" style="font-size:.72rem;color:#999;text-align:center;padding:8px 0">Tap Refresh to see your saved photos.</div>
     <div id="saved-img-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
   </div>
-</div>
 
+</div>
 
 <!-- ════ MORE ════ -->
 <div id="panel-more" class="panel active">
@@ -1753,147 +1676,10 @@ function saveKeyFromInput(id) {
 buildApiKeysList();
 
 // ── IMAGE SEARCH ─────────────────────────────────────
-var imgSource = 'all'; // 'all', 'google', 'pexels', 'unsplash'
 
-function setImgSource(src) {
-  imgSource = src;
-  ['all','google','pexels','unsplash'].forEach(function(s) {
-    var btn = document.getElementById('src-' + s);
-    if (btn) btn.classList.toggle('active', s === src);
-  });
-}
-
-function searchImages(query) {
-  var resultsEl = document.getElementById('imgSearchResults');
-  var statusEl = document.getElementById('imgSearchStatus');
-  if (!query) return;
-
-  resultsEl.innerHTML = '';
-  statusEl.style.display = 'block';
-  statusEl.textContent = 'Searching...';
-
-  var promises = [];
-
-  if (imgSource === 'all' || imgSource === 'google') {
-    promises.push(
-      fetch(WORKER, { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'google-images', query: query }) })
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(!d.ok) return [];
-        return (d.photos||[]).map(function(p){
-          return {src:p.src.medium, full:p.src.large, thumb:p.src.small, credit:p.photographer, source:'Google'};
-        });
-      }).catch(function(){return[];})
-    );
-  }
-
-  if (imgSource === 'all' || imgSource === 'pexels') {
-    promises.push(
-      fetch(WORKER, { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'pexels', query: query }) })
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(!d.ok) return [];
-        return (d.photos||[]).map(function(p){
-          return {src:p.src.medium, full:p.src.large, thumb:p.src.small, credit:p.photographer, source:'Pexels'};
-        });
-      }).catch(function(){return[];})
-    );
-  }
-
-  if (imgSource === 'all' || imgSource === 'unsplash') {
-    promises.push(
-      fetch(WORKER, { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'unsplash', query: query }) })
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(!d.ok) return [];
-        return (d.photos||[]).map(function(p){
-          return {src:p.src.medium, full:p.src.large, thumb:p.src.small, credit:p.photographer, source:'Unsplash'};
-        });
-      }).catch(function(){return[];})
-    );
-  }
-
-  Promise.all(promises).then(function(results) {
-    var all = [];
-    var seenUrls = {};
-    results.forEach(function(r) { all = all.concat(r); });
-    // Deduplicate by URL
-    all = all.filter(function(img) {
-      var key = (img.src||'').split('?')[0];
-      if (seenUrls[key]) return false;
-      seenUrls[key] = true;
-      return true;
-    });
-    statusEl.style.display = 'none';
-    if (!all.length) { statusEl.style.display = 'block'; statusEl.textContent = 'No results found. Try different words.'; return; }
-    all.forEach(function(img) {
-      var wrap = document.createElement('div');
-      wrap.style.cssText = 'position:relative;aspect-ratio:1;overflow:hidden;border-radius:10px;background:#eee;cursor:pointer';
-      var el = document.createElement('img');
-      el.src = img.thumb || img.src;
-      el.style.cssText = 'width:100%;height:100%;object-fit:cover;transition:.2s';
-      el.onerror = function() { wrap.style.display = 'none'; };
-      var badge = document.createElement('div');
-      badge.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.6));padding:4px 6px 5px;font-size:.52rem;color:rgba(255,255,255,.8);font-weight:600';
-      badge.textContent = img.source;
-      var overlay = document.createElement('div');
-      overlay.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;opacity:0;transition:.2s';
-      overlay.innerHTML = '<span style="font-size:.62rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(192,57,43,.85);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span>';
-      wrap.appendChild(el); wrap.appendChild(badge); wrap.appendChild(overlay);
-      var touchStartX, touchStartY;
-      wrap.ontouchstart = function(e) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; overlay.style.opacity = '1'; };
-      wrap.ontouchmove = function() { overlay.style.opacity = '0'; };
-      wrap.ontouchend = function(e) {
-        overlay.style.opacity = '0';
-        var t = e.changedTouches[0];
-        var dx = Math.abs(t.clientX - touchStartX);
-        var dy = Math.abs(t.clientY - touchStartY);
-        if (dx > 8 || dy > 8) return;
-        var target = document.elementFromPoint(t.clientX, t.clientY);
-        if (target && target.textContent.indexOf('ADD TO SITE') !== -1) addImageToSite(img.src);
-        else saveSingleImage(img.src);
-      };
-      wrap.onclick = function(e) {
-        if (e.target.textContent.indexOf('ADD TO SITE') !== -1) addImageToSite(img.src);
-        else saveSingleImage(img.src);
-      };
-      resultsEl.appendChild(wrap);
-    });
-  });
-}
-
-function aiImageSearch() {
-  var query = document.getElementById('aiImgInput').value.trim();
-  if (!query) return;
-  var btn = document.getElementById('aiImgBtn');
-  btn.disabled = true; btn.textContent = 'Thinking...';
-
-  fetch(WORKER, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'ai',
-      messages: [{
-        role: 'system',
-        content: 'You are a photo search assistant for a butcher shop. The user describes what they want. Return ONLY a short, optimized search query (3-6 words) for a stock photo API — no explanation, just the query. Make it specific and visual. Examples: "dry aged ribeye steak raw" or "fresh ground beef prime" or "butcher cutting meat counter".'
-      }, {
-        role: 'user',
-        content: query
-      }]
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    btn.disabled = false; btn.textContent = 'Find Photos';
-    if (!d.ok) { alert('AI error: ' + d.error); return; }
-    var optimizedQuery = d.content.replace(/['"]/g, '').trim();
-    document.getElementById('imgSearchInput').value = optimizedQuery;
-    searchImages(optimizedQuery);
-  })
-  .catch(function(e) { btn.disabled = false; btn.textContent = 'Find Photos'; });
+function doImgSearch() {
+  var q = document.getElementById('imgSearchInput').value.trim();
+  if (q) searchImages(q);
 }
 
 function quickSearch(q) {
@@ -1901,34 +1687,99 @@ function quickSearch(q) {
   searchImages(q);
 }
 
-function downloadWorkerCode() {
-  fetch(WORKER, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'proxy', url: 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/BVMM_worker.js' })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (d.ok && d.html && d.html.length > 100) {
-      var blob = new Blob([d.html], { type: 'text/javascript' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a'); a.href = url; a.download = 'BVMM_worker.js'; a.click();
-      URL.revokeObjectURL(url);
-    } else {
-      // Fallback — embed current worker code
-      var code = document.getElementById('workerCodeBackup') ? document.getElementById('workerCodeBackup').textContent : '';
-      if (code) {
-        var blob = new Blob([code], { type: 'text/javascript' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a'); a.href = url; a.download = 'BVMM_worker.js'; a.click();
-        URL.revokeObjectURL(url);
-      } else {
-        alert('Could not download — paste the worker code Claude gave you manually.');
-      }
-    }
-  })
-  .catch(function() { alert('Could not fetch worker — check your connection.'); });
+function searchImages(query) {
+  var resultsEl = document.getElementById('imgSearchResults');
+  var statusEl = document.getElementById('imgSearchStatus');
+  if (!query) return;
+  resultsEl.innerHTML = '';
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Searching...';
+
+  var promises = [];
+
+  // Google x3 different terms = up to 30 photos
+  [query, query + ' raw', query + ' fresh cut'].forEach(function(term) {
+    promises.push(
+      fetch(WORKER, {method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'google-images',query:term})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        return (d.ok&&d.photos) ? d.photos.map(function(p){
+          return {src:p.src.medium,full:p.src.large,thumb:p.src.small||p.src.medium,source:'Google'};
+        }) : [];
+      }).catch(function(){return[];})
+    );
+  });
+
+  // Pexels
+  promises.push(
+    fetch(WORKER, {method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'pexels',query:query})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      return (d.ok&&d.photos) ? d.photos.map(function(p){
+        return {src:p.src.medium,full:p.src.large,thumb:p.src.small,source:'Pexels'};
+      }) : [];
+    }).catch(function(){return[];})
+  );
+
+  // Unsplash
+  promises.push(
+    fetch(WORKER, {method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'unsplash',query:query})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      return (d.ok&&d.photos) ? d.photos.map(function(p){
+        return {src:p.src.medium,full:p.src.large,thumb:p.src.small,source:'Unsplash'};
+      }) : [];
+    }).catch(function(){return[];})
+  );
+
+  Promise.all(promises).then(function(results) {
+    var all = [], seen = {};
+    results.forEach(function(r){all=all.concat(r);});
+    all = all.filter(function(img){
+      var k=(img.src||'').split('?')[0];
+      if(!k||seen[k]) return false;
+      seen[k]=true; return true;
+    });
+    statusEl.style.display='none';
+    if(!all.length){statusEl.style.display='block';statusEl.textContent='No results. Try different words.';return;}
+    all.forEach(function(img){
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:relative;aspect-ratio:1;overflow:hidden;border-radius:10px;background:#eee;cursor:pointer';
+      var el=document.createElement('img');
+      el.src=img.thumb||img.src;
+      el.style.cssText='width:100%;height:100%;object-fit:cover';
+      el.onerror=function(){wrap.style.display='none';};
+      var badge=document.createElement('div');
+      badge.style.cssText='position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.55));padding:3px 5px 4px;font-size:.5rem;color:rgba(255,255,255,.75);font-weight:600';
+      badge.textContent=img.source||'';
+      var overlay=document.createElement('div');
+      overlay.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;transition:.15s;pointer-events:none';
+      overlay.innerHTML='<span class="img-save-btn" style="font-size:.68rem;color:#fff;font-weight:800;background:rgba(139,37,0,.9);padding:6px 14px;border-radius:8px;pointer-events:auto">+ Save to Site</span><span class="img-dl-btn" style="font-size:.62rem;color:rgba(255,255,255,.8);font-weight:600;pointer-events:auto">&#8595; Download</span>';
+      wrap.appendChild(el);wrap.appendChild(badge);wrap.appendChild(overlay);
+      var tsx,tsy;
+      wrap.addEventListener('touchstart',function(e){tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;overlay.style.opacity='1';},{passive:true});
+      wrap.addEventListener('touchmove',function(){overlay.style.opacity='0';},{passive:true});
+      wrap.addEventListener('touchend',function(e){
+        overlay.style.opacity='0';
+        var t=e.changedTouches[0];
+        if(Math.abs(t.clientX-tsx)>8||Math.abs(t.clientY-tsy)>8) return;
+        var target=document.elementFromPoint(t.clientX,t.clientY);
+        if(target&&target.className&&target.className.indexOf('img-save-btn')!==-1) addImageToSite(img.full||img.src);
+        else saveSingleImage(img.full||img.src);
+        e.preventDefault();
+      });
+      wrap.addEventListener('click',function(e){
+        if(e.target.className&&e.target.className.indexOf('img-save-btn')!==-1) addImageToSite(img.full||img.src);
+        else saveSingleImage(img.full||img.src);
+      });
+      resultsEl.appendChild(wrap);
+    });
+  });
 }
+
 
 // ── END API KEYS / IMAGE SEARCH ──────────────────────
 
@@ -2570,34 +2421,56 @@ function renderImages(imgs, key) {
 }
 
 function addImageToSite(src) {
+  if (!src) return;
   var filename = src.split('/').pop().split('?')[0] || 'image.jpg';
-  if (!confirm('Add "' + filename + '" to your site\'s image folder?')) return;
-  var statusEl = document.createElement('div');
-  statusEl.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2C1810;color:#fff;padding:10px 18px;border-radius:10px;font-size:.75rem;font-weight:700;z-index:999';
-  statusEl.textContent = 'Uploading ' + filename + '...';
-  document.body.appendChild(statusEl);
-  fetch(WORKER, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'img-upload', url: src, filename: filename })
+  if (!filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) filename += '.jpg';
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1A0A04;color:#fff;padding:10px 20px;border-radius:12px;font-size:.78rem;font-weight:800;z-index:9999;white-space:nowrap';
+  toast.textContent = 'Saving...';
+  document.body.appendChild(toast);
+  fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'img-upload',url:src,filename:filename})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    toast.style.background = d.ok ? '#34C759' : '#FF3B30';
+    toast.textContent = d.ok ? '✅ Saved!' : '❌ '+d.error;
+    setTimeout(function(){toast.remove();},2500);
   })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (d.ok) {
-      statusEl.style.background = '#3a5c2d';
-      statusEl.textContent = '✅ Saved to site as /' + d.path;
-    } else {
-      statusEl.style.background = '#8b2020';
-      statusEl.textContent = '❌ ' + d.error;
-    }
-    setTimeout(function() { statusEl.remove(); }, 3000);
-  })
-  .catch(function(e) {
-    statusEl.style.background = '#8b2020';
-    statusEl.textContent = '❌ ' + e.message;
-    setTimeout(function() { statusEl.remove(); }, 3000);
+  .catch(function(){
+    toast.style.background='#FF3B30';toast.textContent='❌ Failed';
+    setTimeout(function(){toast.remove();},2500);
   });
 }
+
+function loadSavedImages() {
+  var grid = document.getElementById('saved-img-grid');
+  var status = document.getElementById('saved-img-status');
+  if (!grid||!status) return;
+  status.textContent = 'Loading...';status.style.display='block';grid.innerHTML='';
+  fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'proxy',url:'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/images'})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.ok){status.textContent='Could not load.';return;}
+    var files;
+    try{files=JSON.parse(d.html);}catch(e){status.textContent='No saved photos yet.';return;}
+    var imgs=(files||[]).filter(function(f){return f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i);});
+    if(!imgs.length){status.textContent='No saved photos yet. Search and tap Save to Site.';return;}
+    status.style.display='none';
+    imgs.forEach(function(f){
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:relative;aspect-ratio:1;overflow:hidden;border-radius:10px;background:#eee';
+      var img=document.createElement('img');
+      img.src='https://greencrk.com/images/'+f.name;
+      img.style.cssText='width:100%;height:100%;object-fit:cover';
+      img.onerror=function(){wrap.style.display='none';};
+      var label=document.createElement('div');
+      label.style.cssText='position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:.5rem;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+      label.textContent=f.name;
+      wrap.appendChild(img);wrap.appendChild(label);grid.appendChild(wrap);
+    });
+  })
+  .catch(function(){status.textContent='Could not load photos.';});
+}
+
 
 function saveSingleImage(src) {
   var a = document.createElement('a');
@@ -2831,17 +2704,17 @@ function renderImages(imgs, key) {
     overlay.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;opacity:0;transition:.2s';
     overlay.innerHTML='<span style="font-size:.65rem;color:#fff;font-weight:800">⬇ SAVE</span><span style="font-size:.55rem;color:rgba(255,255,255,.8);background:rgba(139,37,0,.8);padding:3px 8px;border-radius:6px;font-weight:800">+ ADD TO SITE</span>';
     wrap.appendChild(img); wrap.appendChild(overlay);
-    var tsx, tsy;
-    wrap.ontouchstart=function(e){tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;overlay.style.opacity='1';};
-    wrap.ontouchmove=function(){overlay.style.opacity='0';};
-    wrap.ontouchend=function(e){
+    var _tx,_ty;
+    wrap.addEventListener('touchstart',function(e){_tx=e.touches[0].clientX;_ty=e.touches[0].clientY;overlay.style.opacity='1';},{passive:true});
+    wrap.addEventListener('touchmove',function(){overlay.style.opacity='0';},{passive:true});
+    wrap.addEventListener('touchend',function(e){
       overlay.style.opacity='0';
       var t=e.changedTouches[0];
-      if(Math.abs(t.clientX-tsx)>8||Math.abs(t.clientY-tsy)>8) return;
+      if(Math.abs(t.clientX-_tx)>8||Math.abs(t.clientY-_ty)>8) return;
       var el=document.elementFromPoint(t.clientX,t.clientY);
       if(el&&el.textContent.indexOf('ADD TO SITE')!==-1){addImageToSite(src);}
       else{saveSingleImage(src);}
-    };
+    });
     wrap.onclick=function(e){
       if(e.target.textContent.indexOf('ADD TO SITE')!==-1){addImageToSite(src);}
       else{saveSingleImage(src);}
@@ -2852,50 +2725,19 @@ function renderImages(imgs, key) {
 
 function addImageToSite(src) {
   var filename=src.split('/').pop().split('?')[0]||'image.jpg';
-  if(!filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) filename=filename+'.jpg';
+  if(!confirm('Add "'+filename+'" to your site\'s image folder?')) return;
   var toast=document.createElement('div');
   toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1A0A04;color:#fff;padding:10px 18px;border-radius:12px;font-size:.75rem;font-weight:800;z-index:999;white-space:nowrap';
-  toast.textContent='Saving...';
+  toast.textContent='Uploading '+filename+'...';
   document.body.appendChild(toast);
   fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'img-upload',url:src,filename:filename})})
   .then(function(r){return r.json();})
   .then(function(d){
-    if(d.ok){toast.style.background='#34C759';toast.textContent='✅ Saved!';loadSavedImages();}
+    if(d.ok){toast.style.background='#34C759';toast.textContent='✅ Saved to /'+d.path;}
     else{toast.style.background='#FF3B30';toast.textContent='❌ '+d.error;}
     setTimeout(function(){toast.remove();},3000);
   })
   .catch(function(e){toast.style.background='#FF3B30';toast.textContent='❌ '+e.message;setTimeout(function(){toast.remove();},3000);});
-}
-
-function loadSavedImages() {
-  var grid=document.getElementById('saved-img-grid');
-  var status=document.getElementById('saved-img-status');
-  if(!grid) return;
-  status.textContent='Loading...';
-  fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'proxy',url:'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/images'})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(!d.ok){status.textContent='Could not load saved images.';return;}
-    var files;
-    try{files=JSON.parse(d.html);}catch(e){status.textContent='No saved images yet.';return;}
-    if(!files||!files.length){status.textContent='No saved images yet. Add photos using the search above.';return;}
-    status.style.display='none';
-    grid.innerHTML='';
-    files.filter(function(f){return f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i);}).forEach(function(f){
-      var wrap=document.createElement('div');
-      wrap.style.cssText='position:relative;aspect-ratio:1;overflow:hidden;border-radius:10px;background:#eee';
-      var img=document.createElement('img');
-      img.src='https://greencrk.com/images/'+f.name;
-      img.style.cssText='width:100%;height:100%;object-fit:cover';
-      img.onerror=function(){wrap.style.display='none';};
-      var label=document.createElement('div');
-      label.style.cssText='position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:.5rem;padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-      label.textContent=f.name;
-      wrap.appendChild(img);wrap.appendChild(label);
-      grid.appendChild(wrap);
-    });
-  })
-  .catch(function(){status.textContent='Could not load saved images.';});
 }
 
 function saveSingleImage(src) {
