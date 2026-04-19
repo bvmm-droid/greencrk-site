@@ -3598,6 +3598,267 @@ function downloadAll(key) {
 
 })();
 
+// ══════════ BVMM v3.1 — FIX-IT MODULE ══════════
+// Force reload button, honest PUSHING timeout, diagnostics page.
+(function() {
+  'use strict';
+
+  // ─── 1. Force reload helper ───
+  function hardReload() {
+    try {
+      // Wipe the stuck-state keys only — keep user data (prices, photos, auth)
+      ['bvmm_last_sha', 'bvmm_pending_retry'].forEach(function(k){
+        try { localStorage.removeItem(k); } catch(e) {}
+      });
+    } catch(e) {}
+    var u = window.location.pathname + '?v=' + Date.now();
+    window.location.replace(u);
+  }
+  window.bvmmHardReload = hardReload;
+
+  // ─── 2. Clear stuck state without reload ───
+  function clearStuckState() {
+    // Re-enable the deploy button if it's stuck disabled
+    var btn = document.getElementById('deployBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Push Live';
+      btn.className = 'go-live-btn has-changes';
+    }
+    // Reset deploy row statuses
+    ['fs-site','fs-mgr'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { el.className = 'deploy-row-status'; el.textContent = 'Ready'; }
+    });
+    // Clear any stuck "step" element
+    var s = document.getElementById('s1');
+    if (s) { s.className = 'step'; s.textContent = ''; }
+    // Clear in-flight flags if the original code set any
+    try { window.isDeploying = false; } catch(e) {}
+    flashToast('Cleared stuck state', '#34C759');
+  }
+  window.bvmmClearStuck = clearStuckState;
+
+  // ─── 3. Toast helper ───
+  function flashToast(msg, color) {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:'+(color||'#1A0A04')+';color:#fff;padding:10px 18px;border-radius:12px;font-size:.78rem;font-weight:800;z-index:3000';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2000);
+  }
+
+  // ─── 4. "PUSHING..." timeout watchdog ───
+  // If the deploy button has been disabled + showing "Pushing" text for >15s,
+  // assume the deploy hung and surface an escape hatch.
+  var watchdogTimer = null;
+  function startWatchdog() {
+    stopWatchdog();
+    watchdogTimer = setTimeout(function() {
+      var btn = document.getElementById('deployBtn');
+      if (!btn || !btn.disabled) return;
+      var txt = (btn.textContent || '').toLowerCase();
+      if (txt.indexOf('push') < 0) return;  // Something else is going on
+      // Show escape modal
+      showStuckModal();
+    }, 15000);
+  }
+  function stopWatchdog() {
+    if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+  }
+
+  function showStuckModal() {
+    if (document.getElementById('bvmm-stuck-overlay')) return;
+    var overlay = document.createElement('div');
+    overlay.id = 'bvmm-stuck-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2500;display:flex;align-items:center;justify-content:center;padding:20px';
+    var panel = document.createElement('div');
+    panel.style.cssText = 'background:#F5F0E8;max-width:420px;width:100%;padding:22px 18px;border-radius:16px';
+    panel.innerHTML =
+      '<div style="font-size:1.1rem;font-weight:800;color:#C43B00;margin-bottom:6px">⚠ Push Stuck</div>'+
+      '<div style="font-size:.8rem;color:#1A0A04;line-height:1.55;margin-bottom:14px">The push has been running over 15 seconds with no response. Usually this means one of:</div>'+
+      '<ul style="font-size:.74rem;color:#5C3A2D;line-height:1.6;padding-left:18px;margin-bottom:16px">'+
+        '<li>Auth secret not set (or wrong)</li>'+
+        '<li>Worker not deployed in Cloudflare yet</li>'+
+        '<li>Worker deployed but no BVMM_TOOL secret</li>'+
+        '<li>Internet hiccup</li>'+
+      '</ul>'+
+      '<button id="bvmm-stuck-diag" style="width:100%;background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.82rem;font-weight:800;cursor:pointer;margin-bottom:8px">🔍 Run Diagnostics</button>'+
+      '<button id="bvmm-stuck-clear" style="width:100%;background:#C43B00;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.82rem;font-weight:800;cursor:pointer;margin-bottom:8px">🧹 Clear Stuck State</button>'+
+      '<button id="bvmm-stuck-reload" style="width:100%;background:transparent;color:#5C3A2D;border:1.5px solid rgba(26,10,4,.2);border-radius:10px;padding:11px;font-size:.78rem;font-weight:700;cursor:pointer;margin-bottom:8px">↻ Force Reload Tool</button>'+
+      '<button id="bvmm-stuck-close" style="width:100%;background:transparent;color:#888;border:none;padding:8px;font-size:.72rem;cursor:pointer">Close</button>';
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    document.getElementById('bvmm-stuck-diag').onclick = function() { overlay.remove(); runDiagnostics(); };
+    document.getElementById('bvmm-stuck-clear').onclick = function() { overlay.remove(); clearStuckState(); };
+    document.getElementById('bvmm-stuck-reload').onclick = function() { overlay.remove(); hardReload(); };
+    document.getElementById('bvmm-stuck-close').onclick = function() { overlay.remove(); };
+  }
+
+  // Watch the deploy button state
+  var deployBtnObserver;
+  function attachWatchdog() {
+    var btn = document.getElementById('deployBtn');
+    if (!btn || deployBtnObserver) return;
+    deployBtnObserver = new MutationObserver(function() {
+      if (btn.disabled && (btn.textContent || '').toLowerCase().indexOf('push') >= 0) {
+        startWatchdog();
+      } else {
+        stopWatchdog();
+      }
+    });
+    deployBtnObserver.observe(btn, { attributes: true, childList: true, subtree: true, characterData: true });
+    // Also check initial state on load (in case button is ALREADY stuck when tool opens)
+    if (btn.disabled && (btn.textContent || '').toLowerCase().indexOf('push') >= 0) {
+      startWatchdog();
+    }
+  }
+
+  // ─── 5. Diagnostics screen ───
+  async function runDiagnostics() {
+    if (document.getElementById('bvmm-diag-overlay')) return;
+    var overlay = document.createElement('div');
+    overlay.id = 'bvmm-diag-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2600;overflow-y:auto;padding:20px 0';
+    var panel = document.createElement('div');
+    panel.style.cssText = 'background:#F5F0E8;max-width:520px;margin:auto;padding:22px 16px 24px;border-radius:16px';
+    panel.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'+
+        '<div style="font-size:1.1rem;font-weight:800">🔍 Diagnostics</div>'+
+        '<button id="bvmm-diag-x" style="background:none;border:none;font-size:1.3rem;cursor:pointer">✕</button>'+
+      '</div>'+
+      '<div style="font-size:.72rem;color:#5C3A2D;margin-bottom:14px;line-height:1.5">Checking every piece of the stack. Failures tell you exactly what to fix.</div>'+
+      '<div id="bvmm-diag-rows"></div>'+
+      '<button id="bvmm-diag-fix" style="width:100%;background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.8rem;font-weight:800;cursor:pointer;margin-top:12px;display:none">Open Setup Wizard</button>'+
+      '<button id="bvmm-diag-rerun" style="width:100%;background:transparent;color:#5C3A2D;border:1.5px solid rgba(26,10,4,.2);border-radius:10px;padding:11px;font-size:.76rem;font-weight:700;cursor:pointer;margin-top:8px">Re-run Tests</button>';
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    document.getElementById('bvmm-diag-x').onclick = function() { overlay.remove(); };
+    document.getElementById('bvmm-diag-fix').onclick = function() {
+      overlay.remove();
+      if (typeof window.bvmmShowWizard === 'function') window.bvmmShowWizard('manual');
+    };
+    document.getElementById('bvmm-diag-rerun').onclick = function() { overlay.remove(); runDiagnostics(); };
+
+    var rowsEl = document.getElementById('bvmm-diag-rows');
+    var checks = [
+      { label: 'Tool loaded',               run: function(){ return Promise.resolve({ok:true, detail:'v3.1'}); } },
+      { label: 'Auth secret stored locally', run: function(){
+          var s = '';
+          try { s = localStorage.getItem('bvmm_auth') || ''; } catch(e) {}
+          return Promise.resolve({
+            ok: !!s,
+            detail: s ? 'set ('+s.length+' chars)' : 'MISSING — run setup wizard'
+          });
+      }},
+      { label: 'Worker reachable',          run: function(){
+          return fetch(WORKER, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ action: 'kv-get', key: '__diag__' })
+          }).then(function(r){
+            return { ok: r.status !== 0, detail: 'HTTP '+r.status, _status: r.status };
+          }).catch(function(e){
+            return { ok:false, detail:'NETWORK ERROR — '+e.message };
+          });
+      }},
+      { label: 'Worker auth passing',       run: function(){
+          return fetch(WORKER, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ action: 'kv-get', key: '__diag__' })
+          }).then(function(r){
+            if (r.status === 401) return { ok:false, detail:'401 — secret wrong or BVMM_TOOL not updated in Cloudflare' };
+            if (r.status === 500) return { ok:false, detail:'500 — BVMM_TOOL secret missing in Cloudflare' };
+            return { ok: r.ok, detail: 'HTTP '+r.status };
+          }).catch(function(){ return { ok:false, detail:'could not reach worker' }; });
+      }},
+      { label: 'Site (greencrk.com) reachable', run: function(){
+          return fetch('https://greencrk.com/?_t='+Date.now(), {method:'HEAD'})
+            .then(function(r){ return { ok:r.ok, detail:'HTTP '+r.status }; })
+            .catch(function(e){ return { ok:false, detail:e.message }; });
+      }},
+      { label: 'GitHub token (via deploy test)', run: async function(){
+          try {
+            var r = await fetch(WORKER, {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({ action: 'proxy', url: 'https://api.github.com/repos/bvmm-droid/greencrk-site' })
+            });
+            if (!r.ok) return { ok:false, detail:'worker returned '+r.status };
+            var d = await r.json();
+            if (!d.ok) return { ok:false, detail: d.error || 'worker error' };
+            try {
+              var repo = JSON.parse(d.html);
+              if (repo.id) return { ok:true, detail:'repo access OK' };
+              return { ok:false, detail: repo.message || 'unknown response' };
+            } catch(e) { return { ok:false, detail:'could not parse GitHub response' }; }
+          } catch(e) { return { ok:false, detail:e.message }; }
+      }}
+    ];
+
+    var anyFailed = false;
+    for (var i = 0; i < checks.length; i++) {
+      var c = checks[i];
+      var row = document.createElement('div');
+      row.style.cssText = 'background:#fff;border-radius:10px;padding:11px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px';
+      row.innerHTML = '<span style="font-size:.95rem;width:18px">⏳</span><div style="flex:1"><div style="font-size:.78rem;font-weight:700;color:#1A0A04">'+c.label+'</div><div class="bvmm-diag-detail" style="font-size:.65rem;color:#888;margin-top:2px">checking...</div></div>';
+      rowsEl.appendChild(row);
+      try {
+        var result = await c.run();
+        var icon = row.querySelector('span');
+        var detail = row.querySelector('.bvmm-diag-detail');
+        if (result.ok) { icon.textContent = '✅'; detail.textContent = result.detail; detail.style.color = '#2E7D32'; }
+        else           { icon.textContent = '❌'; detail.textContent = result.detail; detail.style.color = '#C43B00'; anyFailed = true; }
+      } catch(e) {
+        var icon = row.querySelector('span');
+        var detail = row.querySelector('.bvmm-diag-detail');
+        icon.textContent = '❌'; detail.textContent = 'check failed: ' + e.message; detail.style.color = '#C43B00';
+        anyFailed = true;
+      }
+    }
+    if (anyFailed) {
+      var fixBtn = document.getElementById('bvmm-diag-fix');
+      if (fixBtn) fixBtn.style.display = 'block';
+    }
+  }
+  window.bvmmDiagnostics = runDiagnostics;
+
+  // ─── 6. Inject buttons into HOME ───
+  function injectHomeButtons() {
+    var homePanel = document.getElementById('panel-home');
+    if (!homePanel || document.getElementById('bvmm-fixit-card')) return;
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'bvmm-fixit-card';
+    card.style.cssText = 'margin-top:4px';
+    card.innerHTML =
+      '<div class="section-label">If Something\'s Wrong</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+        '<button class="action-btn" id="bvmm-btn-reload"><span class="ab-icon">↻</span>Force Reload Tool</button>'+
+        '<button class="action-btn" id="bvmm-btn-diag"><span class="ab-icon">🔍</span>Run Diagnostics</button>'+
+        '<button class="action-btn" id="bvmm-btn-clear"><span class="ab-icon">🧹</span>Clear Stuck State</button>'+
+        '<button class="action-btn" id="bvmm-btn-wiz"><span class="ab-icon">🛡</span>Setup Wizard</button>'+
+      '</div>';
+    homePanel.appendChild(card);
+    document.getElementById('bvmm-btn-reload').onclick = hardReload;
+    document.getElementById('bvmm-btn-diag').onclick = runDiagnostics;
+    document.getElementById('bvmm-btn-clear').onclick = clearStuckState;
+    document.getElementById('bvmm-btn-wiz').onclick = function() {
+      if (typeof window.bvmmShowWizard === 'function') window.bvmmShowWizard('manual');
+      else alert('Wizard not available');
+    };
+  }
+
+  // ─── 7. Init ───
+  function init() {
+    injectHomeButtons();
+    attachWatchdog();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
 // ══════════ END BVMM v3 ADD-ON ══════════
 
 </script>
