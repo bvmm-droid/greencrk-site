@@ -3132,6 +3132,34 @@ function downloadAll(key) {
     return promise;
   };
 
+  // ── 1b. XMLHttpRequest interceptor (the real deploy/push code uses XHR) ──
+  (function() {
+    var XHRProto = XMLHttpRequest.prototype;
+    var _origOpen = XHRProto.open;
+    var _origSend = XHRProto.send;
+    XHRProto.open = function(method, url) {
+      this.__bvmm_url = url;
+      return _origOpen.apply(this, arguments);
+    };
+    XHRProto.send = function(body) {
+      try {
+        if (this.__bvmm_url && typeof this.__bvmm_url === 'string' && this.__bvmm_url.indexOf(WORKER) === 0) {
+          var secret = '';
+          try { secret = localStorage.getItem('bvmm_auth') || ''; } catch(e) {}
+          try { this.setRequestHeader('x-bvmm-auth', secret); } catch(e) {}
+          var xhr = this;
+          var _origLoad = xhr.onload;
+          xhr.addEventListener('load', function() {
+            if (xhr.status === 401 && !document.getElementById('bvmm-wizard-overlay')) {
+              setTimeout(function(){ if (typeof showWizard === 'function') showWizard('unauthorized'); }, 100);
+            }
+          });
+        }
+      } catch(e) {}
+      return _origSend.apply(this, arguments);
+    };
+  })();
+
   // ── 2. Utilities ──
   function genSecret() {
     var arr = new Uint8Array(32);
@@ -3850,9 +3878,152 @@ function downloadAll(key) {
     };
   }
 
-  // ─── 7. Init ───
+  // ─── 7. Self-update worker from inside the tool ───
+  // Needs: BVMM_CF_TOKEN (API token), account ID, worker name. Saved in localStorage.
+  var CF_ACCOUNT_ID = '3e33cb7e32f60a1266e6e50ed47d9b4b';
+  var CF_WORKER_NAME = 'bvmm-proxy';
+
+  function getCfToken() {
+    try { return localStorage.getItem('bvmm_cf_token') || ''; } catch(e) { return ''; }
+  }
+  function saveCfToken(v) {
+    try { localStorage.setItem('bvmm_cf_token', v); } catch(e) {}
+  }
+
+  function showSelfUpdateModal() {
+    var existing = document.getElementById('bvmm-cf-overlay');
+    if (existing) existing.remove();
+    var overlay = document.createElement('div');
+    overlay.id = 'bvmm-cf-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2700;overflow-y:auto;padding:20px 0';
+    var panel = document.createElement('div');
+    panel.style.cssText = 'background:#F5F0E8;max-width:520px;margin:auto;padding:22px 16px 24px;border-radius:16px';
+
+    var token = getCfToken();
+    panel.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+        '<div style="font-size:1.1rem;font-weight:800">🚀 Update Worker</div>'+
+        '<button id="bvmm-cf-x" style="background:none;border:none;font-size:1.3rem;cursor:pointer">✕</button>'+
+      '</div>'+
+      '<div style="font-size:.72rem;color:#5C3A2D;margin-bottom:12px;line-height:1.55">Deploy the embedded worker code directly to Cloudflare \u2014 no dashboard trip needed.</div>'+
+      '<div class="card" style="background:#fff;padding:12px;margin-bottom:10px">'+
+        '<div style="font-size:.62rem;font-weight:800;letter-spacing:.1em;color:#C43B00;margin-bottom:6px">CLOUDFLARE API TOKEN</div>'+
+        '<div style="font-size:.66rem;color:#888;margin-bottom:8px;line-height:1.45">Saved once on this device. Needs Workers Scripts: Edit permission.</div>'+
+        '<div style="display:flex;gap:6px">'+
+          '<input id="bvmm-cf-token" type="password" value="'+(token||'').replace(/"/g,'&quot;')+'" placeholder="cfut_..." style="flex:1;padding:9px 10px;border:1.5px solid rgba(26,10,4,.12);border-radius:8px;font-size:.7rem;font-family:monospace">'+
+          '<button id="bvmm-cf-eye" style="background:#f0f0f0;border:none;border-radius:8px;padding:9px 11px;font-size:.95rem">👁</button>'+
+          '<button id="bvmm-cf-save" style="background:#1A0A04;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:.7rem;font-weight:800">Save</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="card" style="background:#fff;padding:12px;margin-bottom:10px">'+
+        '<div style="font-size:.62rem;font-weight:800;letter-spacing:.1em;color:#2E7D32;margin-bottom:8px">DEPLOY WORKER</div>'+
+        '<div style="font-size:.7rem;color:#1A0A04;margin-bottom:10px;line-height:1.5">Pushes the worker code embedded in this HTML to Cloudflare. Takes ~5 seconds.</div>'+
+        '<button id="bvmm-cf-deploy" style="width:100%;background:#2E7D32;color:#fff;border:none;border-radius:9px;padding:12px;font-size:.82rem;font-weight:800;cursor:pointer">🚀 Deploy Worker Now</button>'+
+        '<div id="bvmm-cf-status" style="font-size:.72rem;margin-top:10px;font-weight:700;text-align:center;line-height:1.5;min-height:1em"></div>'+
+      '</div>'+
+      '<button id="bvmm-cf-close" style="width:100%;background:transparent;color:#5C3A2D;border:1.5px solid rgba(26,10,4,.15);border-radius:9px;padding:10px;font-size:.74rem;font-weight:600;cursor:pointer">Close</button>';
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    var inp = document.getElementById('bvmm-cf-token');
+    document.getElementById('bvmm-cf-x').onclick = function(){ overlay.remove(); };
+    document.getElementById('bvmm-cf-close').onclick = function(){ overlay.remove(); };
+    document.getElementById('bvmm-cf-eye').onclick = function() { inp.type = inp.type==='password' ? 'text' : 'password'; };
+    document.getElementById('bvmm-cf-save').onclick = function() {
+      var v = (inp.value || '').trim();
+      if (!v) { alert('Paste the token first'); return; }
+      saveCfToken(v);
+      var st = document.getElementById('bvmm-cf-status');
+      st.textContent = '✓ Token saved on this device'; st.style.color = '#2E7D32';
+      setTimeout(function(){ if (st.textContent.indexOf('✓ Token saved') === 0) st.textContent = ''; }, 2500);
+    };
+    document.getElementById('bvmm-cf-deploy').onclick = function() {
+      deployWorker(inp.value.trim() || getCfToken());
+    };
+  }
+
+  async function deployWorker(apiToken) {
+    var st = document.getElementById('bvmm-cf-status');
+    var btn = document.getElementById('bvmm-cf-deploy');
+    if (!apiToken) { st.textContent = '✗ Enter and Save the API token first'; st.style.color = '#C43B00'; return; }
+    var src = (document.getElementById('bvmm-worker-source') || {}).textContent;
+    if (!src || src.trim().length < 100) { st.textContent = '✗ Worker source missing from HTML'; st.style.color = '#C43B00'; return; }
+
+    btn.disabled = true; btn.textContent = 'Deploying...';
+    st.textContent = 'Uploading to Cloudflare...'; st.style.color = '#1A0A04';
+    try {
+      var url = 'https://api.cloudflare.com/client/v4/accounts/' + CF_ACCOUNT_ID + '/workers/scripts/' + CF_WORKER_NAME;
+      // Use multipart/form-data — Cloudflare requires metadata + script parts
+      var metadata = JSON.stringify({
+        main_module: 'worker.js',
+        compatibility_date: '2026-04-09'
+      });
+      var boundary = '----bvmm' + Date.now();
+      var parts = [];
+      parts.push('--' + boundary);
+      parts.push('Content-Disposition: form-data; name="metadata"; filename="metadata.json"');
+      parts.push('Content-Type: application/json');
+      parts.push('');
+      parts.push(metadata);
+      parts.push('--' + boundary);
+      parts.push('Content-Disposition: form-data; name="worker.js"; filename="worker.js"');
+      parts.push('Content-Type: application/javascript+module');
+      parts.push('');
+      parts.push(src.trim());
+      parts.push('--' + boundary + '--');
+      parts.push('');
+      var body = parts.join('\r\n');
+
+      // Direct fetch — bypass my own interceptor by using _origFetch so I don't
+      // accidentally inject x-bvmm-auth onto Cloudflare API calls.
+      var resp = await _origFetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + apiToken,
+          'Content-Type': 'multipart/form-data; boundary=' + boundary
+        },
+        body: body
+      });
+      var data = await resp.json();
+      btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
+      if (!resp.ok || !data.success) {
+        var errMsg = 'Unknown error';
+        if (data.errors && data.errors.length) errMsg = data.errors.map(function(e){ return e.message || JSON.stringify(e); }).join('; ');
+        else if (data.error) errMsg = data.error;
+        st.textContent = '✗ ' + errMsg;
+        st.style.color = '#C43B00';
+        return;
+      }
+      st.innerHTML = '<span style="color:#2E7D32">✓ Worker deployed! Active in ~5 seconds.</span>';
+    } catch(e) {
+      btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
+      st.textContent = '✗ ' + e.message;
+      st.style.color = '#C43B00';
+    }
+  }
+
+  window.bvmmSelfUpdate = showSelfUpdateModal;
+
+  // Add "Update Worker" button to HOME fixit card after injection
+  function addUpdateWorkerButton() {
+    var card = document.getElementById('bvmm-fixit-card');
+    if (!card || document.getElementById('bvmm-btn-update')) return;
+    var grid = card.querySelector('div[style*="grid-template-columns"]');
+    if (!grid) return;
+    var btn = document.createElement('button');
+    btn.className = 'action-btn';
+    btn.id = 'bvmm-btn-update';
+    btn.style.cssText = 'grid-column:1 / -1;background:#2E7D32;color:#fff;border-color:#2E7D32';
+    btn.innerHTML = '<span class="ab-icon">🚀</span>Update Worker (No Cloudflare)';
+    btn.onclick = showSelfUpdateModal;
+    grid.appendChild(btn);
+  }
+
+  // ─── 8. Init ───
   function init() {
     injectHomeButtons();
+    addUpdateWorkerButton();
     attachWatchdog();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
