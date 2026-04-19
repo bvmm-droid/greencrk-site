@@ -3099,7 +3099,710 @@ function downloadAll(key) {
   imgs.forEach(function(src,i){setTimeout(function(){saveSingleImage(src);},i*300);});
 }
 
+// ══════════ BVMM v3 ADD-ON ══════════
+// ═══════════════════════════════════════════════════════════
+// BVMM v3 ADD-ON — runs AFTER all original code.
+// Adds: auth wizard, fetch interceptor, picture upgrades, AI content tools.
+// ═══════════════════════════════════════════════════════════
+(function() {
+  'use strict';
+  if (typeof WORKER === 'undefined') { console.error('BVMM addon: WORKER constant missing'); return; }
+
+  // ── 1. Fetch interceptor: auth header + 401 re-prompt ──
+  var _origFetch = window.fetch.bind(window);
+  window.fetch = function(input, init) {
+    var url = (typeof input === 'string') ? input : (input && input.url);
+    var isWorker = url && typeof url === 'string' && url.indexOf(WORKER) === 0;
+    if (isWorker) {
+      init = init || {};
+      var h = init.headers || {};
+      if (h instanceof Headers) { var p = {}; h.forEach(function(v,k){ p[k]=v; }); h = p; }
+      try { h['x-bvmm-auth'] = localStorage.getItem('bvmm_auth') || ''; } catch(e) {}
+      init.headers = h;
+    }
+    var promise = _origFetch(input, init);
+    if (isWorker) {
+      promise = promise.then(function(resp) {
+        if (resp.status === 401 && !document.getElementById('bvmm-wizard-overlay')) {
+          setTimeout(function(){ showWizard('unauthorized'); }, 100);
+        }
+        return resp;
+      });
+    }
+    return promise;
+  };
+
+  // ── 2. Utilities ──
+  function genSecret() {
+    var arr = new Uint8Array(32);
+    crypto.getRandomValues(arr);
+    var hex = '';
+    for (var i = 0; i < arr.length; i++) {
+      var h = arr[i].toString(16);
+      hex += (h.length < 2 ? '0' : '') + h;
+    }
+    return hex;
+  }
+  function copyTo(text, btn) {
+    var done = function() {
+      var orig = btn.textContent; btn.textContent = '✓ Copied';
+      setTimeout(function(){ btn.textContent = orig; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function() { window.prompt('Copy:', text); });
+    } else {
+      window.prompt('Copy:', text);
+    }
+  }
+  function getWorkerSource() {
+    var el = document.getElementById('bvmm-worker-source');
+    return el ? el.textContent.trim() : '';
+  }
+
+  // ── 3. Wizard ──
+  function showWizard(mode) {
+    var existing = document.getElementById('bvmm-wizard-overlay');
+    if (existing) existing.remove();
+    var secret = localStorage.getItem('bvmm_auth_pending');
+    if (!secret) { secret = genSecret(); try { localStorage.setItem('bvmm_auth_pending', secret); } catch(e) {} }
+
+    var titles = {
+      'first-run':   ['🛡 One-Time Setup', "Your tool needs a secret to prove it's really you. About 2 minutes."],
+      'unauthorized':['🔒 Tool Not Authenticated', "The worker rejected a request. Your secret is either not set in Cloudflare or doesn't match."],
+      'manual':      ['🛡 Re-run Setup', 'Reset, re-test, or set up a new device below.']
+    };
+    var t = titles[mode] || titles.manual;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'bvmm-wizard-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;overflow-y:auto;padding:20px 0';
+    var panel = document.createElement('div');
+    panel.style.cssText = 'background:#F5F0E8;max-width:560px;margin:auto;padding:22px 16px 30px;border-radius:16px';
+
+    panel.innerHTML = ''+
+      '<div style="text-align:center;margin-bottom:16px">'+
+        '<div style="font-size:1.25rem;font-weight:800;color:#1A0A04">'+t[0]+'</div>'+
+        '<div style="font-size:.76rem;color:#5C3A2D;margin-top:6px;line-height:1.5">'+t[1]+'</div>'+
+      '</div>'+
+      '<div class="card" style="background:#fff;margin-bottom:10px;padding:14px">'+
+        '<div style="font-size:.6rem;font-weight:800;letter-spacing:.1em;color:#C43B00;margin-bottom:8px">STEP 1 — COPY YOUR SECRET</div>'+
+        '<div style="display:flex;gap:6px">'+
+          '<input id="bw-secret" type="text" readonly value="'+secret+'" style="flex:1;padding:9px 10px;border:1.5px solid rgba(26,10,4,.12);border-radius:8px;font-size:.62rem;font-family:monospace;background:#F5F0E8">'+
+          '<button id="bw-copy-secret" style="background:#1A0A04;color:#fff;border:none;border-radius:8px;padding:9px 12px;font-size:.7rem;font-weight:800;cursor:pointer">Copy</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="card" style="background:#fff;margin-bottom:10px;padding:14px">'+
+        '<div style="font-size:.6rem;font-weight:800;letter-spacing:.1em;color:#C43B00;margin-bottom:8px">STEP 2 — OPEN CLOUDFLARE</div>'+
+        '<a href="https://dash.cloudflare.com/3e33cb7e32f60a1266e6e50ed47d9b4b/workers/services/edit/bvmm-proxy/production" target="_blank" rel="noopener" style="display:block;background:#F38020;color:#fff;text-align:center;padding:11px;border-radius:8px;font-size:.8rem;font-weight:800;text-decoration:none">Open Cloudflare Editor →</a>'+
+      '</div>'+
+      '<div class="card" style="background:#fff;margin-bottom:10px;padding:14px">'+
+        '<div style="font-size:.6rem;font-weight:800;letter-spacing:.1em;color:#C43B00;margin-bottom:8px">STEP 3 — PASTE SECRET INTO BVMM_TOOL</div>'+
+        '<div style="font-size:.72rem;color:#1A0A04;line-height:1.55">In Cloudflare: <b>Settings</b> → <b>Variables and Secrets</b> → find <b>BVMM_TOOL</b> → ✏ → <b>Rotate</b> → paste the secret → <b>Save</b>.</div>'+
+      '</div>'+
+      '<div class="card" style="background:#fff;margin-bottom:10px;padding:14px">'+
+        '<div style="font-size:.6rem;font-weight:800;letter-spacing:.1em;color:#C43B00;margin-bottom:8px">STEP 4 — COPY &amp; DEPLOY WORKER CODE</div>'+
+        '<div style="font-size:.72rem;color:#1A0A04;margin-bottom:10px;line-height:1.55">In Cloudflare: <b>Edit Code</b> → select all → delete → paste → <b>Deploy</b>.</div>'+
+        '<button id="bw-copy-worker" style="width:100%;background:#1A0A04;color:#fff;border:none;border-radius:8px;padding:11px;font-size:.78rem;font-weight:800;cursor:pointer">📋 Copy Worker Code (v3)</button>'+
+      '</div>'+
+      '<div class="card" style="background:#fff;margin-bottom:10px;padding:14px;border:2px solid #2E7D32">'+
+        '<div style="font-size:.6rem;font-weight:800;letter-spacing:.1em;color:#2E7D32;margin-bottom:8px">STEP 5 — TEST</div>'+
+        '<div style="font-size:.72rem;color:#1A0A04;margin-bottom:10px">After Cloudflare says Deployed, tap below.</div>'+
+        '<button id="bw-test" style="width:100%;background:#2E7D32;color:#fff;border:none;border-radius:8px;padding:12px;font-size:.82rem;font-weight:800;cursor:pointer">✓ Test Connection</button>'+
+        '<div id="bw-result" style="font-size:.74rem;margin-top:10px;font-weight:700;text-align:center;line-height:1.45"></div>'+
+      '</div>'+
+      '<button id="bw-close" style="width:100%;background:transparent;color:#5C3A2D;border:1.5px solid rgba(26,10,4,.15);border-radius:8px;padding:9px;font-size:.72rem;font-weight:600;cursor:pointer;margin-top:4px">Close (finish later)</button>';
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    document.getElementById('bw-copy-secret').onclick = function() { copyTo(secret, this); };
+    document.getElementById('bw-copy-worker').onclick = function() {
+      var src = getWorkerSource();
+      if (!src) { alert('Worker source missing — file may be corrupted'); return; }
+      copyTo(src, this);
+    };
+    document.getElementById('bw-close').onclick = function() { overlay.remove(); };
+    document.getElementById('bw-test').onclick = function() {
+      var btn = this, res = document.getElementById('bw-result');
+      btn.disabled = true; btn.textContent = 'Testing...'; res.innerHTML = '';
+      try { localStorage.setItem('bvmm_auth', secret); } catch(e) {}
+      _origFetch(WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-bvmm-auth': secret },
+        body: JSON.stringify({ action: 'kv-get', key: '__bvmm_auth_probe__' })
+      }).then(function(r) {
+        return r.json().then(function(d){ return { status: r.status, body: d }; }, function(){ return { status: r.status, body: {} }; });
+      }).then(function(o) {
+        btn.disabled = false; btn.textContent = '✓ Test Connection';
+        if (o.status === 401) {
+          res.innerHTML = '<span style="color:#C43B00">✗ Secret rejected.<br>Check Step 3 — paste the exact secret, tap Save, AND Step 4 Deploy.</span>';
+          try { localStorage.removeItem('bvmm_auth'); } catch(e) {}
+          return;
+        }
+        if (o.status === 500 && /misconfigured/i.test(((o.body)||{}).error||'')) {
+          res.innerHTML = '<span style="color:#C43B00">✗ BVMM_TOOL not set in Cloudflare.<br>Go back to Step 3.</span>';
+          return;
+        }
+        if (((o.body)||{}).ok) {
+          res.innerHTML = '<span style="color:#2E7D32">✓ Connected! You\'re all set.</span>';
+          try { localStorage.removeItem('bvmm_auth_pending'); } catch(e) {}
+          setTimeout(function(){ var ov = document.getElementById('bvmm-wizard-overlay'); if (ov) ov.remove(); }, 1400);
+          return;
+        }
+        res.innerHTML = '<span style="color:#C43B00">? Got status '+o.status+': '+(((o.body)||{}).error||'unknown')+'</span>';
+      }).catch(function(e) {
+        btn.disabled = false; btn.textContent = '✓ Test Connection';
+        res.innerHTML = '<span style="color:#C43B00">✗ Could not reach worker.<br>'+e.message+'</span>';
+      });
+    };
+  }
+  window.bvmmShowWizard = showWizard;
+
+  // ── 4. First-run auto-show ──
+  function onReady() {
+    if (!localStorage.getItem('bvmm_auth')) {
+      setTimeout(function(){ showWizard('first-run'); }, 400);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
+  else onReady();
+
+  // ── 5. Add "Run setup wizard" button to Settings ──
+  function addSettingsCard() {
+    var panel = document.getElementById('sub-settings');
+    if (!panel || document.getElementById('bvmm-auth-card')) return;
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'bvmm-auth-card';
+    card.style.cssText = 'border:2px solid #C43B00;background:#FFF8F5';
+    card.innerHTML =
+      '<div class="section-label" style="color:#C43B00">🛡 Tool Authentication</div>'+
+      '<p style="font-size:.72rem;color:#5C3A2D;margin-bottom:10px;line-height:1.55">Re-test auth, rotate secret, or set up a new device.</p>'+
+      '<button id="bvmm-open-wiz" style="width:100%;background:#C43B00;color:#fff;border:none;border-radius:9px;padding:11px;font-size:.8rem;font-weight:800;cursor:pointer">Open Setup Wizard</button>';
+    // Insert near top of settings panel
+    var subTitle = panel.querySelector('.sec-sub');
+    if (subTitle && subTitle.nextSibling) panel.insertBefore(card, subTitle.nextSibling);
+    else panel.insertBefore(card, panel.firstChild);
+    document.getElementById('bvmm-open-wiz').onclick = function(){ showWizard('manual'); };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // PICTURE IMPROVEMENTS
+  // ═══════════════════════════════════════════════════════════
+
+  var PC_PREFIX = 'bvmm_photocache_';
+  var PC_TTL = 60*60*1000;
+  function cacheGet(key) {
+    try {
+      var raw = localStorage.getItem(PC_PREFIX + key);
+      if (!raw) return null;
+      var o = JSON.parse(raw);
+      return (Date.now() - o.t > PC_TTL) ? null : o.v;
+    } catch(e) { return null; }
+  }
+  function cachePut(key, val) {
+    try { localStorage.setItem(PC_PREFIX + key, JSON.stringify({ t: Date.now(), v: val })); } catch(e) {}
+  }
+
+  async function prepareImage(sourceUrl, maxWidth) {
+    maxWidth = maxWidth || 800;
+    var img = new Image();
+    var loaded = false;
+    try {
+      img.crossOrigin = 'anonymous';
+      await new Promise(function(res, rej) {
+        img.onload = res; img.onerror = rej;
+        img.src = sourceUrl;
+        setTimeout(rej, 8000);
+      });
+      if (img.naturalWidth > 0) loaded = true;
+    } catch(e) { loaded = false; }
+    if (!loaded) {
+      var resp = await _origFetch(WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-bvmm-auth': localStorage.getItem('bvmm_auth')||'' },
+        body: JSON.stringify({ action: 'img-fetch', url: sourceUrl })
+      });
+      var data = await resp.json();
+      if (!data.ok) throw new Error(data.error || 'img-fetch failed');
+      img = new Image();
+      await new Promise(function(res, rej) {
+        img.onload = res; img.onerror = rej;
+        img.src = 'data:' + (data.contentType||'image/jpeg') + ';base64,' + data.content;
+      });
+    }
+    var scale = Math.min(1, maxWidth / img.naturalWidth);
+    var w = Math.max(1, Math.round(img.naturalWidth * scale));
+    var h = Math.max(1, Math.round(img.naturalHeight * scale));
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    return new Promise(function(resolve, reject) {
+      canvas.toBlob(function(blob) {
+        if (!blob) { reject(new Error('Canvas toBlob failed')); return; }
+        var reader = new FileReader();
+        reader.onload = function() { resolve({ base64: reader.result.split(',')[1], bytes: blob.size, w:w, h:h }); };
+        reader.onerror = function(){ reject(new Error('Read failed')); };
+        reader.readAsDataURL(blob);
+      }, 'image/webp', 0.85);
+    });
+  }
+
+  async function aiAltText(itemName) {
+    try {
+      var resp = await fetch(WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ai',
+          max_tokens: 60,
+          messages: [
+            { role: 'system', content: 'You write concise, descriptive alt text for butcher shop website images. 8 to 12 words. No quotes. No "Image of" filler. Just a useful visual description.' },
+            { role: 'user', content: 'Product: ' + itemName + '. Write alt text for its product photo.' }
+          ]
+        })
+      });
+      var data = await resp.json();
+      if (data.ok && data.content) return data.content.trim().replace(/^["']|["']$/g, '');
+    } catch(e) {}
+    return itemName;
+  }
+
+  // Override saveAndAttach
+  if (typeof window.saveAndAttach === 'function') {
+    var _origSaveAndAttach = window.saveAndAttach;
+    window.saveAndAttach = async function(itemName, url) {
+      var status = document.getElementById('pickerStatus');
+      if (status) { status.style.display='block'; status.textContent = 'Optimizing photo...'; }
+      try {
+        var img = await prepareImage(url, 800);
+        var base = itemName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'item';
+        var filename = base + '-' + Date.now().toString(36) + '.webp';
+        if (status) status.textContent = 'Uploading ('+Math.round(img.bytes/1024)+' KB)...';
+        var resp = await fetch(WORKER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'img-upload-raw', filename: filename, content: img.base64 })
+        });
+        var data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'Upload failed');
+        // Fire-and-forget alt text
+        aiAltText(itemName).then(function(alt) {
+          try {
+            var m = JSON.parse(localStorage.getItem('bvmm_item_alts')||'{}');
+            m[itemName] = alt;
+            localStorage.setItem('bvmm_item_alts', JSON.stringify(m));
+          } catch(e) {}
+        });
+        if (status) status.textContent = 'Attaching...';
+        if (typeof attachImageToItem === 'function') attachImageToItem(itemName, filename);
+      } catch(e) {
+        if (status) status.textContent = 'Optimize failed, using fallback: ' + e.message;
+        setTimeout(function(){ _origSaveAndAttach(itemName, url); }, 800);
+      }
+    };
+  }
+
+  // Override openImagePicker for auto-search
+  if (typeof window.openImagePicker === 'function') {
+    var _origOpenPicker = window.openImagePicker;
+    window.openImagePicker = function(itemName) {
+      _origOpenPicker(itemName);
+      setTimeout(function() {
+        var inp = document.getElementById('pickerSearch');
+        if (!inp) return;
+        inp.value = itemName;
+        if (typeof window.pickerSearch === 'function') window.pickerSearch(itemName);
+      }, 250);
+    };
+  }
+
+  // Override pickerSearch for cache
+  if (typeof window.pickerSearch === 'function') {
+    var _origPickerSearch = window.pickerSearch;
+    window.pickerSearch = function(itemName) {
+      var inp = document.getElementById('pickerSearch');
+      if (!inp) return _origPickerSearch(itemName);
+      var q = inp.value.trim();
+      if (!q) return;
+      var cached = cacheGet(q);
+      if (cached && cached.length) {
+        var grid = document.getElementById('pickerGrid');
+        var status = document.getElementById('pickerStatus');
+        if (grid && status) {
+          grid.innerHTML = ''; status.style.display = 'none';
+          cached.forEach(function(img) {
+            var wrap = document.createElement('div');
+            wrap.style.cssText = 'aspect-ratio:1;overflow:hidden;border-radius:10px;background:#eee;cursor:pointer;position:relative';
+            var el = document.createElement('img');
+            el.src = img.thumb || img.src;
+            el.style.cssText = 'width:100%;height:100%;object-fit:cover';
+            var badge = document.createElement('div');
+            badge.textContent = '⚡'; badge.title = 'Cached';
+            badge.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(46,125,50,.9);color:#fff;border-radius:4px;padding:1px 5px;font-size:.55rem;font-weight:800';
+            wrap.appendChild(el); wrap.appendChild(badge);
+            wrap.onclick = function(){ saveAndAttach(itemName, img.src); };
+            grid.appendChild(wrap);
+          });
+          return;
+        }
+      }
+      _origPickerSearch(itemName);
+      var attempts = 0;
+      var pollId = setInterval(function() {
+        attempts++;
+        if (attempts > 20) { clearInterval(pollId); return; }
+        var grid = document.getElementById('pickerGrid');
+        if (!grid) { clearInterval(pollId); return; }
+        var imgs = grid.querySelectorAll('img');
+        if (imgs.length) {
+          clearInterval(pollId);
+          var list = [];
+          imgs.forEach(function(i) { list.push({ src: i.src, thumb: i.src }); });
+          cachePut(q, list);
+        }
+      }, 500);
+    };
+  }
+
+  // Post-process applyChanges to inject AI alt text into img tags
+  if (typeof window.applyChanges === 'function') {
+    var _origApply = window.applyChanges;
+    window.applyChanges = function(html) {
+      html = _origApply(html);
+      try {
+        var altMap = JSON.parse(localStorage.getItem('bvmm_item_alts')||'{}');
+        Object.keys(altMap).forEach(function(itemName) {
+          var newAlt = altMap[itemName] || '';
+          if (!newAlt) return;
+          var esc = itemName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/&/g, '&amp;');
+          var re = new RegExp('(<img src="images\\/[^"]+")(\\s+alt=")' + esc + '(")', 'g');
+          html = html.replace(re, '$1$2' + newAlt.replace(/"/g, '&quot;') + '$3');
+        });
+      } catch(e) {}
+      return html;
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // AI CONTENT GENERATORS
+  // ═══════════════════════════════════════════════════════════
+
+  async function callAI(systemPrompt, userPrompt, maxTokens) {
+    var resp = await fetch(WORKER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'ai',
+        max_tokens: maxTokens || 2048,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+    var data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'AI error');
+    return data.content || '';
+  }
+
+  function showAiResult(title, content) {
+    var existing = document.getElementById('bvmm-ai-overlay');
+    if (existing) existing.remove();
+    var overlay = document.createElement('div');
+    overlay.id = 'bvmm-ai-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1500;overflow-y:auto;padding:20px 0';
+    var panel = document.createElement('div');
+    panel.style.cssText = 'background:#F5F0E8;max-width:560px;margin:auto;padding:18px 14px;border-radius:16px';
+    panel.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+        '<div style="font-size:1rem;font-weight:800">'+title+'</div>'+
+        '<button id="bvmm-ai-x" style="background:none;border:none;font-size:1.4rem;cursor:pointer">✕</button>'+
+      '</div>'+
+      '<textarea id="bvmm-ai-ta" readonly style="width:100%;height:300px;padding:10px;border:1.5px solid rgba(26,10,4,.12);border-radius:10px;font-family:monospace;font-size:.68rem;line-height:1.5;background:#fff;color:#1A0A04;resize:vertical"></textarea>'+
+      '<div style="display:flex;gap:8px;margin-top:10px">'+
+        '<button id="bvmm-ai-cp" style="flex:1;background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:11px;font-size:.78rem;font-weight:800;cursor:pointer">📋 Copy</button>'+
+        '<button id="bvmm-ai-cl" style="flex:1;background:transparent;color:#5C3A2D;border:1.5px solid rgba(26,10,4,.15);border-radius:10px;padding:11px;font-size:.78rem;font-weight:600;cursor:pointer">Close</button>'+
+      '</div>'+
+      '<div style="font-size:.64rem;color:#888;margin-top:8px;line-height:1.5">Not auto-pushed. Copy what you want and paste into index.html.</div>';
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    document.getElementById('bvmm-ai-ta').value = content;
+    document.getElementById('bvmm-ai-x').onclick = function(){ overlay.remove(); };
+    document.getElementById('bvmm-ai-cl').onclick = function(){ overlay.remove(); };
+    document.getElementById('bvmm-ai-cp').onclick = function() { copyTo(content, this); };
+  }
+
+  async function runGen(btn, label, sys, user, tokens) {
+    var orig = btn.textContent; btn.disabled = true; btn.textContent = 'Generating…';
+    try { showAiResult(label, await callAI(sys, user, tokens)); }
+    catch(e) { alert('AI error: ' + e.message); }
+    finally { btn.disabled = false; btn.innerHTML = orig; }
+  }
+
+  function itemNames() {
+    var items = [];
+    if (typeof DELI !== 'undefined') items = items.concat(DELI);
+    if (typeof BUTCHER !== 'undefined') items = items.concat(BUTCHER);
+    return items.map(function(i){ return i.name; });
+  }
+
+  function addContentCard() {
+    var panel = document.getElementById('sub-settings');
+    if (!panel || document.getElementById('bvmm-content-card')) return;
+    var card = document.createElement('div');
+    card.className = 'card'; card.id = 'bvmm-content-card';
+    card.innerHTML =
+      '<div class="section-label">🤖 AI Content Tools (for SEO)</div>'+
+      '<p style="font-size:.72rem;color:#5C3A2D;margin-bottom:12px;line-height:1.55">Generate static content for your site. Output shows in a preview — you copy what you want into index.html.</p>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+        '<button id="ai-g-d" style="background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:12px 10px;font-size:.7rem;font-weight:800;cursor:pointer;line-height:1.3">Product<br>Descriptions</button>'+
+        '<button id="ai-g-f" style="background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:12px 10px;font-size:.7rem;font-weight:800;cursor:pointer;line-height:1.3">FAQ<br>Section</button>'+
+        '<button id="ai-g-c" style="background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:12px 10px;font-size:.7rem;font-weight:800;cursor:pointer;line-height:1.3">Cooking<br>Guides</button>'+
+        '<button id="ai-g-s" style="background:#C43B00;color:#fff;border:none;border-radius:10px;padding:12px 10px;font-size:.7rem;font-weight:800;cursor:pointer;line-height:1.3">Schema.org<br>(SEO win)</button>'+
+      '</div>';
+    panel.appendChild(card);
+    document.getElementById('ai-g-d').onclick = function() {
+      runGen(this, 'Product Descriptions',
+        'You write appetizing product copy for Babylon Village Meat Market, a neighborhood butcher shop on Long Island, NY. Descriptions are 1-2 sentences each, warm, specific, mentioning provenance or preparation when relevant. Never invent prices or certifications.',
+        'Write a description for each item. Return STRICT JSON: {"Item Name":"Description..."}. No markdown, no commentary.\n\nItems:\n' + itemNames().join('\n'),
+        3000);
+    };
+    document.getElementById('ai-g-f').onclick = function() {
+      runGen(this, 'FAQ Section (paste into index.html)',
+        'You write SEO-friendly FAQ for a neighborhood butcher shop. Return STRICT HTML: start with <script type="application/ld+json"> JSON-LD (FAQPage schema), then a styled <section> with 10-15 question/answer pairs. Topics: hours, catering, orders, cuts, cooking, storage, delivery, dry-aged beef.',
+        'Generate FAQ content for Babylon Village Meat Market, Babylon NY. Use real-sounding customer questions.',
+        3500);
+    };
+    document.getElementById('ai-g-c').onclick = function() {
+      runGen(this, 'Cooking Guides',
+        'You write cooking guides for a butcher shop website. Return STRICT HTML: one <article> per cut with h3 title, method, time, temperature, tip. Cover: ribeye, NY strip, tomahawk, filet mignon, tri-tip, brisket, short ribs, pork chop, chicken cutlet, leg of lamb.',
+        'Generate cooking guides for Babylon Village Meat Market.',
+        3500);
+    };
+    document.getElementById('ai-g-s').onclick = function() {
+      runGen(this, 'Schema.org JSON-LD (paste in <head> of index.html)',
+        'You generate schema.org JSON-LD for a local butcher shop. Return STRICT HTML with: (1) a <script type="application/ld+json"> LocalBusiness block including type Butcher Shop, name, address, openingHoursSpecification, geo coordinates for Babylon, NY, URL greencrk.com; (2) a <script> BreadcrumbList for Home > Shop. No prose outside the script tags.',
+        'Babylon Village Meat Market, Babylon NY 11702 (approx). Established 1983. Website: greencrk.com. Products include: ' + itemNames().slice(0,20).join(', '),
+        2500);
+    };
+  }
+
+  // Wait for DOM, then add settings cards
+  function finishInit() {
+    addSettingsCard();
+    addContentCard();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', finishInit);
+  else finishInit();
+
+})();
+
+// ══════════ END BVMM v3 ADD-ON ══════════
+
 </script>
 
 
+
+<script type="text/x-worker-source" id="bvmm-worker-source">
+// BVMM Worker v3 - bvmm-proxy
+// 2026-04-18 - auth + filename whitelist + chunked base64 fix + img-fetch + img-upload-raw
+// Secrets: GITHUB_TOKEN, OPENAI_API_KEY, SERP_API_KEY, PEXELS_API_KEY, UNSPLASH_KEY, BVMM_TOOL
+// KV: BVMM_DATA
+
+const ALLOWED_FILES = ['index.html', 'BVMM_push_live.html'];
+const ALLOWED_IMG_EXTS = ['jpg','jpeg','png','webp','gif'];
+
+function isAllowedFile(name) {
+  return typeof name === 'string' && ALLOWED_FILES.indexOf(name) >= 0;
+}
+function isAllowedImage(name) {
+  if (typeof name !== 'string') return false;
+  if (name.indexOf('/') >= 0 || name.indexOf('\\') >= 0 || name.indexOf('..') >= 0) return false;
+  var ext = (name.split('.').pop() || '').toLowerCase();
+  return ALLOWED_IMG_EXTS.indexOf(ext) >= 0;
+}
+function bufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  const chunk = 8192;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunk, bytes.length)));
+  }
+  return btoa(binary);
+}
+
+export default {
+  async fetch(request, env) {
+    const headers = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, x-bvmm-auth',
+      'Content-Type': 'application/json'
+    };
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
+
+    const expected = env.BVMM_TOOL || '';
+    if (!expected) return new Response(JSON.stringify({ok:false,error:'Server misconfigured: BVMM_TOOL secret not set'}), {status:500,headers});
+    if ((request.headers.get('x-bvmm-auth')||'') !== expected) {
+      return new Response(JSON.stringify({ok:false,error:'Unauthorized'}), {status:401,headers});
+    }
+
+    let body;
+    try { body = await request.json(); }
+    catch (e) { return new Response(JSON.stringify({ok:false,error:'Invalid JSON'}), {headers}); }
+    const action = body.action;
+
+    if (action === 'google-images') {
+      try {
+        const q = body.query || 'meat';
+        const url = 'https://serpapi.com/search.json?engine=google_images&q=' + encodeURIComponent(q) + '&num=10&safe=active&api_key=' + env.SERP_API_KEY;
+        const r = await fetch(url); const d = await r.json();
+        if (!r.ok || d.error) return new Response(JSON.stringify({ok:false,error:d.error||'SerpApi error'}), {headers});
+        const photos = (d.images_results||[]).slice(0,10).map(function(i){ return {src:{medium:i.original,small:i.thumbnail,large:i.original},photographer:i.source,title:i.title}; });
+        return new Response(JSON.stringify({ok:true,photos}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'pexels') {
+      try {
+        const q = body.query || 'meat';
+        const r = await fetch('https://api.pexels.com/v1/search?query=' + encodeURIComponent(q) + '&per_page=15&orientation=landscape', { headers: { 'Authorization': env.PEXELS_API_KEY } });
+        const d = await r.json();
+        if (!r.ok) return new Response(JSON.stringify({ok:false,error:'Pexels error'}), {headers});
+        return new Response(JSON.stringify({ok:true,photos:d.photos||[]}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'unsplash') {
+      try {
+        const q = body.query || 'meat';
+        const r = await fetch('https://api.unsplash.com/search/photos?query=' + encodeURIComponent(q) + '&per_page=15&orientation=landscape', { headers: { 'Authorization': 'Client-ID ' + env.UNSPLASH_KEY } });
+        const d = await r.json();
+        if (!r.ok) return new Response(JSON.stringify({ok:false,error:'Unsplash error'}), {headers});
+        const photos = (d.results||[]).map(function(p){ return {src:{medium:p.urls.regular,small:p.urls.thumb,large:p.urls.full},photographer:p.user.name}; });
+        return new Response(JSON.stringify({ok:true,photos}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'proxy-headers') {
+      try {
+        const url = body.url; if (!url) return new Response(JSON.stringify({ok:false,error:'No URL'}), {headers});
+        const extra = body.headers || {};
+        const r = await fetch(url, { headers: { 'User-Agent':'Mozilla/5.0 (compatible; BVMM-Bot/1.0)', ...extra } });
+        const text = await r.text();
+        return new Response(JSON.stringify({ok:true,html:text,status:r.status}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'proxy') {
+      try {
+        const url = body.url; if (!url) return new Response(JSON.stringify({ok:false,error:'No URL'}), {headers});
+        const r = await fetch(url, { headers:{'User-Agent':'Mozilla/5.0 (compatible; BVMM-Bot/1.0)'} });
+        const text = await r.text();
+        return new Response(JSON.stringify({ok:true,html:text,finalUrl:r.url}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'ai') {
+      try {
+        const r = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST',
+          headers:{'x-api-key':env.OPENAI_API_KEY,'anthropic-version':'2023-06-01','Content-Type':'application/json'},
+          body: JSON.stringify({
+            model: body.model || 'claude-sonnet-4-5',
+            max_tokens: body.max_tokens || 1024,
+            system: (body.messages && body.messages[0] && body.messages[0].role==='system') ? body.messages[0].content : '',
+            messages: (body.messages||[]).filter(function(m){return m.role!=='system';})
+          })
+        });
+        const d = await r.json();
+        if (!r.ok) return new Response(JSON.stringify({ok:false,error:(d.error&&d.error.message)||'Claude error'}), {headers});
+        const content = (d.content && d.content[0] && d.content[0].text) || '';
+        return new Response(JSON.stringify({ok:true,content}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'deploy') {
+      try {
+        const filename = body.filename; const content = body.content;
+        if (!isAllowedFile(filename)) return new Response(JSON.stringify({ok:false,error:'File not allowed: '+filename}), {status:400,headers});
+        const token = env.GITHUB_TOKEN;
+        const apiBase = 'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/';
+        const gh = {'Authorization':'token '+token,'Content-Type':'application/json','User-Agent':'bvmm-proxy-worker'};
+        const gr = await fetch(apiBase+filename,{headers:gh}); const gd = await gr.json();
+        const sha = gd.sha || null;
+        const pb = { message: 'Update '+filename+' via BVMM Manager', content };
+        if (sha) pb.sha = sha;
+        const pr = await fetch(apiBase+filename, { method:'PUT', headers:gh, body:JSON.stringify(pb) });
+        const pd = await pr.json();
+        if (!pr.ok) return new Response(JSON.stringify({ok:false,error:pd.message||'GitHub error'}), {headers});
+        const commit = (pd.commit&&pd.commit.sha)?pd.commit.sha.substring(0,7):'ok';
+        return new Response(JSON.stringify({ok:true,commit}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'img-upload') {
+      try {
+        const url = body.url; const filename = body.filename;
+        if (!url || !filename) return new Response(JSON.stringify({ok:false,error:'Missing url or filename'}), {headers});
+        if (!isAllowedImage(filename)) return new Response(JSON.stringify({ok:false,error:'Invalid image filename'}), {status:400,headers});
+        const ir = await fetch(url, { headers:{'User-Agent':'Mozilla/5.0 (compatible; BVMM-Bot/1.0)'} });
+        if (!ir.ok) return new Response(JSON.stringify({ok:false,error:'Could not fetch image'}), {headers});
+        const buf = await ir.arrayBuffer();
+        const b64 = bufferToBase64(buf);
+        const token = env.GITHUB_TOKEN;
+        const apiBase = 'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/images/';
+        const gh = {'Authorization':'token '+token,'Content-Type':'application/json','User-Agent':'bvmm-proxy-worker'};
+        const gr = await fetch(apiBase+filename,{headers:gh}); const gd = await gr.json();
+        const sha = gd.sha || null;
+        const pb = { message:'Add image '+filename+' via BVMM Manager', content:b64 };
+        if (sha) pb.sha = sha;
+        const pr = await fetch(apiBase+filename, { method:'PUT', headers:gh, body:JSON.stringify(pb) });
+        const pd = await pr.json();
+        if (!pr.ok) return new Response(JSON.stringify({ok:false,error:pd.message||'GitHub error'}), {headers});
+        return new Response(JSON.stringify({ok:true,path:'images/'+filename}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'img-upload-raw') {
+      try {
+        const filename = body.filename; const b64 = body.content;
+        if (!filename || !b64) return new Response(JSON.stringify({ok:false,error:'Missing filename or content'}), {headers});
+        if (!isAllowedImage(filename)) return new Response(JSON.stringify({ok:false,error:'Invalid image filename'}), {status:400,headers});
+        const token = env.GITHUB_TOKEN;
+        const apiBase = 'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/images/';
+        const gh = {'Authorization':'token '+token,'Content-Type':'application/json','User-Agent':'bvmm-proxy-worker'};
+        const gr = await fetch(apiBase+filename,{headers:gh}); const gd = await gr.json();
+        const sha = gd.sha || null;
+        const pb = { message:'Add image '+filename+' via BVMM Manager', content:b64 };
+        if (sha) pb.sha = sha;
+        const pr = await fetch(apiBase+filename, { method:'PUT', headers:gh, body:JSON.stringify(pb) });
+        const pd = await pr.json();
+        if (!pr.ok) return new Response(JSON.stringify({ok:false,error:pd.message||'GitHub error'}), {headers});
+        return new Response(JSON.stringify({ok:true,path:'images/'+filename}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'img-fetch') {
+      try {
+        const url = body.url;
+        if (!url) return new Response(JSON.stringify({ok:false,error:'No URL'}), {headers});
+        const r = await fetch(url, { headers:{'User-Agent':'Mozilla/5.0 (compatible; BVMM-Bot/1.0)'} });
+        if (!r.ok) return new Response(JSON.stringify({ok:false,error:'Could not fetch'}), {headers});
+        const ct = r.headers.get('content-type') || 'image/jpeg';
+        const buf = await r.arrayBuffer();
+        const b64 = bufferToBase64(buf);
+        return new Response(JSON.stringify({ok:true,content:b64,contentType:ct}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'kv-set') {
+      try { await env.BVMM_DATA.put(body.key, body.value); return new Response(JSON.stringify({ok:true}), {headers}); }
+      catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'kv-get') {
+      try { const v = await env.BVMM_DATA.get(body.key); return new Response(JSON.stringify({ok:true,value:v}), {headers}); }
+      catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'kv-list') {
+      try { const l = await env.BVMM_DATA.list({ prefix: body.prefix || undefined }); return new Response(JSON.stringify({ok:true,keys:l.keys}), {headers}); }
+      catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+
+    return new Response(JSON.stringify({ok:false,error:'Unknown action: '+action}), {headers});
+  }
+};
+
+</script>
 </body></html>
