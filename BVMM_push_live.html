@@ -3915,6 +3915,12 @@ function downloadAll(key) {
           '<button id="bvmm-cf-save" style="background:#1A0A04;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:.7rem;font-weight:800">Save</button>'+
         '</div>'+
       '</div>'+
+      '<div class="card" style="background:#fff;padding:12px;margin-bottom:10px;border:2px solid #C43B00">'+
+        '<div style="font-size:.62rem;font-weight:800;letter-spacing:.1em;color:#C43B00;margin-bottom:8px">\uD83D\uDD04 SYNC AUTH SECRET TO CLOUDFLARE</div>'+
+        '<div style="font-size:.7rem;color:#1A0A04;margin-bottom:10px;line-height:1.5">One-tap fix for \u201CFailed: Unauthorized\u201D. Writes this tool\u2019s secret directly to Cloudflare\u2019s BVMM_TOOL. No copy-paste.</div>'+
+        '<button id="bvmm-cf-sync" style="width:100%;background:#C43B00;color:#fff;border:none;border-radius:9px;padding:12px;font-size:.82rem;font-weight:800;cursor:pointer">\uD83D\uDD04 Sync Secret Now</button>'+
+        '<div id="bvmm-cf-sync-status" style="font-size:.72rem;margin-top:10px;font-weight:700;text-align:center;line-height:1.5;min-height:1em"></div>'+
+      '</div>'+
       '<div class="card" style="background:#fff;padding:12px;margin-bottom:10px">'+
         '<div style="font-size:.62rem;font-weight:800;letter-spacing:.1em;color:#2E7D32;margin-bottom:8px">DEPLOY WORKER</div>'+
         '<div style="font-size:.7rem;color:#1A0A04;margin-bottom:10px;line-height:1.5">Pushes the worker code embedded in this HTML to Cloudflare. Takes ~5 seconds.</div>'+
@@ -3930,6 +3936,9 @@ function downloadAll(key) {
     document.getElementById('bvmm-cf-x').onclick = function(){ overlay.remove(); };
     document.getElementById('bvmm-cf-close').onclick = function(){ overlay.remove(); };
     document.getElementById('bvmm-cf-eye').onclick = function() { inp.type = inp.type==='password' ? 'text' : 'password'; };
+    document.getElementById('bvmm-cf-sync').onclick = function() {
+      syncSecretToCloudflare(inp.value.trim() || getCfToken());
+    };
     document.getElementById('bvmm-cf-save').onclick = function() {
       var v = (inp.value || '').trim();
       if (!v) { alert('Paste the token first'); return; }
@@ -4000,6 +4009,96 @@ function downloadAll(key) {
       btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
       st.textContent = '✗ ' + e.message;
       st.style.color = '#C43B00';
+    }
+  }
+
+  // ─── Sync local auth secret to Cloudflare BVMM_TOOL via CF API ───
+  // This is THE fix for the copy-paste mismatch hell.
+  // Writes the tool's current auth secret (from localStorage) directly to
+  // Cloudflare's BVMM_TOOL secret using the Workers Secrets API.
+  async function syncSecretToCloudflare(apiToken) {
+    var st = document.getElementById('bvmm-cf-sync-status');
+    var btn = document.getElementById('bvmm-cf-sync');
+    if (!st || !btn) return;
+
+    if (!apiToken) {
+      st.innerHTML = '<span style="color:#C43B00">✗ Save your Cloudflare API token first (box above).</span>';
+      return;
+    }
+
+    // Get the current auth secret from localStorage. If none, generate one.
+    var secret = '';
+    try { secret = localStorage.getItem('bvmm_auth') || ''; } catch(e) {}
+    if (!secret) {
+      // Generate a new one so we have something to sync. User probably wiped storage.
+      secret = genSecret();
+      try { localStorage.setItem('bvmm_auth', secret); } catch(e) {}
+    }
+
+    btn.disabled = true; btn.textContent = 'Syncing...';
+    st.innerHTML = '<span style="color:#1A0A04">Writing BVMM_TOOL to Cloudflare...</span>';
+
+    try {
+      // Cloudflare Workers secrets API:
+      // PUT /accounts/{account_id}/workers/scripts/{script_name}/secrets
+      // Body: { "name": "BVMM_TOOL", "text": "<value>", "type": "secret_text" }
+      var url = 'https://api.cloudflare.com/client/v4/accounts/' + CF_ACCOUNT_ID + '/workers/scripts/' + CF_WORKER_NAME + '/secrets';
+      var resp = await _origFetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + apiToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'BVMM_TOOL',
+          text: secret,
+          type: 'secret_text'
+        })
+      });
+      var data;
+      try { data = await resp.json(); } catch(e) { data = {}; }
+      btn.disabled = false; btn.textContent = '🔄 Sync Secret Now';
+
+      if (!resp.ok || data.success === false) {
+        var errMsg = 'Unknown error';
+        if (data.errors && data.errors.length) {
+          errMsg = data.errors.map(function(e){ return (e.message||JSON.stringify(e)); }).join('; ');
+        } else if (data.error) {
+          errMsg = data.error;
+        } else if (resp.status === 401 || resp.status === 403) {
+          errMsg = 'API token rejected — check Cloudflare token permissions';
+        } else if (resp.status === 404) {
+          errMsg = 'Worker not found — is bvmm-proxy deployed yet?';
+        } else {
+          errMsg = 'HTTP ' + resp.status;
+        }
+        st.innerHTML = '<span style="color:#C43B00">✗ ' + errMsg + '</span>';
+        return;
+      }
+
+      // Success — verify end-to-end by hitting the worker with this secret
+      st.innerHTML = '<span style="color:#1A0A04">Verifying round-trip...</span>';
+      try {
+        var testResp = await _origFetch(WORKER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-bvmm-auth': secret },
+          body: JSON.stringify({ action: 'kv-get', key: '__sync_verify__' })
+        });
+        if (testResp.status === 401) {
+          st.innerHTML = '<span style="color:#C43B00">✓ Secret written, but worker still returns 401. Cloudflare may take ~10s. Try Test Connection in the Setup Wizard in a moment.</span>';
+          return;
+        }
+        if (testResp.ok) {
+          st.innerHTML = '<span style="color:#2E7D32">\u2713 Done! Auth synced end-to-end. Push Live should work now.</span>';
+          return;
+        }
+        st.innerHTML = '<span style="color:#2E7D32">\u2713 Secret written to Cloudflare. Test a push to confirm.</span>';
+      } catch(e) {
+        st.innerHTML = '<span style="color:#2E7D32">\u2713 Secret written. Couldn\u2019t verify round-trip (' + e.message + '), but should work. Try push.</span>';
+      }
+    } catch(e) {
+      btn.disabled = false; btn.textContent = '🔄 Sync Secret Now';
+      st.innerHTML = '<span style="color:#C43B00">✗ ' + e.message + '</span>';
     }
   }
 
