@@ -3108,6 +3108,16 @@ function downloadAll(key) {
   'use strict';
   if (typeof WORKER === 'undefined') { console.error('BVMM addon: WORKER constant missing'); return; }
 
+  // ── HARDCODED AUTH SECRET ──
+  // Baked into the HTML. Must match BVMM_TOOL in Cloudflare Worker secrets.
+  // To rotate: change this value AND update BVMM_TOOL in Cloudflare, then push new HTML.
+  // Yes, anyone viewing source can see this. For a butcher shop site that's acceptable —
+  // worst case is someone burns Cloudflare Worker credits, which Claude rolls back.
+  var AUTH_SECRET = '7221757dafc0de12381c31d962037789fdc269ad3ee7b14c0edc200586e4faab';
+  // Mirror into localStorage so any legacy code paths still work, and ensure it
+  // overwrites whatever stale value was there from previous versions.
+  try { localStorage.setItem('bvmm_auth', AUTH_SECRET); } catch(e) {}
+
   // ── 1. Fetch interceptor: auth header + 401 re-prompt ──
   var _origFetch = window.fetch.bind(window);
   window.fetch = function(input, init) {
@@ -3117,7 +3127,7 @@ function downloadAll(key) {
       init = init || {};
       var h = init.headers || {};
       if (h instanceof Headers) { var p = {}; h.forEach(function(v,k){ p[k]=v; }); h = p; }
-      try { h['x-bvmm-auth'] = localStorage.getItem('bvmm_auth') || ''; } catch(e) {}
+      h['x-bvmm-auth'] = AUTH_SECRET;
       init.headers = h;
     }
     var promise = _origFetch(input, init);
@@ -3144,11 +3154,8 @@ function downloadAll(key) {
     XHRProto.send = function(body) {
       try {
         if (this.__bvmm_url && typeof this.__bvmm_url === 'string' && this.__bvmm_url.indexOf(WORKER) === 0) {
-          var secret = '';
-          try { secret = localStorage.getItem('bvmm_auth') || ''; } catch(e) {}
-          try { this.setRequestHeader('x-bvmm-auth', secret); } catch(e) {}
+          try { this.setRequestHeader('x-bvmm-auth', AUTH_SECRET); } catch(e) {}
           var xhr = this;
-          var _origLoad = xhr.onload;
           xhr.addEventListener('load', function() {
             if (xhr.status === 401 && !document.getElementById('bvmm-wizard-overlay')) {
               setTimeout(function(){ if (typeof showWizard === 'function') showWizard('unauthorized'); }, 100);
@@ -3286,11 +3293,11 @@ function downloadAll(key) {
   }
   window.bvmmShowWizard = showWizard;
 
-  // ── 4. First-run auto-show ──
+  // ── 4. First-run auto-show (DISABLED — auth is hardcoded) ──
   function onReady() {
-    if (!localStorage.getItem('bvmm_auth')) {
-      setTimeout(function(){ showWizard('first-run'); }, 400);
-    }
+    // Auth is hardcoded via AUTH_SECRET constant. No wizard needed.
+    // Wizard still accessible manually via Settings → Run Setup Wizard
+    // and via the fix-it card on HOME, for edge cases.
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
   else onReady();
