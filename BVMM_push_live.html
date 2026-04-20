@@ -1,4 +1,5 @@
 <html><head>
+<!-- BVMM Manager — v4 skin redesign (Home + Edit only). All plumbing, auth, and IDs preserved. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meat Market Manager</title>
@@ -143,6 +144,21 @@ body{background:#F5F0E8;color:#1A0A04;font-family:-apple-system,BlinkMacSystemFo
 
 /* ── SQUARE ── */
 .sq-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#fff;border:1.5px solid rgba(26,10,4,.07);border-radius:14px;margin-bottom:8px}
+
+/* ── v4 CAPTIONS & GROUPED LAYOUT (skin only) ── */
+.caption{font-size:.65rem;color:#8a7a6c;line-height:1.4;margin-top:4px;padding:0 2px}
+.action-btn-wrap{display:flex;flex-direction:column;gap:0}
+.action-btn-wrap .action-btn{margin-bottom:0}
+.action-btn-wrap .caption{margin-bottom:6px}
+.group-title{font-size:.62rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a7a6c;margin:16px 2px 8px}
+.danger-zone{border:1.5px solid rgba(192,57,43,.2);background:rgba(192,57,43,.03)}
+.danger-zone .section-label{color:#C0392B}
+details.v4-details{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(26,10,4,.06)}
+details.v4-details summary{cursor:pointer;font-weight:800;font-size:.82rem;color:#1A0A04;list-style:none}
+details.v4-details summary::-webkit-details-marker{display:none}
+details.v4-details summary::after{content:'▸';float:right;transition:transform .2s}
+details.v4-details[open] summary::after{transform:rotate(90deg)}
+details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;margin-bottom:10px;line-height:1.45}
 </style>
 </head>
 <body>
@@ -159,7 +175,7 @@ body{background:#F5F0E8;color:#1A0A04;font-family:-apple-system,BlinkMacSystemFo
 <!-- ════ HOME ════ -->
 <div id="panel-home" class="panel active">
 
-  <!-- DASHBOARD CARD -->
+  <!-- DASHBOARD CARD (unchanged — all IDs preserved) -->
   <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
     <div style="background:#111;padding:20px 18px 16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -196,7 +212,9 @@ body{background:#F5F0E8;color:#1A0A04;font-family:-apple-system,BlinkMacSystemFo
     </div>
   </div>
 
+  <!-- PUSH LIVE (unchanged — deployBtn id preserved) -->
   <button class="go-live-btn has-changes" id="deployBtn" onclick="deployAll()" disabled="">Pushing...</button>
+  <p class="caption" style="text-align:center;margin-bottom:10px">Sends your changes to the live website. Takes ~30 seconds.</p>
 
   <div class="deploy-rows" id="deploy-rows" style="display: block;">
     <div class="deploy-row"><span class="deploy-row-name">greencrk.com</span><span class="deploy-row-status ok" id="fs-site">- e857a8d</span></div>
@@ -206,8 +224,11 @@ body{background:#F5F0E8;color:#1A0A04;font-family:-apple-system,BlinkMacSystemFo
   <button class="secondary-btn" id="openSiteBtn" style="display:none" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
   <div id="last-deployed" style="display:none">Last pushed: just now</div>
 
+  <!-- GROUP 1: EVERYDAY QUICK ACTIONS -->
+  <div class="group-title">Everyday Actions</div>
   <div class="card" style="margin-top:4px">
-    <div class="section-label">Quick Actions</div>
+    <div class="section-label">Today</div>
+    <div style="font-size:.7rem;color:#8a7a6c;margin-bottom:12px;line-height:1.45">Fast things you might do on any given day. Each one queues a change — tap Go Live above when you're ready to publish.</div>
     <div class="action-grid">
       <button class="action-btn" onclick="quickClose()"><span class="ab-icon">🔒</span>Mark Closed Today</button>
       <button class="action-btn" onclick="quickSpecial()"><span class="ab-icon">⭐</span>Set Today's Special</button>
@@ -216,20 +237,44 @@ body{background:#F5F0E8;color:#1A0A04;font-family:-apple-system,BlinkMacSystemFo
       <button class="action-btn" onclick="undoLast()"><span class="ab-icon">↶</span>Undo Last Change</button>
       <button class="action-btn" onclick="openBulkIncrease()"><span class="ab-icon">📈</span>Bulk Price Increase</button>
     </div>
+    <p class="caption" style="margin-top:10px"><b>Mark Closed Today:</b> Shows a "Closed today" banner on the site for just today. <b>Set Today's Special:</b> Banner at top of the site. <b>Clear Banner:</b> Removes today's banner. <b>View Live Site:</b> Opens greencrk.com in a new tab. <b>Undo Last Change:</b> Reverses your most recent edit (before pushing). <b>Bulk Price Increase:</b> Raise all prices in a category by a %.</p>
   </div>
 
-  <div class="card">
-    <div class="section-label">Site Actions</div>
+  <!-- GROUP 2: SITE BACKUPS & ROLLBACK -->
+  <details class="v4-details">
+    <summary>💾 Backups &amp; Rollback</summary>
+    <div class="caption-intro">Every push automatically creates a backup. Use these if a change went wrong AFTER you pushed it live.</div>
     <button class="secondary-btn" onclick="backupSite(this)">💾 Download Site Backup</button>
-    <button class="secondary-btn red-text" onclick="rollback()">↩ Rollback to Last Good Version</button>
+    <p class="caption">Saves a copy of the current index.html to your phone's Files app. Good insurance before big changes.</p>
+    <button class="secondary-btn red-text" onclick="rollback()" style="margin-top:10px">↩ Rollback to Last Good Version</button>
+    <p class="caption">Opens a list of timestamped backups from previous pushes. Pick one to restore the site to how it looked then.</p>
     <div id="rollback-area"></div>
-  </div>
+  </details>
 
-<div class="card" id="bvmm-fixit-card" style="margin-top: 4px;"><div class="section-label">If Something's Wrong</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="action-btn" id="bvmm-btn-reload"><span class="ab-icon">↻</span>Force Reload Tool</button><button class="action-btn" id="bvmm-btn-diag"><span class="ab-icon">🔍</span>Run Diagnostics</button><button class="action-btn" id="bvmm-btn-clear"><span class="ab-icon">🧹</span>Clear Stuck State</button><button class="action-btn" id="bvmm-btn-wiz"><span class="ab-icon">🛡</span>Setup Wizard</button><button class="action-btn" id="bvmm-btn-update" style="grid-column-start: 1; grid-column-end: -1; background: rgb(46, 125, 50); color: rgb(255, 255, 255); border-color: rgb(46, 125, 50);"><span class="ab-icon">🚀</span>Update Worker (No Cloudflare)</button></div></div></div>
+  <!-- GROUP 3: IF SOMETHING'S WRONG (fixit card — all IDs preserved) -->
+  <details class="v4-details danger-zone">
+    <summary>🛠 If Something's Wrong</summary>
+    <div class="caption-intro">Start here when something feels broken. <b>Run Diagnostics first</b> — it'll usually tell you exactly what's wrong.</div>
+    <div id="bvmm-fixit-card-inner">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="action-btn" id="bvmm-btn-diag"><span class="ab-icon">🔍</span>Run Diagnostics</button>
+        <button class="action-btn" id="bvmm-btn-reload"><span class="ab-icon">↻</span>Force Reload Tool</button>
+        <button class="action-btn" id="bvmm-btn-clear"><span class="ab-icon">🧹</span>Clear Stuck State</button>
+        <button class="action-btn" id="bvmm-btn-wiz"><span class="ab-icon">🛡</span>Setup Wizard</button>
+        <button class="action-btn" id="bvmm-btn-update" style="grid-column-start: 1; grid-column-end: -1; background: rgb(46, 125, 50); color: rgb(255, 255, 255); border-color: rgb(46, 125, 50);"><span class="ab-icon">🚀</span>Update Worker (No Cloudflare)</button>
+      </div>
+      <p class="caption" style="margin-top:12px"><b>Run Diagnostics:</b> Checks 6 things and shows what's broken. <b>Force Reload Tool:</b> Dumps Safari's cache and reloads this page — fixes "button doesn't respond" bugs. <b>Clear Stuck State:</b> If the tool seems frozen mid-push. <b>Setup Wizard:</b> Walks you through tool authentication (rarely needed). <b>Update Worker:</b> Deploys new Worker code without logging into Cloudflare. Only tap this if someone tells you to.</p>
+    </div>
+  </details>
+
+</div>
 
 
 <!-- ════ EDIT ════ -->
 <div id="panel-edit" class="panel">
+
+  <p class="sec-title">Edit Your Site</p>
+  <p class="sec-sub">Pick what you want to change below. Everything shows as a "pending change" until you tap Go Live on the Home tab.</p>
 
   <div class="sub-nav">
     <button class="sub-btn" id="sub-btn-deli" onclick="showSubTab('deli')">🥪 Deli</button>
@@ -238,6 +283,7 @@ body{background:#F5F0E8;color:#1A0A04;font-family:-apple-system,BlinkMacSystemFo
     <button class="sub-btn" id="sub-btn-hours" onclick="showSubTab('hours')">🕐 Hours</button>
     <button class="sub-btn" id="sub-btn-specials" onclick="showSubTab('specials')">📢 Notice</button>
   </div>
+  <p class="caption" style="margin-bottom:14px"><b>Deli / Butcher / Catering:</b> edit prices and photos. <b>Hours:</b> daily open/close times. <b>Notice:</b> banner message at the top of the site. Tap the 📷 icon next to any Deli or Butcher item to add or replace its photo.</p>
 
   <!-- DELI -->
   <div class="sub-panel" id="sub-deli">
