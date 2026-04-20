@@ -213,12 +213,12 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
   </div>
 
   <!-- PUSH LIVE (unchanged — deployBtn id preserved) -->
-  <button class="go-live-btn has-changes" id="deployBtn" onclick="deployAll()" disabled="">Pushing...</button>
+  <button class="go-live-btn" id="deployBtn" onclick="deployAll()">Push Live</button>
   <p class="caption" style="text-align:center;margin-bottom:10px">Sends your changes to the live website. Takes ~30 seconds.</p>
 
   <div class="deploy-rows" id="deploy-rows" style="display: block;">
-    <div class="deploy-row"><span class="deploy-row-name">greencrk.com</span><span class="deploy-row-status ok" id="fs-site">- e857a8d</span></div>
-    <div class="deploy-row"><span class="deploy-row-name">Meat Market Manager</span><span class="deploy-row-status going" id="fs-mgr">Pushing...</span></div>
+    <div class="deploy-row"><span class="deploy-row-name">greencrk.com</span><span class="deploy-row-status" id="fs-site">Ready</span></div>
+    <div class="deploy-row"><span class="deploy-row-name">Meat Market Manager</span><span class="deploy-row-status" id="fs-mgr">Ready</span></div>
   </div>
   <div id="s1" class="step"></div>
   <button class="secondary-btn" id="openSiteBtn" style="display:none" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
@@ -252,7 +252,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
   </details>
 
   <!-- GROUP 3: IF SOMETHING'S WRONG (fixit card — all IDs preserved) -->
-  <details class="v4-details danger-zone">
+  <details class="v4-details danger-zone" id="bvmm-fixit-card">
     <summary>🛠 If Something's Wrong</summary>
     <div class="caption-intro">Start here when something feels broken. <b>Run Diagnostics first</b> — it'll usually tell you exactly what's wrong.</div>
     <div id="bvmm-fixit-card-inner">
@@ -1330,6 +1330,9 @@ function deployAll() {
         if (!ok) { fst('fs-site','err','Failed'); setStep('s1','err','Error: '+msg); btn.disabled=false; btn.textContent='Try Again'; return; }
         fst('fs-site','ok','- '+msg);
         localStorage.setItem('bvmm_last_deployed', Date.now());
+        // v4 fix: refresh the "Last Push" label immediately instead of waiting for page reload
+        var lpEl = document.getElementById('dashLastPush');
+        if (lpEl) { lpEl.textContent = 'Just now'; lpEl.style.color = '#34C759'; }
         var ldEl = document.getElementById('last-deployed'); if(ldEl) ldEl.textContent = 'Last pushed: just now';
         fst('fs-mgr','going','Pushing...');
         var toolHTML = document.documentElement.outerHTML;
@@ -1696,6 +1699,28 @@ function initDashboard() {
       document.getElementById('statusText').textContent = 'Unreachable';
     });
 }
+
+// v4 fix: refresh "Last Push" label every time the tab becomes visible again,
+// so "12h ago" updates after you leave and come back without requiring a reload.
+(function() {
+  function refreshLastPushLabel() {
+    var el = document.getElementById('dashLastPush');
+    if (!el) return;
+    var ts = localStorage.getItem('bvmm_last_deployed');
+    if (!ts) { el.textContent = 'Never'; el.style.color = '#C0392B'; return; }
+    var d = new Date(parseInt(ts));
+    var diff = Math.floor((new Date() - d) / 60000);
+    var label = diff < 1 ? 'Just now' : diff < 60 ? diff + 'm ago' : diff < 1440 ? Math.floor(diff/60) + 'h ago' : Math.floor(diff/1440) + 'd ago';
+    el.textContent = label;
+    // Color: green if pushed <1h, amber <24h, red older
+    el.style.color = diff < 60 ? '#34C759' : diff < 1440 ? '#E67E22' : '#C0392B';
+  }
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) refreshLastPushLabel();
+  });
+  // Also refresh every 60s while the tab is open
+  setInterval(refreshLastPushLabel, 60000);
+})();
 
 function updateDashboard() {
   // Banner status
