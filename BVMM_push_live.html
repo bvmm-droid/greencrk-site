@@ -185,7 +185,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
     <div style="background:#111;padding:20px 18px 16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div>
-          <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px">Meat Market Manager <span style="display:inline-block;background:#34C759;color:#0a0a0a;font-size:.68rem;font-weight:900;letter-spacing:.05em;padding:2px 7px;border-radius:5px;margin-left:6px;vertical-align:1px">v4.1</span></div>
+          <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px">Meat Market Manager <span id="bvmm-build-badge" style="display:inline-block;background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);font-size:.6rem;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:5px;margin-left:6px;vertical-align:1px;text-transform:none">loading…</span></div>
           <div style="font-size:1.15rem;font-weight:800;color:#fff" id="dashDay">Sunday — Open Today</div>
         </div>
         <div style="text-align:right">
@@ -205,6 +205,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
       <div style="padding:14px 12px;border-right:1px solid #eee;text-align:center">
         <div style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:5px">Last Push</div>
         <div style="font-size: 0.8rem; font-weight: 700; color: rgb(192, 57, 43);" id="dashLastPush">Never</div>
+        <div id="dashLastPushSummary" style="font-size:.58rem;color:#888;margin-top:3px;line-height:1.3;display:none"></div>
       </div>
       <div style="padding:14px 12px;border-right:1px solid #eee;text-align:center">
         <div style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#999;margin-bottom:5px">Banner</div>
@@ -282,6 +283,12 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
 
   <p class="sec-title">Edit Your Site</p>
   <p class="sec-sub">Pick what you want to change below. Everything shows as a "pending change" until you tap Go Live on the Home tab.</p>
+
+  <!-- v4.2: Product search — type a word, matching rows highlight/stay visible -->
+  <div style="position:relative;margin-bottom:12px">
+    <input id="productSearch" type="text" placeholder="🔍 Search any product (e.g. ribeye, salmon)" style="width:100%;padding:12px 40px 12px 14px;border:1.5px solid rgba(26,10,4,.15);border-radius:12px;font-size:.88rem;font-family:inherit;background:#fff;color:#111;box-sizing:border-box" oninput="productSearchFilter(this.value)">
+    <button id="productSearchClear" onclick="productSearchFilter('');document.getElementById('productSearch').value=''" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#aaa;font-size:1rem;cursor:pointer;padding:6px 10px;display:none">✕</button>
+  </div>
 
   <div class="sub-nav">
     <button class="sub-btn active" id="sub-btn-all" onclick="showSubTab('all')">📋 All</button>
@@ -1455,6 +1462,8 @@ function deployAll() {
         if (!ok) { fst('fs-site','err','Failed'); setStep('s1','err','Error: '+msg); btn.disabled=false; btn.textContent='Try Again'; return; }
         fst('fs-site','ok','- '+msg);
         localStorage.setItem('bvmm_last_deployed', Date.now());
+        // v4.2: also remember WHAT was pushed so the dashboard can show a helpful caption
+        try { localStorage.setItem('bvmm_last_deployed_summary', summary || ''); } catch(e){}
         // v4 fix: refresh the "Last Push" label immediately instead of waiting for page reload
         var lpEl = document.getElementById('dashLastPush');
         if (lpEl) { lpEl.textContent = 'Just now'; lpEl.style.color = '#34C759'; }
@@ -1861,12 +1870,139 @@ function initDashboard() {
     el.textContent = label;
     // Color: green if pushed <1h, amber <24h, red older
     el.style.color = diff < 60 ? '#34C759' : diff < 1440 ? '#E67E22' : '#C0392B';
+    // v4.2: show a short summary of WHAT was last pushed, underneath
+    var sumEl = document.getElementById('dashLastPushSummary');
+    if (sumEl) {
+      var summary = '';
+      try { summary = localStorage.getItem('bvmm_last_deployed_summary') || ''; } catch(e){}
+      if (summary) {
+        // Trim to fit — dashboard cell is narrow
+        var trimmed = summary.length > 36 ? summary.slice(0, 34) + '…' : summary;
+        sumEl.textContent = trimmed;
+        sumEl.style.display = 'block';
+        sumEl.title = summary; // full text on long-press/hover
+      } else {
+        sumEl.style.display = 'none';
+      }
+    }
   }
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) refreshLastPushLabel();
   });
   // Also refresh every 60s while the tab is open
   setInterval(refreshLastPushLabel, 60000);
+  // v4.2: Run once on load so the summary shows immediately
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', refreshLastPushLabel);
+  } else {
+    refreshLastPushLabel();
+  }
+})();
+
+// v4.2: Auto-fetch the build timestamp from GitHub so the version badge
+// always reflects the real last-modified time of BVMM_push_live.html.
+// No more manual version bumping — if the badge doesn't match what Claude sent
+// you, you know Safari is showing a cached copy.
+(function() {
+  var badge = document.getElementById('bvmm-build-badge');
+  if (!badge) return;
+  function setBadge(text, color) {
+    badge.textContent = text;
+    if (color) {
+      badge.style.background = color;
+      badge.style.color = '#0a0a0a';
+    }
+  }
+  function fmt(d) {
+    var now = new Date();
+    var diffMin = Math.floor((now - d) / 60000);
+    if (diffMin < 1) return 'just now';
+    if (diffMin < 60) return diffMin + 'm ago';
+    if (diffMin < 1440) return Math.floor(diffMin / 60) + 'h ago';
+    // Show date for anything older than a day
+    var opts = { month: 'short', day: 'numeric' };
+    return d.toLocaleDateString('en-US', opts);
+  }
+  // Use GitHub's API to find the last commit that touched BVMM_push_live.html
+  fetch('https://api.github.com/repos/bvmm-droid/greencrk-site/commits?path=BVMM_push_live.html&per_page=1')
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(commits) {
+      if (!commits || !commits.length) { setBadge('v4.2'); return; }
+      var when = commits[0].commit && commits[0].commit.author && commits[0].commit.author.date;
+      if (!when) { setBadge('v4.2'); return; }
+      var d = new Date(when);
+      var now = new Date();
+      var diffMin = Math.floor((now - d) / 60000);
+      // Green if very recent, gray otherwise
+      var color = diffMin < 60 ? '#34C759' : 'rgba(255,255,255,.15)';
+      setBadge('Updated ' + fmt(d), color);
+    })
+    .catch(function() { setBadge('v4.2'); });
+})();
+
+// v4.2: Auto-updating build badge — shows the last commit date of BVMM_push_live.html
+// Pulls from GitHub API so no manual version bumping needed.
+(function() {
+  var badge = document.getElementById('bvmm-build-badge');
+  if (!badge) return;
+
+  function formatDate(iso) {
+    try {
+      var d = new Date(iso);
+      var now = new Date();
+      var diffMs = now - d;
+      var diffMin = Math.floor(diffMs / 60000);
+      var diffH = Math.floor(diffMin / 60);
+      var diffD = Math.floor(diffH / 24);
+      if (diffMin < 2) return 'just now';
+      if (diffMin < 60) return diffMin + 'm ago';
+      if (diffH < 24) return diffH + 'h ago';
+      if (diffD < 7) return diffD + 'd ago';
+      // Format as "Apr 19"
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[d.getMonth()] + ' ' + d.getDate();
+    } catch(e) { return 'unknown'; }
+  }
+
+  function fetchBuildInfo() {
+    // Use GitHub API directly — no auth needed for public repo reads (60 req/hour limit)
+    fetch('https://api.github.com/repos/bvmm-droid/greencrk-site/commits?path=BVMM_push_live.html&per_page=1', {
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(commits) {
+      if (!commits || !commits.length) { badge.textContent = 'unknown'; return; }
+      var commit = commits[0];
+      var when = commit.commit && commit.commit.committer && commit.commit.committer.date;
+      if (!when) { badge.textContent = 'unknown'; return; }
+      var label = formatDate(when);
+      badge.textContent = 'built ' + label;
+      // Fresh = recently committed = green tint
+      var diffMin = Math.floor((new Date() - new Date(when)) / 60000);
+      if (diffMin < 60) {
+        badge.style.background = 'rgba(52,199,89,.25)';
+        badge.style.color = '#A8F0BD';
+      } else if (diffMin < 24*60) {
+        badge.style.background = 'rgba(255,255,255,.1)';
+        badge.style.color = 'rgba(255,255,255,.85)';
+      } else {
+        // Older than 24h — slightly dim
+        badge.style.background = 'rgba(255,255,255,.06)';
+        badge.style.color = 'rgba(255,255,255,.55)';
+      }
+    })
+    .catch(function() {
+      // Network / rate limit — fall back gracefully
+      badge.textContent = 'v4.2';
+    });
+  }
+
+  fetchBuildInfo();
+  // Re-check when the tab becomes visible again, so if the user uploaded a new
+  // version and force-reloaded the badge updates without waiting for anything.
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) fetchBuildInfo();
+  });
 })();
 
 function updateDashboard() {
@@ -2908,6 +3044,77 @@ function sqDeploy(activate) {
 }
 
 sqCheckStatus();
+
+// v4.2: Product search — filters rows in Deli, Butcher, Catering by name/section.
+// Every row in those lists has a data-search attribute (see buildPriceList + buildCateringList).
+function productSearchFilter(query) {
+  var q = (query || '').toLowerCase().trim();
+  var clearBtn = document.getElementById('productSearchClear');
+  if (clearBtn) clearBtn.style.display = q ? 'inline-block' : 'none';
+
+  // If user started typing, switch to "All" view so matches from any section show
+  if (q && typeof showSubTab === 'function') {
+    var allBtn = document.getElementById('sub-btn-all');
+    if (allBtn && !allBtn.classList.contains('active')) showSubTab('all');
+  }
+
+  // Filter all item rows + catering rows inside panel-edit
+  var editPanel = document.getElementById('panel-edit');
+  if (!editPanel) return;
+  var rows = editPanel.querySelectorAll('[data-search]');
+  var matchCount = 0;
+  rows.forEach(function(row) {
+    if (!q) {
+      row.style.display = '';
+      row.style.background = '';
+      matchCount++;
+      return;
+    }
+    var hay = row.getAttribute('data-search') || '';
+    if (hay.indexOf(q) >= 0) {
+      row.style.display = '';
+      row.style.background = 'rgba(255, 235, 150, 0.3)'; // soft highlight
+      matchCount++;
+    } else {
+      row.style.display = 'none';
+      row.style.background = '';
+    }
+  });
+
+  // Hide section labels that have no visible rows under them (cleaner look)
+  var secs = editPanel.querySelectorAll('.sec-lbl');
+  secs.forEach(function(sec) {
+    if (!q) { sec.style.display = ''; return; }
+    // A sec-lbl's following siblings until the next sec-lbl are its items
+    var sib = sec.nextElementSibling;
+    var anyVisible = false;
+    while (sib && !sib.classList.contains('sec-lbl')) {
+      if (sib.hasAttribute('data-search') && sib.style.display !== 'none') {
+        anyVisible = true; break;
+      }
+      sib = sib.nextElementSibling;
+    }
+    sec.style.display = anyVisible ? '' : 'none';
+  });
+
+  // Show a "no results" message
+  var noRes = document.getElementById('productSearchNoResults');
+  if (q && matchCount === 0) {
+    if (!noRes) {
+      noRes = document.createElement('div');
+      noRes.id = 'productSearchNoResults';
+      noRes.style.cssText = 'padding:24px;text-align:center;color:#888;font-size:.85rem;background:#fff;border-radius:12px;margin:10px 0';
+      noRes.innerHTML = '🔍 No products match "<span id=\"productSearchNoResultsQ\"></span>"';
+      var sub = editPanel.querySelector('.sub-nav');
+      if (sub && sub.parentNode) sub.parentNode.insertBefore(noRes, sub.nextSibling);
+    }
+    var qEl = document.getElementById('productSearchNoResultsQ');
+    if (qEl) qEl.textContent = q;
+    noRes.style.display = 'block';
+  } else if (noRes) {
+    noRes.style.display = 'none';
+  }
+}
 
 // -- IMAGES TAB ----------------------------------------
 var browserCurrentUrl = '';
