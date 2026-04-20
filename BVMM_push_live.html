@@ -796,13 +796,117 @@ function openImagePicker(itemName) {
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:flex-end;justify-content:center';
   overlay.onclick = function(e) { if(e.target===overlay) overlay.remove(); };
   var sheet = document.createElement('div');
-  sheet.style.cssText = 'background:#F5F0E8;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 16px 24px;max-height:80vh;overflow-y:auto';
-  sheet.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-size:1rem;font-weight:800">Photo for ' + itemName + '</div><button onclick="document.getElementById(\'imgPickerOverlay\').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer">✕</button></div><div style="font-size:.7rem;color:#888;margin-bottom:10px">Tap a saved photo to attach it, or search below</div><div style="display:flex;gap:8px;margin-bottom:10px"><input id="pickerSearch" type="text" placeholder="Search for a photo..." style="flex:1;padding:10px 12px;border:1.5px solid rgba(26,10,4,.12);border-radius:10px;font-size:.82rem" onkeydown="if(event.key===\'Enter\')pickerSearch(\'' + itemName.replace(/\'/g,"\\'") + '\')"><button onclick="pickerSearch(\'' + itemName.replace(/\'/g,"\\'") + '\')" style="background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:.75rem;font-weight:700">Go</button></div>' +
-  (itemImages[itemName] ? '<button onclick="removeItemImage(\'' + itemName.replace(/\'/g,"\\'") + '\')" style="width:100%;background:#FF3B30;color:#fff;border:none;border-radius:10px;padding:10px;font-size:.75rem;font-weight:700;margin-bottom:10px">Remove Current Photo</button>' : '') +
-  '<div id="pickerGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div><div id="pickerStatus" style="text-align:center;font-size:.7rem;color:#999;padding:10px">Loading saved photos...</div>';
+  sheet.style.cssText = 'background:#F5F0E8;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 16px 24px;max-height:85vh;overflow-y:auto';
+  var safeName = itemName.replace(/\'/g,"\\'");
+  // Check if browser supports speech recognition (webkitSpeechRecognition works on iOS Safari)
+  var voiceSupported = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+  var voiceBtn = voiceSupported
+    ? '<button id="pickerMicBtn" onclick="pickerVoiceSearch(\'' + safeName + '\')" style="background:#C43B00;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:.75rem;font-weight:800;cursor:pointer;white-space:nowrap" title="Describe by voice">🎤</button>'
+    : '';
+  sheet.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+      '<div style="font-size:1rem;font-weight:800">Photo for ' + itemName + '</div>' +
+      '<button onclick="document.getElementById(\'imgPickerOverlay\').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer">✕</button>' +
+    '</div>' +
+    // AI + VOICE search (describe it — highlighted as the preferred option)
+    '<div style="background:#fff;border:1.5px solid rgba(26,10,4,.08);border-radius:12px;padding:12px;margin-bottom:10px">' +
+      '<div style="font-size:.72rem;font-weight:800;color:#1A0A04;margin-bottom:6px">✨ Describe the photo you want</div>' +
+      '<div style="font-size:.65rem;color:#8a7a6c;margin-bottom:8px;line-height:1.4">Tap the mic or type what you need. AI will find it. Ex: "nice plated osso bucco with gremolata"</div>' +
+      '<div style="display:flex;gap:6px">' +
+        '<input id="pickerAIInput" type="text" placeholder="Describe what you want..." style="flex:1;padding:10px 12px;border:1.5px solid rgba(26,10,4,.12);border-radius:10px;font-size:.82rem" onkeydown="if(event.key===\'Enter\')pickerAISearch(\'' + safeName + '\')">' +
+        voiceBtn +
+        '<button id="pickerAIBtn" onclick="pickerAISearch(\'' + safeName + '\')" style="background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:.75rem;font-weight:800;cursor:pointer;white-space:nowrap">Go</button>' +
+      '</div>' +
+      '<div id="pickerVoiceStatus" style="font-size:.65rem;color:#C43B00;margin-top:6px;display:none"></div>' +
+    '</div>' +
+    // Plain text search (still available as a simpler fallback)
+    '<details style="margin-bottom:10px"><summary style="font-size:.68rem;color:#8a7a6c;cursor:pointer;padding:4px 0">Or plain text search ▸</summary>' +
+      '<div style="display:flex;gap:8px;margin-top:8px">' +
+        '<input id="pickerSearch" type="text" placeholder="Search for a photo..." style="flex:1;padding:10px 12px;border:1.5px solid rgba(26,10,4,.12);border-radius:10px;font-size:.82rem" onkeydown="if(event.key===\'Enter\')pickerSearch(\'' + safeName + '\')">' +
+        '<button onclick="pickerSearch(\'' + safeName + '\')" style="background:#1A0A04;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:.75rem;font-weight:700">Go</button>' +
+      '</div>' +
+    '</details>' +
+    (itemImages[itemName] ? '<button onclick="removeItemImage(\'' + safeName + '\')" style="width:100%;background:#FF3B30;color:#fff;border:none;border-radius:10px;padding:10px;font-size:.75rem;font-weight:700;margin-bottom:10px">Remove Current Photo</button>' : '') +
+    '<div id="pickerGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>' +
+    '<div id="pickerStatus" style="text-align:center;font-size:.7rem;color:#999;padding:10px">Loading saved photos...</div>';
   overlay.appendChild(sheet);
   document.body.appendChild(overlay);
   loadPickerImages(itemName);
+}
+
+// v4: AI search inside the per-product picker — takes plain-English, optimizes via Claude, then searches
+function pickerAISearch(itemName) {
+  var input = document.getElementById('pickerAIInput');
+  var query = (input && input.value || '').trim();
+  if (!query) return;
+  var btn = document.getElementById('pickerAIBtn');
+  var status = document.getElementById('pickerStatus');
+  var grid = document.getElementById('pickerGrid');
+  if (btn) { btn.disabled = true; btn.textContent = 'Thinking...'; }
+  if (grid) grid.innerHTML = '';
+  if (status) { status.style.display = 'block'; status.textContent = 'AI is thinking...'; }
+  fetch(WORKER, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'ai',
+      messages: [{
+        role: 'system',
+        content: 'You are a photo search assistant for a butcher shop. The user describes what they want for the product "' + itemName + '". Return ONLY a short, optimized search query (3-6 words) for a stock photo API — no explanation, no quotes, just the query. Make it specific and visual.'
+      }, {
+        role: 'user',
+        content: query
+      }]
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if (btn) { btn.disabled = false; btn.textContent = 'Go'; }
+    if (!d.ok) { if (status) status.textContent = 'AI error: ' + (d.error || 'unknown'); return; }
+    var optimized = (d.content || query).replace(/['"]/g,'').trim();
+    // Put the optimized query into the plain search box so pickerSearch can use it,
+    // and also show the user what AI decided to search for.
+    var plainBox = document.getElementById('pickerSearch');
+    if (plainBox) plainBox.value = optimized;
+    pickerSearch(itemName);
+  })
+  .catch(function(e){
+    if (btn) { btn.disabled = false; btn.textContent = 'Go'; }
+    if (status) status.textContent = 'AI error: ' + (e.message || 'network');
+  });
+}
+
+// v4: Voice search inside the per-product picker — iOS Safari supports webkitSpeechRecognition
+function pickerVoiceSearch(itemName) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Voice search not supported in this browser.'); return; }
+  var input = document.getElementById('pickerAIInput');
+  var micBtn = document.getElementById('pickerMicBtn');
+  var statusEl = document.getElementById('pickerVoiceStatus');
+  var rec = new SR();
+  rec.lang = 'en-US';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  if (micBtn) { micBtn.style.background = '#FF3B30'; micBtn.textContent = '●'; }
+  if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = 'Listening... speak now'; }
+  rec.onresult = function(e) {
+    var transcript = e.results[0][0].transcript;
+    if (input) input.value = transcript;
+    if (statusEl) statusEl.textContent = 'Heard: "' + transcript + '" — searching...';
+    if (micBtn) { micBtn.style.background = '#C43B00'; micBtn.textContent = '🎤'; }
+    pickerAISearch(itemName);
+    setTimeout(function(){ if (statusEl) statusEl.style.display = 'none'; }, 2000);
+  };
+  rec.onerror = function(e) {
+    if (micBtn) { micBtn.style.background = '#C43B00'; micBtn.textContent = '🎤'; }
+    if (statusEl) statusEl.textContent = 'Voice error: ' + (e.error || 'unknown') + '. Try typing instead.';
+  };
+  rec.onend = function() {
+    if (micBtn) { micBtn.style.background = '#C43B00'; micBtn.textContent = '🎤'; }
+  };
+  try { rec.start(); } catch(e) {
+    if (statusEl) statusEl.textContent = 'Could not start voice: ' + e.message;
+  }
 }
 
 function loadPickerImages(itemName) {
@@ -3603,10 +3707,7 @@ function downloadAll(key) {
             var el = document.createElement('img');
             el.src = img.thumb || img.src;
             el.style.cssText = 'width:100%;height:100%;object-fit:cover';
-            var badge = document.createElement('div');
-            badge.textContent = '⚡'; badge.title = 'Cached';
-            badge.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(46,125,50,.9);color:#fff;border-radius:4px;padding:1px 5px;font-size:.55rem;font-weight:800';
-            wrap.appendChild(el); wrap.appendChild(badge);
+            wrap.appendChild(el);
             wrap.onclick = function(){ saveAndAttach(itemName, img.src); };
             grid.appendChild(wrap);
           });
