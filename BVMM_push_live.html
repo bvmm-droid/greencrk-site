@@ -4733,6 +4733,139 @@ function downloadAll(key) {
 
 // ══════════ END BVMM v3 ADD-ON ══════════
 
+
+// ══════════ BVMM v4.3 ADD-ON — Clipboard Paste Photo ══════════
+// Adds a "📋 Paste Image from Clipboard" button to the image picker modal.
+// The user long-presses a photo anywhere (Safari, Photos, Messages) → Copy,
+// then taps Paste inside the picker. Image goes through the EXISTING
+// saveAndAttach() pipeline — resize to 800px, convert to WebP, upload,
+// attach to the product, generate AI alt text. Nothing existing is modified.
+//
+// TO REMOVE: delete this entire block (from the banner above to the banner below).
+// No other file changes are required. The tool keeps working identically.
+(function() {
+  'use strict';
+  if (window._bvmmPasteInstalled) return;
+  window._bvmmPasteInstalled = true;
+
+  function waitAndInstall() {
+    if (typeof window.openImagePicker !== 'function' || typeof window.saveAndAttach !== 'function') {
+      setTimeout(waitAndInstall, 150);
+      return;
+    }
+    var _origOpenPicker = window.openImagePicker;
+    window.openImagePicker = function(itemName) {
+      _origOpenPicker(itemName);
+      // Wait a tick for the modal DOM to be present, then inject
+      setTimeout(function() { injectPasteCard(itemName); }, 0);
+    };
+  }
+
+  function injectPasteCard(itemName) {
+    var overlay = document.getElementById('imgPickerOverlay');
+    if (!overlay) return;
+    var sheet = overlay.firstChild;
+    if (!sheet || sheet.querySelector('#bvmmPasteBtn')) return;
+
+    var card = document.createElement('div');
+    card.id = 'bvmmPasteCard';
+    card.style.cssText = 'background:#fff8ed;border:1.5px solid #f0c27b;border-radius:12px;padding:12px;margin-bottom:10px';
+    card.innerHTML =
+      '<div style="font-size:.72rem;font-weight:800;color:#8a4f00;margin-bottom:6px">📋 Paste a photo you copied</div>' +
+      '<div style="font-size:.65rem;color:#8a6a3a;margin-bottom:8px;line-height:1.4">' +
+        'Long-press an image anywhere (Safari, Photos, Messages) → tap <b>Copy</b>. Then tap Paste below.' +
+      '</div>' +
+      '<button id="bvmmPasteBtn" style="width:100%;background:#C43B00;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.85rem;font-weight:800;cursor:pointer">' +
+        '📋 Paste Image from Clipboard' +
+      '</button>' +
+      '<div id="bvmmPasteStatus" style="font-size:.68rem;margin-top:8px;text-align:center;display:none;line-height:1.4"></div>';
+
+    // Insert right after the title row (first child of the sheet)
+    var titleRow = sheet.firstElementChild;
+    if (titleRow && titleRow.insertAdjacentElement) {
+      titleRow.insertAdjacentElement('afterend', card);
+    } else {
+      sheet.insertBefore(card, sheet.firstChild);
+    }
+
+    var btn = document.getElementById('bvmmPasteBtn');
+    if (btn) btn.onclick = function() { handlePaste(itemName); };
+  }
+
+  function showStatus(msg, color) {
+    var el = document.getElementById('bvmmPasteStatus');
+    if (!el) return;
+    el.style.display = 'block';
+    el.style.color = color || '#8a6a3a';
+    el.textContent = msg;
+  }
+
+  async function handlePaste(itemName) {
+    var btn = document.getElementById('bvmmPasteBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Reading...'; }
+
+    try {
+      if (!navigator.clipboard || typeof navigator.clipboard.read !== 'function') {
+        throw new Error('Your Safari is too old for clipboard paste. Update iOS, or use the photo search below instead.');
+      }
+
+      var items;
+      try {
+        items = await navigator.clipboard.read();
+      } catch (permErr) {
+        throw new Error('Safari blocked clipboard access. Tap the button again and choose Paste when prompted.');
+      }
+
+      var imageBlob = null;
+      for (var i = 0; i < items.length && !imageBlob; i++) {
+        var item = items[i];
+        for (var j = 0; j < item.types.length; j++) {
+          if (item.types[j].indexOf('image/') === 0) {
+            imageBlob = await item.getType(item.types[j]);
+            break;
+          }
+        }
+      }
+
+      if (!imageBlob) {
+        throw new Error('No image on your clipboard. Long-press an image somewhere and tap Copy, then try again.');
+      }
+
+      showStatus('Got image (' + Math.round(imageBlob.size / 1024) + ' KB). Optimizing...');
+      if (btn) btn.textContent = 'Saving...';
+
+      // Convert blob to object URL. prepareImage() accepts any URL the <img> element can load.
+      // Blob URLs load synchronously without CORS — no Worker fetch needed.
+      var blobUrl = URL.createObjectURL(imageBlob);
+      try {
+        await window.saveAndAttach(itemName, blobUrl);
+        showStatus('✅ Saved and attached to ' + itemName + '. Closing...', '#0a7c0a');
+        setTimeout(function() {
+          var ov = document.getElementById('imgPickerOverlay');
+          if (ov) ov.remove();
+          // Refresh the edit view so the new photo shows up immediately
+          try { if (typeof buildPriceList === 'function' && typeof DELI !== 'undefined') buildPriceList('deli-list', DELI, 'd'); } catch(e) {}
+          try { if (typeof buildPriceList === 'function' && typeof BUTCHER !== 'undefined') buildPriceList('butcher-list', BUTCHER, 'b'); } catch(e) {}
+          try { if (typeof updateBar === 'function') updateBar(); } catch(e) {}
+        }, 1200);
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+    } catch (err) {
+      var msg = (err && err.message) || 'Unknown error';
+      showStatus('❌ ' + msg, '#C0392B');
+      if (btn) { btn.disabled = false; btn.textContent = '📋 Paste Image from Clipboard'; }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', waitAndInstall);
+  } else {
+    waitAndInstall();
+  }
+})();
+// ══════════ END v4.3 Paste ══════════
+
 </script>
 
 
