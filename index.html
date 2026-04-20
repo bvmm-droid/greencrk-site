@@ -8251,16 +8251,16 @@ if('serviceWorker' in navigator){
 .bvmm-sr-card:hover,
 .bvmm-sr-card:active { background: rgba(255,255,255,.14); }
 .bvmm-sr-thumb {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 10px;
   background: #fff;
   object-fit: cover;
   flex-shrink: 0;
 }
-.bvmm-sr-body { flex: 1; min-width: 0; }
+.bvmm-sr-body { flex: 1; min-width: 0; overflow: hidden; }
 .bvmm-sr-tag {
-  font-size: .62rem;
+  font-size: .58rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: rgba(255,255,255,.5);
@@ -8278,7 +8278,7 @@ if('serviceWorker' in navigator){
   white-space: nowrap;
 }
 .bvmm-sr-price {
-  font-size: .88rem;
+  font-size: .82rem;
   color: rgba(255,255,255,.85);
   font-weight: 500;
   margin-top: 2px;
@@ -8287,14 +8287,16 @@ if('serviceWorker' in navigator){
   background: #c9a96a;
   color: #1a1208;
   border: none;
-  padding: 8px 14px;
-  border-radius: 20px;
+  padding: 10px 14px;
+  border-radius: 999px;
   font-size: .72rem;
-  font-weight: 700;
-  letter-spacing: .05em;
+  font-weight: 800;
+  letter-spacing: .04em;
   text-transform: uppercase;
   cursor: pointer;
   flex-shrink: 0;
+  min-width: 64px;
+  box-shadow: 0 2px 8px rgba(201,169,106,.3);
   transition: background .15s, transform .1s;
 }
 .bvmm-sr-add:hover { background: #d6b77a; }
@@ -8302,22 +8304,41 @@ if('serviceWorker' in navigator){
 </style>
 <script>
 (function(){
-  // Default fallback logo when a product has no photo
+  // Default fallback logo when a product truly has no image
   var BVMM_LOGO = 'https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/bvmm+black-1920w.png';
 
-  // Check if a photo src looks like a real uploaded BVMM photo (not a stock placeholder)
-  function isRealPhoto(src) {
-    if (!src) return false;
-    if (src.indexOf('unsplash.com') !== -1) return false;  // stock
-    if (src.indexOf('placeholder') !== -1) return false;
-    return true;
+  // Pull a usable image URL from any product element
+  // (tries <img> first, then background-image on any descendant)
+  function findImageUrl(el) {
+    if (!el) return null;
+    var img = el.querySelector('img');
+    if (img) {
+      var src = img.getAttribute('src') || img.src;
+      if (src) return src;
+    }
+    // Try background-image on known photo classes and any descendant
+    var photoEls = el.querySelectorAll('.og-photo, [style*="background-image"]');
+    for (var i = 0; i < photoEls.length; i++) {
+      var style = photoEls[i].getAttribute('style') || '';
+      var m = style.match(/background-image:\s*url\(["']?([^"')]+)["']?\)/);
+      if (m && m[1]) return m[1];
+    }
+    return null;
   }
 
-  // Parse onclick="openOrderSheet('Name', 45.00, 'desc', 'cat')" to get args
+  // Parse onclick="openOrderSheet('Name', 45.00, 'desc', 'cat')"
   function parseOrderArgs(el) {
     var onclick = el.getAttribute('onclick') || '';
     var m = onclick.match(/openOrderSheet\(([^)]+)\)/);
-    return m ? m[1] : null;
+    if (m) return { fn: 'openOrderSheet', args: m[1] };
+    // og-card uses ogAdd('id', this)
+    var btn = el.querySelector('.og-add[onclick^="ogAdd"]');
+    if (btn) {
+      var oc = btn.getAttribute('onclick') || '';
+      var m2 = oc.match(/ogAdd\(([^)]+)\)/);
+      if (m2) return { fn: 'ogAdd', args: m2[1], btnEl: btn };
+    }
+    return null;
   }
 
   // Build one search result card
@@ -8325,25 +8346,26 @@ if('serviceWorker' in navigator){
     var card = document.createElement('div');
     card.className = 'bvmm-sr-card';
 
-    // Thumbnail: try to grab real photo from product, fall back to BVMM logo
+    // Thumbnail: use the product's own image, fall back to BVMM logo
     var thumb = document.createElement('img');
     thumb.className = 'bvmm-sr-thumb';
-    var srcImg = el.querySelector('img');
-    var srcUrl = srcImg ? srcImg.getAttribute('src') : null;
-    thumb.src = isRealPhoto(srcUrl) ? srcUrl : BVMM_LOGO;
+    var url = findImageUrl(el);
+    thumb.src = url || BVMM_LOGO;
     thumb.alt = name;
     thumb.loading = 'lazy';
-    thumb.onerror = function(){ thumb.src = BVMM_LOGO; };
+    thumb.onerror = function(){ if (thumb.src !== BVMM_LOGO) thumb.src = BVMM_LOGO; };
     card.appendChild(thumb);
 
-    // Body: category tag, name, price
+    // Body
     var body = document.createElement('div');
     body.className = 'bvmm-sr-body';
     body.innerHTML =
-      '<div class="bvmm-sr-tag">' + (category || '') + '</div>' +
+      '<div class="bvmm-sr-tag"></div>' +
       '<div class="bvmm-sr-name"></div>' +
-      '<div class="bvmm-sr-price">' + (price || '') + '</div>';
+      '<div class="bvmm-sr-price"></div>';
+    body.querySelector('.bvmm-sr-tag').textContent = category || '';
     body.querySelector('.bvmm-sr-name').textContent = name;
+    body.querySelector('.bvmm-sr-price').textContent = price || '';
     card.appendChild(body);
 
     // Add to Cart button
@@ -8352,14 +8374,20 @@ if('serviceWorker' in navigator){
     addBtn.textContent = '+ Add';
     addBtn.onclick = function(e) {
       e.stopPropagation();
-      var args = parseOrderArgs(el);
-      if (args) {
-        try { eval('openOrderSheet(' + args + ')'); } catch(err) {}
-      }
+      e.preventDefault();
+      var parsed = parseOrderArgs(el);
+      if (!parsed) return;
+      try {
+        if (parsed.fn === 'openOrderSheet') {
+          eval('openOrderSheet(' + parsed.args + ')');
+        } else if (parsed.fn === 'ogAdd') {
+          eval('ogAdd(' + parsed.args.replace(/this/, 'parsed.btnEl') + ')');
+        }
+      } catch(err) { console.warn('Add failed:', err); }
     };
     card.appendChild(addBtn);
 
-    // Tapping the card (not the button) jumps to the product in the menu
+    // Tapping the card (not the button) jumps to the product
     card.onclick = function(e) {
       if (e.target === addBtn || addBtn.contains(e.target)) return;
       if (typeof toggleNavSearch === 'function') toggleNavSearch();
@@ -8371,13 +8399,11 @@ if('serviceWorker' in navigator){
     return card;
   }
 
-  // Our own gSearch: filter products, then build the visible results list with photos
   function bvmmSearch(q) {
     q = (q || '').trim().toLowerCase();
     var list = document.getElementById('searchResultsList');
     var sc = document.getElementById('searchCount');
 
-    // When empty, restore the menu and clear results
     if (!q) {
       document.querySelectorAll('.search-hidden').forEach(function(el){ el.classList.remove('search-hidden'); });
       document.querySelectorAll('.deli-section-head').forEach(function(h){ h.style.display = ''; });
@@ -8392,74 +8418,79 @@ if('serviceWorker' in navigator){
       return;
     }
 
-    // Match function — matches as whole or word-by-word
     function matches(text) {
       text = (text || '').toLowerCase();
       if (text.indexOf(q) > -1) return true;
-      var words = q.split(/\s+/);
-      return words.every(function(w){ return text.indexOf(w) > -1; });
+      return q.split(/\s+/).every(function(w){ return text.indexOf(w) > -1; });
     }
 
     var results = [];
+    var seenKeys = {};
+    function addResult(el, name, price, category) {
+      // Dedup by name+price so duplicate HTML rows don't show twice
+      var key = (name || '') + '|' + (price || '');
+      if (seenKeys[key]) return;
+      seenKeys[key] = true;
+      results.push({ el: el, name: name, price: price, category: category });
+    }
 
-    // Deli cards (.lcard)
+    // Deli sandwiches/wraps
     document.querySelectorAll('.lcard').forEach(function(card){
-      var text = card.textContent;
-      var hit = matches(text);
+      var hit = matches(card.textContent);
       card.classList.toggle('search-hidden', !hit);
       if (hit) {
-        var nameEl = card.querySelector('.lcard-name');
-        var priceEl = card.querySelector('.lcard-price');
-        var tagEl = card.querySelector('.lcard-tag');
-        if (nameEl) results.push({
-          el: card,
-          name: nameEl.textContent.trim(),
-          price: priceEl ? priceEl.textContent.trim() : '',
-          category: tagEl ? tagEl.textContent.trim() : 'Deli'
-        });
+        var n = card.querySelector('.lcard-name');
+        var p = card.querySelector('.lcard-price');
+        var t = card.querySelector('.lcard-tag');
+        if (n) addResult(card, n.textContent.trim(), p ? p.textContent.trim() : '', t ? t.textContent.trim() : 'Deli');
       }
     });
 
-    // Butcher rows (.mrow)
+    // Butcher small rows
     document.querySelectorAll('.mrow').forEach(function(row){
-      var text = row.textContent;
-      var hit = matches(text);
+      var hit = matches(row.textContent);
       row.classList.toggle('search-hidden', !hit);
       if (hit) {
-        var nameEl = row.querySelector('.mi-name');
-        var priceEl = row.querySelector('.mi-price');
-        if (nameEl) results.push({
-          el: row,
-          name: nameEl.textContent.trim(),
-          price: priceEl ? priceEl.textContent.trim() : '',
-          category: 'Butcher'
-        });
+        var n = row.querySelector('.mi-name');
+        var p = row.querySelector('.mi-price');
+        if (n) addResult(row, n.textContent.trim(), p ? p.textContent.trim() : '', 'Butcher');
       }
     });
 
-    // Catering items (.c-item)
+    // Butcher pretty cards (the ones with photos + descriptions)
+    document.querySelectorAll('.og-card').forEach(function(card){
+      var hit = matches(card.textContent);
+      card.classList.toggle('search-hidden', !hit);
+      if (hit) {
+        var n = card.querySelector('.og-name');
+        var p = card.querySelector('.og-price');
+        var u = card.querySelector('.og-unit');
+        var c = card.querySelector('.og-cat-chip');
+        var priceText = p ? p.textContent.trim() + (u ? u.textContent.trim() : '') : '';
+        if (n) addResult(card, n.textContent.trim(), priceText, c ? c.textContent.trim() : 'Butcher');
+      }
+    });
+
+    // Catering items
     document.querySelectorAll('.c-item').forEach(function(item){
-      var text = item.textContent;
-      var hit = matches(text);
+      var hit = matches(item.textContent);
       item.classList.toggle('search-hidden', !hit);
       if (hit) {
-        // Try common name/price selectors, fall back to textContent split
-        var nameEl = item.querySelector('.c-item-name, .lcard-name, .mi-name');
-        var priceEl = item.querySelector('.c-item-price, .lcard-price, .mi-price');
-        var name = nameEl ? nameEl.textContent.trim() : item.textContent.trim().split('$')[0].trim();
-        var price = priceEl ? priceEl.textContent.trim() : '';
+        var n = item.querySelector('.c-item-name, .lcard-name, .mi-name');
+        var p = item.querySelector('.c-item-price, .lcard-price, .mi-price');
+        var name = n ? n.textContent.trim() : item.textContent.trim().split('$')[0].trim();
+        var price = p ? p.textContent.trim() : '';
         if (!price) {
           var pm = item.textContent.match(/\$[\d.,]+/);
           if (pm) price = pm[0];
         }
-        if (name) results.push({ el: item, name: name, price: price, category: 'Catering' });
+        if (name) addResult(item, name, price, 'Catering');
       }
     });
 
-    // Hide empty section headers / groups
+    // Tidy up section headers / groups
     document.querySelectorAll('.deli-section-head').forEach(function(h){
-      var next = h.nextElementSibling;
-      var hasVisible = false;
+      var next = h.nextElementSibling, hasVisible = false;
       while (next && !next.classList.contains('deli-section-head')) {
         if (next.classList.contains('lcard') && !next.classList.contains('search-hidden')) { hasVisible = true; break; }
         next = next.nextElementSibling;
@@ -8467,12 +8498,10 @@ if('serviceWorker' in navigator){
       h.style.display = hasVisible ? '' : 'none';
     });
     document.querySelectorAll('.mgroup').forEach(function(g){
-      var visible = g.querySelectorAll('.mrow:not(.search-hidden)').length;
-      g.style.display = visible ? '' : 'none';
+      g.style.display = g.querySelectorAll('.mrow:not(.search-hidden)').length ? '' : 'none';
     });
     document.querySelectorAll('.c-sub-head').forEach(function(h){
-      var next = h.nextElementSibling;
-      var hasVisible = false;
+      var next = h.nextElementSibling, hasVisible = false;
       while (next && !next.classList.contains('c-sub-head')) {
         if (next.classList.contains('c-item') && !next.classList.contains('search-hidden')) { hasVisible = true; break; }
         next = next.nextElementSibling;
@@ -8480,18 +8509,27 @@ if('serviceWorker' in navigator){
       h.style.display = hasVisible ? '' : 'none';
     });
 
-    // Show all menu panels while searching so all matches can be seen
     var tabs = document.querySelector('.menu-tabs');
     if (tabs) tabs.style.display = 'none';
     document.querySelectorAll('.mpanel').forEach(function(p){ p.style.display = 'block'; });
 
-    // Count display
+    // Deduplicate: same product name appears in multiple sections (Beef Cuts, Specials, etc.)
+    // Show each unique product once. Keep the first one we found.
+    var seen = {};
+    var deduped = [];
+    results.forEach(function(r) {
+      var key = (r.name || '').toLowerCase().trim();
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      deduped.push(r);
+    });
+    results = deduped;
+
     if (sc) {
       sc.style.display = 'block';
       sc.textContent = results.length + (results.length === 1 ? ' item found' : ' items found');
     }
 
-    // Build visible results list with photos
     if (list) {
       list.innerHTML = '';
       results.slice(0, 20).forEach(function(r) {
@@ -8501,10 +8539,8 @@ if('serviceWorker' in navigator){
     }
   }
 
-  // Install our search — last definition wins
   function install() {
     window.gSearch = bvmmSearch;
-    // If the search bar already has a value, re-run
     var input = document.getElementById('globalSearch');
     if (input && input.value) bvmmSearch(input.value);
   }
