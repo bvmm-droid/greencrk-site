@@ -1762,7 +1762,9 @@ function uploadFile() {
       stepEl.textContent = 'Pushing ' + selectedFile.name + '...';
       pushFile(selectedFile.name, b64, function(ok, msg) {
         if (!ok) { stepEl.className='step show err'; stepEl.textContent='Failed: '+msg; btn.disabled=false; btn.textContent='⬆ Push to Site'; return; }
-        stepEl.className='step show ok'; stepEl.textContent='✅ ' + selectedFile.name + ' is live! ' + (msg||'');
+        var now = new Date();
+        var timeStr = now.toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
+        stepEl.className='step show ok'; stepEl.textContent='✅ ' + selectedFile.name + ' uploaded — ' + timeStr;
         btn.disabled=false; btn.textContent='⬆ Push to Site';
         if (selectedFile.name === 'index.html') { localStorage.setItem('bvmm_last_deployed', Date.now()); updateDashboard(); }
         selectedFile = null;
@@ -4984,6 +4986,83 @@ function downloadAll(key) {
     softenStep2Error();
   }
 
+  // ─── Stable photo filenames ───
+  // One photo per product, always overwriting the previous one.
+  // When user pastes/searches/AI-finds a photo FOR a product, the file is named
+  // after the product (e.g. "skirt-steak-prime.webp"). Next time they change it,
+  // the same filename is used — GitHub overwrites in place. No build-up of junk.
+  // When user picks an ALREADY-EXISTING file from their folder (different path),
+  // we don't rename — that's them using a legacy asset by choice.
+  var _saveInFlight = false;
+  var _currentItemName = null;
+
+  function stableFilename(itemName, ext) {
+    if (!itemName) return null;
+    ext = ext || '.webp';
+    var base = itemName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'item';
+    return base + ext;
+  }
+
+  function installStableFilenames() {
+    // Wrap saveAndAttach so we know when an upload-for-product is in flight.
+    if (typeof window.saveAndAttach === 'function' && !window._bvmmSaveWrapped) {
+      window._bvmmSaveWrapped = true;
+      var _origSave = window.saveAndAttach;
+      window.saveAndAttach = async function(itemName, url) {
+        _saveInFlight = true;
+        _currentItemName = itemName;
+        try {
+          return await _origSave(itemName, url);
+        } finally {
+          // Small delay so any follow-up attachImageToItem call is still caught
+          setTimeout(function() {
+            _saveInFlight = false;
+            _currentItemName = null;
+          }, 100);
+        }
+      };
+    }
+
+    // Intercept fetch to rewrite the filename in outgoing upload requests
+    if (typeof window.fetch === 'function' && !window._bvmmFetchStableNames) {
+      window._bvmmFetchStableNames = true;
+      var _fetch = window.fetch.bind(window);
+      window.fetch = function(input, init) {
+        try {
+          if (_saveInFlight && _currentItemName && init && typeof init.body === 'string') {
+            var body = init.body;
+            if (body.indexOf('"action":"img-upload') !== -1) {
+              var parsed;
+              try { parsed = JSON.parse(body); } catch(e) {}
+              if (parsed && parsed.filename) {
+                var extMatch = parsed.filename.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                var ext = extMatch ? extMatch[0] : '.webp';
+                parsed.filename = stableFilename(_currentItemName, ext);
+                init = Object.assign({}, init, { body: JSON.stringify(parsed) });
+              }
+            }
+          }
+        } catch(e) {}
+        return _fetch(input, init);
+      };
+    }
+
+    // Wrap attachImageToItem so the product's stored filename matches what we uploaded.
+    // Only rewrites during a save-in-flight, so picking legacy files stays untouched.
+    if (typeof window.attachImageToItem === 'function' && !window._bvmmAttachWrapped) {
+      window._bvmmAttachWrapped = true;
+      var _origAttach = window.attachImageToItem;
+      window.attachImageToItem = function(itemName, filename) {
+        if (_saveInFlight && _currentItemName === itemName && filename) {
+          var extMatch = filename.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+          var ext = extMatch ? extMatch[0] : '.webp';
+          filename = stableFilename(itemName, ext);
+        }
+        return _origAttach(itemName, filename);
+      };
+    }
+  }
+
 
   function hideOldGallery() {
     try {
@@ -5008,11 +5087,13 @@ function downloadAll(key) {
       waitAndInstall();
       hideOldGallery();
       installStep2Softener();
+      installStableFilenames();
     });
   } else {
     waitAndInstall();
     hideOldGallery();
     installStep2Softener();
+    installStableFilenames();
   }
 })();
 // ══════════ END v4.4 Paste & Push ══════════
