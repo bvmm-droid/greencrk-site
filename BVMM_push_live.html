@@ -185,7 +185,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
     <div style="background:#111;padding:20px 18px 16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div>
-          <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px">Meat Market Manager <span style="opacity:.7;font-weight:600">v4.1</span></div>
+          <div style="font-size:.6rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px">Meat Market Manager <span style="display:inline-block;background:#34C759;color:#0a0a0a;font-size:.68rem;font-weight:900;letter-spacing:.05em;padding:2px 7px;border-radius:5px;margin-left:6px;vertical-align:1px">v4.1</span></div>
           <div style="font-size:1.15rem;font-weight:800;color:#fff" id="dashDay">Sunday — Open Today</div>
         </div>
         <div style="text-align:right">
@@ -267,9 +267,10 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
         <button class="action-btn" id="bvmm-btn-reload"><span class="ab-icon">↻</span>Force Reload Tool</button>
         <button class="action-btn" id="bvmm-btn-clear"><span class="ab-icon">🧹</span>Clear Stuck State</button>
         <button class="action-btn" id="bvmm-btn-wiz"><span class="ab-icon">🛡</span>Setup Wizard</button>
+        <button class="action-btn" id="bvmm-btn-uploadurl" style="grid-column-start: 1; grid-column-end: -1"><span class="ab-icon">📋</span>Copy GitHub Upload URL</button>
         <button class="action-btn" id="bvmm-btn-update" style="grid-column-start: 1; grid-column-end: -1; background: rgb(46, 125, 50); color: rgb(255, 255, 255); border-color: rgb(46, 125, 50);"><span class="ab-icon">🚀</span>Update Worker (No Cloudflare)</button>
       </div>
-      <p class="caption" style="margin-top:12px"><b>Run Diagnostics:</b> Checks 6 things and shows what's broken. <b>Force Reload Tool:</b> Dumps Safari's cache and reloads this page — fixes "button doesn't respond" bugs. <b>Clear Stuck State:</b> If the tool seems frozen mid-push. <b>Setup Wizard:</b> Walks you through tool authentication (rarely needed). <b>Update Worker:</b> Deploys new Worker code without logging into Cloudflare. Only tap this if someone tells you to.</p>
+      <p class="caption" style="margin-top:12px"><b>Run Diagnostics:</b> Checks 6 things and shows what's broken. <b>Force Reload Tool:</b> Dumps Safari's cache and reloads this page — fixes "button doesn't respond" bugs. <b>Clear Stuck State:</b> If the tool seems frozen mid-push. <b>Setup Wizard:</b> Walks you through tool authentication (rarely needed). <b>Copy GitHub Upload URL:</b> Copies the upload page URL to your clipboard, so you can paste in Safari to drop a new tool version fast. <b>Update Worker:</b> Deploys new Worker code without logging into Cloudflare. Only tap this if someone tells you to.</p>
     </div>
   </details>
 
@@ -4202,7 +4203,14 @@ function downloadAll(key) {
   // ─── 6. Inject buttons into HOME ───
   function injectHomeButtons() {
     var homePanel = document.getElementById('panel-home');
-    if (!homePanel || document.getElementById('bvmm-fixit-card')) return;
+    if (!homePanel) return;
+    // If the fix-it card already exists in the HTML (v4+), just wire up its buttons.
+    var existing = document.getElementById('bvmm-fixit-card');
+    if (existing) {
+      wireFixitButtons();
+      return;
+    }
+    // Otherwise (legacy), inject the card
     var card = document.createElement('div');
     card.className = 'card';
     card.id = 'bvmm-fixit-card';
@@ -4216,13 +4224,53 @@ function downloadAll(key) {
         '<button class="action-btn" id="bvmm-btn-wiz"><span class="ab-icon">🛡</span>Setup Wizard</button>'+
       '</div>';
     homePanel.appendChild(card);
-    document.getElementById('bvmm-btn-reload').onclick = hardReload;
-    document.getElementById('bvmm-btn-diag').onclick = runDiagnostics;
-    document.getElementById('bvmm-btn-clear').onclick = clearStuckState;
-    document.getElementById('bvmm-btn-wiz').onclick = function() {
+    wireFixitButtons();
+  }
+
+  function wireFixitButtons() {
+    var r = document.getElementById('bvmm-btn-reload');     if (r) r.onclick = hardReload;
+    var d = document.getElementById('bvmm-btn-diag');       if (d) d.onclick = runDiagnostics;
+    var c = document.getElementById('bvmm-btn-clear');      if (c) c.onclick = clearStuckState;
+    var w = document.getElementById('bvmm-btn-wiz');        if (w) w.onclick = function() {
       if (typeof window.bvmmShowWizard === 'function') window.bvmmShowWizard('manual');
       else alert('Wizard not available');
     };
+    // v4.1: Copy GitHub Upload URL button
+    var u = document.getElementById('bvmm-btn-uploadurl');
+    if (u) u.onclick = copyUploadUrl;
+  }
+
+  // v4.1: Copy GitHub upload URL to clipboard + show helper toast
+  function copyUploadUrl() {
+    var url = 'https://github.com/bvmm-droid/greencrk-site/upload/main';
+    var showToast = function(text, color) {
+      var t = document.createElement('div');
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:' + (color||'#1A0A04') + ';color:#fff;padding:12px 18px;border-radius:12px;font-size:.8rem;font-weight:700;z-index:9999;max-width:90vw;text-align:center;line-height:1.4';
+      t.textContent = text;
+      document.body.appendChild(t);
+      setTimeout(function(){ t.remove(); }, 4000);
+    };
+    var opened = false;
+    var openPage = function() {
+      if (opened) return;
+      opened = true;
+      // Also open the page directly — on iPhone, this is the fastest path
+      window.open(url, '_blank');
+    };
+    // Try Clipboard API first (iOS Safari supports it)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function() {
+        showToast('✓ Upload URL copied & opening Safari...', '#34C759');
+        openPage();
+      }).catch(function() {
+        // Fallback: just open the page
+        showToast('Opening GitHub upload page...', '#1A0A04');
+        openPage();
+      });
+    } else {
+      showToast('Opening GitHub upload page...', '#1A0A04');
+      openPage();
+    }
   }
 
   // ─── 7. Self-update worker from inside the tool ───
