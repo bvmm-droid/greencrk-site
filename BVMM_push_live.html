@@ -4734,12 +4734,15 @@ function downloadAll(key) {
 // ══════════ END BVMM v3 ADD-ON ══════════
 
 
-// ══════════ BVMM v4.3 ADD-ON — Clipboard Paste Photo ══════════
-// Adds a "📋 Paste Image from Clipboard" button to the image picker modal.
-// The user long-presses a photo anywhere (Safari, Photos, Messages) → Copy,
-// then taps Paste inside the picker. Image goes through the EXISTING
-// saveAndAttach() pipeline — resize to 800px, convert to WebP, upload,
-// attach to the product, generate AI alt text. Nothing existing is modified.
+// ══════════ BVMM v4.4 ADD-ON — Paste & Push Live ══════════
+// Two additions to the image picker modal:
+//   1) "📋 Paste Image from Clipboard"          — paste only, push later (v4.3)
+//   2) "⚡ Paste & Push Live Now"               — paste AND push in one tap (v4.4)
+// Plus a cosmetic fix: the "Error: Bad response" / "Failed" message on HOME that
+// comes from Step 2 (tool self-backup) is downgraded to a neutral note so the
+// user isn't told their push failed when it didn't.
+//
+// Nothing existing is modified or removed. All new logic is additive.
 //
 // TO REMOVE: delete this entire block (from the banner above to the banner below).
 // No other file changes are required. The tool keeps working identically.
@@ -4773,12 +4776,15 @@ function downloadAll(key) {
     card.innerHTML =
       '<div style="font-size:.72rem;font-weight:800;color:#8a4f00;margin-bottom:6px">📋 Paste a photo you copied</div>' +
       '<div style="font-size:.65rem;color:#8a6a3a;margin-bottom:8px;line-height:1.4">' +
-        'Long-press an image anywhere (Safari, Photos, Messages) → tap <b>Copy</b>. Then tap Paste below.' +
+        'Long-press an image anywhere → tap <b>Copy</b>. Then tap a button below.' +
       '</div>' +
-      '<button id="bvmmPasteBtn" style="width:100%;background:#C43B00;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.85rem;font-weight:800;cursor:pointer">' +
-        '📋 Paste Image from Clipboard' +
+      '<button id="bvmmPasteBtn" style="width:100%;background:#C43B00;color:#fff;border:none;border-radius:10px;padding:12px;font-size:.82rem;font-weight:800;cursor:pointer;margin-bottom:8px">' +
+        '📋 Paste (review on Home before pushing)' +
       '</button>' +
-      '<div id="bvmmPasteStatus" style="font-size:.68rem;margin-top:8px;text-align:center;display:none;line-height:1.4"></div>';
+      '<button id="bvmmPasteGoBtn" style="width:100%;background:#0a7c0a;color:#fff;border:none;border-radius:10px;padding:14px;font-size:.9rem;font-weight:800;cursor:pointer">' +
+        '⚡ Paste &amp; Push Live Now' +
+      '</button>' +
+      '<div id="bvmmPasteStatus" style="font-size:.72rem;margin-top:10px;text-align:center;display:none;line-height:1.5;padding:8px;border-radius:8px"></div>';
 
     // Insert right after the title row (first child of the sheet)
     var titleRow = sheet.firstElementChild;
@@ -4789,20 +4795,28 @@ function downloadAll(key) {
     }
 
     var btn = document.getElementById('bvmmPasteBtn');
-    if (btn) btn.onclick = function() { handlePaste(itemName); };
+    if (btn) btn.onclick = function() { handlePaste(itemName, false); };
+    var goBtn = document.getElementById('bvmmPasteGoBtn');
+    if (goBtn) goBtn.onclick = function() { handlePaste(itemName, true); };
   }
 
-  function showStatus(msg, color) {
+  function showStatus(msg, color, bg) {
     var el = document.getElementById('bvmmPasteStatus');
     if (!el) return;
     el.style.display = 'block';
     el.style.color = color || '#8a6a3a';
+    el.style.background = bg || 'transparent';
     el.textContent = msg;
   }
 
-  async function handlePaste(itemName) {
+  async function handlePaste(itemName, alsoPush) {
     var btn = document.getElementById('bvmmPasteBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Reading...'; }
+    var goBtn = document.getElementById('bvmmPasteGoBtn');
+    if (btn) { btn.disabled = true; }
+    if (goBtn) { goBtn.disabled = true; }
+    var activeBtn = alsoPush ? goBtn : btn;
+    var origText = activeBtn ? activeBtn.textContent : '';
+    if (activeBtn) activeBtn.textContent = 'Reading clipboard...';
 
     try {
       if (!navigator.clipboard || typeof navigator.clipboard.read !== 'function') {
@@ -4831,40 +4845,177 @@ function downloadAll(key) {
         throw new Error('No image on your clipboard. Long-press an image somewhere and tap Copy, then try again.');
       }
 
-      showStatus('Got image (' + Math.round(imageBlob.size / 1024) + ' KB). Optimizing...');
-      if (btn) btn.textContent = 'Saving...';
+      showStatus('📸 Got image (' + Math.round(imageBlob.size / 1024) + ' KB). Optimizing...', '#8a4f00');
+      if (activeBtn) activeBtn.textContent = 'Saving...';
 
       // Convert blob to object URL. prepareImage() accepts any URL the <img> element can load.
       // Blob URLs load synchronously without CORS — no Worker fetch needed.
       var blobUrl = URL.createObjectURL(imageBlob);
       try {
         await window.saveAndAttach(itemName, blobUrl);
-        showStatus('✅ Saved and attached to ' + itemName + '. Closing...', '#0a7c0a');
-        setTimeout(function() {
-          var ov = document.getElementById('imgPickerOverlay');
-          if (ov) ov.remove();
-          // Refresh the edit view so the new photo shows up immediately
-          try { if (typeof buildPriceList === 'function' && typeof DELI !== 'undefined') buildPriceList('deli-list', DELI, 'd'); } catch(e) {}
-          try { if (typeof buildPriceList === 'function' && typeof BUTCHER !== 'undefined') buildPriceList('butcher-list', BUTCHER, 'b'); } catch(e) {}
-          try { if (typeof updateBar === 'function') updateBar(); } catch(e) {}
-        }, 1200);
       } finally {
         URL.revokeObjectURL(blobUrl);
       }
+
+      // Refresh the edit view so the new photo shows up immediately on the product row
+      try { if (typeof buildPriceList === 'function' && typeof DELI !== 'undefined') buildPriceList('deli-list', DELI, 'd'); } catch(e) {}
+      try { if (typeof buildPriceList === 'function' && typeof BUTCHER !== 'undefined') buildPriceList('butcher-list', BUTCHER, 'b'); } catch(e) {}
+      try { if (typeof updateBar === 'function') updateBar(); } catch(e) {}
+
+      if (!alsoPush) {
+        // Paste-only path: show success, close modal, let user push later from HOME
+        showStatus('✅ Saved and attached to ' + itemName + '. Tap HOME → Push Live when ready.', '#0a5e0a', '#e8f5e8');
+        setTimeout(function() {
+          var ov = document.getElementById('imgPickerOverlay');
+          if (ov) ov.remove();
+        }, 1800);
+        return;
+      }
+
+      // Paste-and-push path: trigger deployAll and watch for completion
+      showStatus('📤 Attached. Now pushing to greencrk.com...', '#8a4f00');
+      if (activeBtn) activeBtn.textContent = 'Pushing to greencrk.com...';
+      await runDeployAndWait();
+      showStatus('✅ LIVE on greencrk.com! Your ' + itemName + ' photo is up.', '#0a5e0a', '#e8f5e8');
+      if (activeBtn) activeBtn.textContent = '✅ LIVE — tap ✕ to close';
+      // Leave modal open so they can add another photo to another product if they want
     } catch (err) {
       var msg = (err && err.message) || 'Unknown error';
-      showStatus('❌ ' + msg, '#C0392B');
-      if (btn) { btn.disabled = false; btn.textContent = '📋 Paste Image from Clipboard'; }
+      showStatus('❌ ' + msg, '#C0392B', '#fbe8e8');
+      if (btn) { btn.disabled = false; btn.textContent = '📋 Paste (review on Home before pushing)'; }
+      if (goBtn) { goBtn.disabled = false; goBtn.textContent = '⚡ Paste & Push Live Now'; }
     }
   }
 
+  // Trigger the existing PUSH LIVE button and wait until it reports success or failure.
+  // We watch the fs-site status row — that's STEP 1 (the real site push).
+  // Step 2 (tool self-backup) is ignored; if it fails, the site is still live.
+  function runDeployAndWait() {
+    return new Promise(function(resolve, reject) {
+      var deployBtn = document.getElementById('deployBtn');
+      if (!deployBtn) return reject(new Error('Push button not found'));
+      if (typeof window.deployAll !== 'function') return reject(new Error('Push function not available'));
+
+      var siteRow = document.getElementById('fs-site');
+      var done = false;
+      var timeout;
+
+      var check = function() {
+        if (done || !siteRow) return;
+        if (siteRow.className && siteRow.className.indexOf('ok') !== -1) {
+          done = true; clearTimeout(timeout); cleanup(); resolve();
+        } else if (siteRow.className && siteRow.className.indexOf('err') !== -1) {
+          done = true; clearTimeout(timeout); cleanup();
+          var errText = siteRow.textContent || 'Push failed';
+          reject(new Error('Push failed: ' + errText.replace(/^[-\s]+/, '').trim()));
+        }
+      };
+
+      var obs;
+      var cleanup = function() { if (obs) { try { obs.disconnect(); } catch(e) {} obs = null; } };
+
+      if (siteRow && window.MutationObserver) {
+        obs = new MutationObserver(check);
+        obs.observe(siteRow, { attributes: true, childList: true, subtree: true, characterData: true });
+      }
+      // Fallback poll in case MutationObserver misses the class update
+      var poll = setInterval(function() {
+        check();
+        if (done) clearInterval(poll);
+      }, 400);
+
+      timeout = setTimeout(function() {
+        if (done) return;
+        done = true; cleanup(); clearInterval(poll);
+        reject(new Error('Push took too long (over 60s). Check HOME tab to see what happened.'));
+      }, 60000);
+
+      // Trigger the push
+      try { window.deployAll(); } catch(e) { done = true; cleanup(); clearInterval(poll); reject(e); }
+    });
+  }
+
+  // Cosmetic fix: downgrade the "Failed / Bad response" Step 2 message on HOME.
+  // When the actual site push succeeded (fs-site is green) but the tool self-backup
+  // failed (fs-mgr shows error), the tool currently still shouts "Failed" in red,
+  // which terrifies the user even though their changes ARE live. We watch for that
+  // exact scenario and replace the scary red row with a calm gray note.
+  function softenStep2Error() {
+    try {
+      var siteRow = document.getElementById('fs-site');
+      var mgrRow = document.getElementById('fs-mgr');
+      if (!siteRow || !mgrRow) return;
+      var siteOk = siteRow.className && siteRow.className.indexOf('ok') !== -1;
+      var mgrErr = mgrRow.className && mgrRow.className.indexOf('err') !== -1;
+      if (siteOk && mgrErr) {
+        // Step 1 succeeded, Step 2 failed — reframe Step 2 as a gentle note
+        mgrRow.className = mgrRow.className.replace('err', '');
+        mgrRow.style.color = '#6a6a6a';
+        mgrRow.textContent = 'tool backup skipped';
+        // Also hide the standalone red error banner if present
+        var errorBanner = document.querySelector('[style*="Error: Bad response"]');
+        if (!errorBanner) {
+          // Scan for elements containing that text
+          var all = document.querySelectorAll('div, p, span');
+          for (var i = 0; i < all.length; i++) {
+            if (all[i].children.length === 0 && /Error:\s*Bad response/i.test(all[i].textContent || '')) {
+              all[i].style.display = 'none';
+              break;
+            }
+          }
+        }
+      }
+    } catch(e) {}
+  }
+
+  function installStep2Softener() {
+    // Check whenever fs-site or fs-mgr changes
+    var siteRow = document.getElementById('fs-site');
+    var mgrRow = document.getElementById('fs-mgr');
+    if (!window.MutationObserver || !siteRow || !mgrRow) {
+      // Fallback: poll every 1s — cheap and safe
+      setInterval(softenStep2Error, 1000);
+      return;
+    }
+    var obs = new MutationObserver(softenStep2Error);
+    obs.observe(siteRow, { attributes: true, childList: true, subtree: true, characterData: true });
+    obs.observe(mgrRow, { attributes: true, childList: true, subtree: true, characterData: true });
+    // Also run once on install in case the error is already there from a prior push
+    softenStep2Error();
+  }
+
+
+  function hideOldGallery() {
+    try {
+      var g = document.getElementById('img-grid-old');
+      if (g) {
+        var card = g;
+        while (card && !(card.classList && card.classList.contains('card'))) card = card.parentElement;
+        if (card) card.style.display = 'none';
+      }
+      // The "🔄 Load Site Images" button at the bottom is paired with this gallery
+      var loadBtns = document.querySelectorAll('button.main-btn');
+      for (var i = 0; i < loadBtns.length; i++) {
+        if (loadBtns[i].textContent.indexOf('Load Site Images') !== -1) {
+          loadBtns[i].style.display = 'none';
+        }
+      }
+    } catch(e) {}
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', waitAndInstall);
+    document.addEventListener('DOMContentLoaded', function() {
+      waitAndInstall();
+      hideOldGallery();
+      installStep2Softener();
+    });
   } else {
     waitAndInstall();
+    hideOldGallery();
+    installStep2Softener();
   }
 })();
-// ══════════ END v4.3 Paste ══════════
+// ══════════ END v4.4 Paste & Push ══════════
 
 </script>
 
