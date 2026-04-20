@@ -218,11 +218,11 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
   </div>
 
   <!-- PUSH LIVE (unchanged — deployBtn id preserved) -->
-  <button class="go-live-btn" id="deployBtn" onclick="deployAll()" disabled="">Pushing...</button>
+  <button class="go-live-btn has-changes" id="deployBtn" onclick="deployAll()" disabled="">Pushing...</button>
   <p class="caption" style="text-align:center;margin-bottom:10px">Sends your changes to the live website. Takes ~30 seconds.</p>
 
   <div class="deploy-rows" id="deploy-rows" style="display: block;">
-    <div class="deploy-row"><span class="deploy-row-name">greencrk.com</span><span class="deploy-row-status ok" id="fs-site">- 2c72089</span></div>
+    <div class="deploy-row"><span class="deploy-row-name">greencrk.com</span><span class="deploy-row-status ok" id="fs-site">- 545bd4a</span></div>
     <div class="deploy-row"><span class="deploy-row-name">Meat Market Manager</span><span class="deploy-row-status going" id="fs-mgr">Pushing...</span></div>
   </div>
   <div id="s1" class="step"></div>
@@ -334,7 +334,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
       <label class="sw"><input type="checkbox" id="bannerOn" onchange="updatePreview()"><span class="sl"></span></label>
     </div>
     <textarea class="b-inp" id="bannerTxt" rows="3" placeholder="e.g. ⭐ Today's Special: Bone-In Ribeye $38/lb" oninput="updatePreview()"></textarea>
-    <div class="b-preview" id="bPreview"></div>
+    <div class="b-preview" id="bPreview" style="display: none;"></div>
     <button class="main-btn" onclick="pushBannerOnly()" id="bannerPushBtn">📢 Push Banner Live Now</button>
     <div id="banner-step" class="step" style="margin-top:8px"></div>
   </div>
