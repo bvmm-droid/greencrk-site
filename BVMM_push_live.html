@@ -159,6 +159,11 @@ details.v4-details summary::-webkit-details-marker{display:none}
 details.v4-details summary::after{content:'▸';float:right;transition:transform .2s}
 details.v4-details[open] summary::after{transform:rotate(90deg)}
 details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;margin-bottom:10px;line-height:1.45}
+
+/* ── v4 ALL-MODE: show every edit sub-panel at once with clear dividers ── */
+#panel-edit.all-mode .sub-panel{display:block;margin-bottom:28px}
+#panel-edit.all-mode .sub-panel:not(:first-of-type){padding-top:24px;border-top:3px solid #1A0A04;margin-top:24px}
+#panel-edit.all-mode .sub-panel .sec-title{background:#1A0A04;color:#F5F0E8;padding:10px 14px;border-radius:10px;margin-bottom:8px;font-size:.95rem}
 </style>
 </head>
 <body>
@@ -167,7 +172,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
 <div class="tabs">
   <button class="tab active" id="tab-home" onclick="showMainTab('home')"><span class="tab-icon">🏠</span>Home</button>
   <button class="tab" id="tab-edit" onclick="showMainTab('edit')"><span class="tab-icon">✏️</span>Edit</button>
-  <button class="tab" id="tab-images" onclick="showMainTab('images');loadImages()"><span class="tab-icon">🖼️</span>Images</button>
+  <button class="tab" id="tab-images" onclick="showMainTab('images');loadImages()"><span class="tab-icon">🖼️</span>Images &amp; AI</button>
   <button class="tab" id="tab-more" onclick="showMainTab('more')"><span class="tab-icon">⚙️</span>More</button>
 </div>
 
@@ -277,13 +282,14 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
   <p class="sec-sub">Pick what you want to change below. Everything shows as a "pending change" until you tap Go Live on the Home tab.</p>
 
   <div class="sub-nav">
+    <button class="sub-btn active" id="sub-btn-all" onclick="showSubTab('all')">📋 All</button>
     <button class="sub-btn" id="sub-btn-deli" onclick="showSubTab('deli')">🥪 Deli</button>
     <button class="sub-btn" id="sub-btn-butcher" onclick="showSubTab('butcher')">🥩 Butcher</button>
     <button class="sub-btn" id="sub-btn-catering" onclick="showSubTab('catering')">🍽 Catering</button>
     <button class="sub-btn" id="sub-btn-hours" onclick="showSubTab('hours')">🕐 Hours</button>
     <button class="sub-btn" id="sub-btn-specials" onclick="showSubTab('specials')">📢 Notice</button>
   </div>
-  <p class="caption" style="margin-bottom:14px"><b>Deli / Butcher / Catering:</b> edit prices and photos. <b>Hours:</b> daily open/close times. <b>Notice:</b> banner message at the top of the site. Tap the 📷 icon next to any Deli or Butcher item to add or replace its photo.</p>
+  <p class="caption" style="margin-bottom:14px"><b>All:</b> shows everything in one scroll. <b>Deli / Butcher / Catering:</b> prices and photos (tap 📷 to add/replace). <b>Hours:</b> daily open/close times. <b>Notice:</b> banner at top of site.</p>
 
   <!-- DELI -->
   <div class="sub-panel" id="sub-deli">
@@ -338,8 +344,21 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
 
 <!-- ════ IMAGES ════ -->
 <div id="panel-images" class="panel">
-  <p class="sec-title">Image Library</p>
-  <p class="sec-sub">Search millions of photos or ask AI to find exactly what you need.</p>
+  <p class="sec-title">Images &amp; AI</p>
+  <p class="sec-sub">Photos and AI tools in one place. Search photos below, or jump to other AI features here.</p>
+
+  <!-- v4: AI shortcuts card — jumps to existing AI features without moving them -->
+  <div class="card" style="border:1.5px solid rgba(26,10,4,.12);background:linear-gradient(135deg,#fff 0%,#faf6f0 100%)">
+    <div class="section-label">🤖 AI Shortcuts</div>
+    <p style="font-size:.7rem;color:#8a7a6c;margin-bottom:10px;line-height:1.45">All AI features in one place. Tap to jump.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="action-btn" onclick="showSubTab('ai')" style="text-align:left"><span class="ab-icon">💬</span>Ask AI Chat</button>
+      <button class="action-btn" onclick="document.getElementById('aiImgInput').focus();document.getElementById('aiImgInput').scrollIntoView({behavior:'smooth',block:'center'})" style="text-align:left"><span class="ab-icon">🖼️</span>Find a Photo</button>
+      <button class="action-btn" onclick="showSubTab('settings');setTimeout(function(){var el=document.getElementById('bvmm-content-card');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},300)" style="text-align:left"><span class="ab-icon">📝</span>Write Product Descriptions</button>
+      <button class="action-btn" onclick="showSubTab('settings');setTimeout(function(){var el=document.getElementById('bvmm-content-card');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},300)" style="text-align:left"><span class="ab-icon">🔍</span>SEO / FAQ / Guides</button>
+    </div>
+    <p class="caption" style="margin-top:10px"><b>Ask AI Chat:</b> talk to it in plain English about prices, hours, or specials. <b>Find a Photo:</b> describe what you need, AI searches for you. <b>Write Product Descriptions:</b> AI writes store descriptions for your items. <b>SEO / FAQ / Guides:</b> AI generates SEO-friendly content.</p>
+  </div>
 
   <!-- AI DESCRIBE WHAT YOU WANT -->
   <div class="card">
@@ -2916,6 +2935,16 @@ function showMainTab(name) {
     document.getElementById('tab-' + n).classList.toggle('active', n === name);
     document.getElementById('panel-' + n).classList.toggle('active', n === name);
   });
+  // v4: When Edit is opened and no sub-panel is currently active, default to All view
+  if (name === 'edit') {
+    var anyActive = ['sub-deli','sub-butcher','sub-catering','sub-hours','sub-specials'].some(function(id){
+      var el = document.getElementById(id);
+      return el && el.classList.contains('active');
+    });
+    if (!anyActive) {
+      if (typeof showSubTab === 'function') showSubTab('all');
+    }
+  }
 }
 
 // ── SUB TAB NAVIGATION ──
@@ -2925,6 +2954,37 @@ function showSubTab(name) {
   // More sub-tabs
   var moreSubs = ['ai','files','settings'];
   var allSubs = editSubs.concat(moreSubs);
+
+  // v4: Handle the 'all' pseudo-tab — activate EVERY edit sub-panel simultaneously
+  if (name === 'all') {
+    // highlight only the 'All' button
+    var allBtn = document.getElementById('sub-btn-all');
+    if (allBtn) allBtn.classList.add('active');
+    editSubs.forEach(function(n) {
+      var btn = document.getElementById('sub-btn-' + n);
+      var panel = document.getElementById('sub-' + n);
+      if (btn) btn.classList.remove('active');
+      if (panel) panel.classList.add('active'); // show all edit panels together
+    });
+    // Deactivate more sub-panels (not affected)
+    moreSubs.forEach(function(n) {
+      var btn = document.getElementById('sub-btn-' + n);
+      var panel = document.getElementById('sub-' + n);
+      if (btn) btn.classList.remove('active');
+      if (panel) panel.classList.remove('active');
+    });
+    // Add visual marker so we can style section dividers in all-mode
+    var editPanel = document.getElementById('panel-edit');
+    if (editPanel) editPanel.classList.add('all-mode');
+    showMainTab('edit');
+    return;
+  }
+
+  // Regular single-tab behavior: remove all-mode marker
+  var editPanel = document.getElementById('panel-edit');
+  if (editPanel) editPanel.classList.remove('all-mode');
+  var allBtn = document.getElementById('sub-btn-all');
+  if (allBtn) allBtn.classList.remove('active');
 
   allSubs.forEach(function(n) {
     var btn = document.getElementById('sub-btn-' + n);
