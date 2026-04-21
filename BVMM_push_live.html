@@ -4590,54 +4590,40 @@ function downloadAll(key) {
     if (!src || src.trim().length < 100) { st.textContent = '✗ Worker source missing from HTML'; st.style.color = '#C43B00'; return; }
 
     btn.disabled = true; btn.textContent = 'Deploying...';
-    st.textContent = 'Uploading to Cloudflare...'; st.style.color = '#1A0A04';
+    st.textContent = 'Routing through Worker proxy (no CORS)...'; st.style.color = '#1A0A04';
     try {
-      var url = 'https://api.cloudflare.com/client/v4/accounts/' + CF_ACCOUNT_ID + '/workers/scripts/' + CF_WORKER_NAME;
+      // Route through our own Worker (server-side) — avoids Safari's CORS block on api.cloudflare.com
+      var proxyResp = await fetch(WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'cf-deploy-worker',
+          apiToken: apiToken,
+          workerSource: src.trim()
+        })
+      });
 
-      // Use browser-native FormData — avoids hand-crafted multipart issues in Safari.
-      // We do NOT set Content-Type; the browser adds it with the correct boundary automatically.
-      var metadataBlob = new Blob([JSON.stringify({
-        main_module: 'worker.js',
-        compatibility_date: '2026-04-09'
-      })], { type: 'application/json' });
-      var scriptBlob = new Blob([src.trim()], { type: 'application/javascript+module' });
+      var rawText = await proxyResp.text();
+      var data; try { data = JSON.parse(rawText); } catch(_) { data = null; }
 
-      var fd = new FormData();
-      fd.append('metadata', metadataBlob, 'metadata.json');
-      fd.append('worker.js', scriptBlob, 'worker.js');
+      btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
 
-      var resp;
-      try {
-        resp = await fetch(url, {
-          method: 'PUT',
-          headers: { 'Authorization': 'Bearer ' + apiToken },
-          body: fd,
-          mode: 'cors'
-        });
-      } catch(fetchErr) {
-        btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
-        // Safari's "Load failed" usually means CORS blocked the request before it reached Cloudflare.
-        // Tell the user exactly what's happening and offer the manual path.
-        st.innerHTML = '<div style="color:#C43B00;line-height:1.5">✗ Browser blocked the request (' + (fetchErr.message || 'Load failed') + ').<br><br>This happens on some iPhones when Cloudflare\'s API rejects cross-origin calls. Use the manual paste method instead — Settings tab → Cloudflare Worker card → Download Latest Worker Code, then Open Worker Editor, Select All / Delete / Paste / Deploy.</div>';
+      // If the Worker doesn't have the cf-deploy-worker action yet (first-time setup),
+      // it returns the default "Unknown action" error. Tell the user to paste once.
+      if (data && data.error && /unknown action|cf-deploy-worker/i.test(data.error)) {
+        st.innerHTML = '<div style="color:#C43B00;line-height:1.55"><b>First-time setup needed (one-time only):</b><br><br>The live Worker is an older version that doesn\'t have the proxy deploy feature yet. You have to paste the new Worker code into Cloudflare <b>once</b>. After that, this button works with one tap forever.<br><br>Go to <b>More → Settings → Cloudflare Worker → Download Latest Worker Code</b>, then <b>Open Worker Editor</b>, Select All / Delete / Paste / Deploy. Comes back here and this button will work instantly from then on.</div>';
         return;
       }
 
-      // Read response safely — sometimes CF returns non-JSON error pages
-      var rawText = await resp.text();
-      var data;
-      try { data = JSON.parse(rawText); } catch(_) { data = null; }
-
-      btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
-      if (!resp.ok || !data || !data.success) {
-        var errMsg = 'HTTP ' + resp.status;
-        if (data && data.errors && data.errors.length) errMsg = data.errors.map(function(e){ return e.message || JSON.stringify(e); }).join('; ');
-        else if (data && data.error) errMsg = data.error;
-        else if (rawText) errMsg += ' — ' + rawText.substring(0, 120);
+      if (!proxyResp.ok || !data || !data.ok) {
+        var errMsg = 'HTTP ' + proxyResp.status;
+        if (data && data.error) errMsg = data.error;
+        else if (rawText) errMsg += ' — ' + rawText.substring(0, 150);
         st.textContent = '✗ ' + errMsg;
         st.style.color = '#C43B00';
         return;
       }
-      st.innerHTML = '<span style="color:#2E7D32">✓ Worker deployed! Active in ~5 seconds.</span>';
+      st.innerHTML = '<span style="color:#2E7D32">✓ Worker deployed via proxy! Active in ~5 seconds.</span>';
     } catch(e) {
       btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
       st.textContent = '✗ ' + e.message;
@@ -5170,6 +5156,40 @@ function downloadAll(key) {
     catch(e) { return btoa(html); }
   }
 
+  // ── Direct GitHub push — bypasses the Worker entirely.
+  // GitHub's REST API supports CORS from any origin, so browsers can call it directly.
+  // This avoids the Worker's filename whitelist AND avoids CORS issues with Cloudflare.
+  async function githubPut(filename, base64content, commitMsg) {
+    var token = localStorage.getItem('bvmm_gh_tok');
+    if (!token) throw new Error('GitHub token not saved. Go to Settings → API Keys → paste GitHub Token, then retry.');
+    var apiBase = 'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/';
+    var gh = {
+      'Authorization': 'token ' + token,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github+json'
+    };
+    // Fetch current SHA (required to update an existing file)
+    var sha = null;
+    try {
+      var gr = await fetch(apiBase + filename, { headers: gh });
+      if (gr.ok) { var gd = await gr.json(); sha = gd.sha || null; }
+    } catch(_) {}
+    var pb = { message: commitMsg || ('Update ' + filename + ' via BVMM tool'), content: base64content };
+    if (sha) pb.sha = sha;
+    var pr = await fetch(apiBase + filename, {
+      method: 'PUT',
+      headers: gh,
+      body: JSON.stringify(pb)
+    });
+    var rawText = await pr.text();
+    var pd; try { pd = JSON.parse(rawText); } catch(_) { pd = null; }
+    if (!pr.ok) {
+      var msg = (pd && pd.message) ? pd.message : ('HTTP ' + pr.status);
+      throw new Error('GitHub: ' + msg);
+    }
+    return (pd && pd.commit && pd.commit.sha) ? pd.commit.sha.substring(0, 7) : 'ok';
+  }
+
   // ── PUSH FILE PICKER CONTENT TO preview.html ──────────────
   window.stagingUploadFile = function() {
     var inp = document.createElement('input');
@@ -5186,16 +5206,14 @@ function downloadAll(key) {
     inp.click();
   };
 
-  function stagingPushHTML(html, originalName) {
-    if (typeof pushFile !== 'function') {
-      setStagingStatus('pushFile() unavailable — this is not the full tool.', 'err');
-      return;
+  async function stagingPushHTML(html, originalName) {
+    setStagingStatus('Pushing ' + (originalName || 'file') + ' (' + Math.round(html.length/1024) + ' KB) to preview.html via GitHub …', 'info');
+    try {
+      var commit = await githubPut('preview.html', encodeForGithub(html), 'Preview build via BVMM tool');
+      setStagingStatus('✅ Pushed (commit ' + commit + '). Live at greencrk.com/preview.html in ~30 seconds — tap Open Preview.', 'ok');
+    } catch(e) {
+      setStagingStatus('Push failed: ' + e.message, 'err');
     }
-    setStagingStatus('Pushing ' + (originalName || 'file') + ' (' + Math.round(html.length/1024) + ' KB) to preview.html …', 'info');
-    pushFile('preview.html', encodeForGithub(html), function(ok, msg) {
-      if (!ok) { setStagingStatus('Push failed: ' + (msg || ''), 'err'); return; }
-      setStagingStatus('✅ Live at greencrk.com/preview.html — tap Open Preview to review, then Promote when happy.', 'ok');
-    });
   }
 
   // ── APPLY MY PENDING CHANGES TO preview.html ──────────────
@@ -5213,46 +5231,34 @@ function downloadAll(key) {
   };
 
   // ── PROMOTE preview.html → index.html ─────────────────────
-  window.stagingPromote = function() {
+  window.stagingPromote = async function() {
     var ok = confirm('Promote preview.html to live index.html?\n\nThis REPLACES greencrk.com with whatever is on the preview page right now. A rollback is auto-saved first.');
     if (!ok) return;
     var previewRaw = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/preview.html';
     setStagingStatus('Fetching preview.html …', 'info');
-    fetch(previewRaw + '?nocache=' + Date.now())
-      .then(function(r) {
-        if (r.status === 404) throw new Error('No preview.html in the repo yet. Upload one first.');
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.text();
-      })
-      .then(function(html) {
-        // Fetch live site first so we can save it as a rollback, then push preview as new live
-        if (typeof RAW !== 'undefined') {
-          fetch(RAW + '?nocache=' + Date.now())
-            .then(function(r){ return r.ok ? r.text() : ''; })
-            .then(function(liveHTML){
-              try { if (liveHTML && typeof saveRollback === 'function') saveRollback(liveHTML); } catch(e){}
-              setStagingStatus('Promoting to live …', 'info');
-              pushFile('index.html', encodeForGithub(html), function(ok, msg) {
-                if (!ok) { setStagingStatus('Promote failed: ' + (msg || ''), 'err'); return; }
-                setStagingStatus('🎉 LIVE on greencrk.com! Wait ~30 seconds for the CDN to refresh, then check it.', 'ok');
-              });
-            })
-            .catch(function() {
-              // Even if rollback save fails, continue with promote
-              setStagingStatus('Promoting to live (no rollback saved) …', 'info');
-              pushFile('index.html', encodeForGithub(html), function(ok, msg) {
-                if (!ok) { setStagingStatus('Promote failed: ' + (msg || ''), 'err'); return; }
-                setStagingStatus('🎉 LIVE on greencrk.com! Wait ~30 seconds for the CDN to refresh.', 'ok');
-              });
-            });
-        } else {
-          pushFile('index.html', encodeForGithub(html), function(ok, msg) {
-            if (!ok) { setStagingStatus('Promote failed: ' + (msg || ''), 'err'); return; }
-            setStagingStatus('🎉 LIVE on greencrk.com!', 'ok');
-          });
+    try {
+      var pResp = await fetch(previewRaw + '?nocache=' + Date.now());
+      if (pResp.status === 404) throw new Error('No preview.html in the repo yet. Upload one first.');
+      if (!pResp.ok) throw new Error('HTTP ' + pResp.status);
+      var html = await pResp.text();
+
+      // Save current live as a rollback first (best-effort, via existing Worker path)
+      try {
+        if (typeof RAW !== 'undefined' && typeof saveRollback === 'function') {
+          var liveResp = await fetch(RAW + '?nocache=' + Date.now());
+          if (liveResp.ok) {
+            var liveHtml = await liveResp.text();
+            try { saveRollback(liveHtml); } catch(_) {}
+          }
         }
-      })
-      .catch(function(e) { setStagingStatus('Error: ' + e.message, 'err'); });
+      } catch(_) {}
+
+      setStagingStatus('Promoting to live …', 'info');
+      var commit = await githubPut('index.html', encodeForGithub(html), 'Promote preview to live via BVMM tool');
+      setStagingStatus('🎉 LIVE on greencrk.com! (commit ' + commit + ') Wait ~30 seconds for the CDN to refresh.', 'ok');
+    } catch(e) {
+      setStagingStatus('Error: ' + e.message, 'err');
+    }
   };
 
   // ── EXPORT ALL SETTINGS TO JSON FILE ─────────────────────
@@ -5457,6 +5463,34 @@ export default {
         if (!pr.ok) return new Response(JSON.stringify({ok:false,error:pd.message||'GitHub error'}), {headers});
         const commit = (pd.commit&&pd.commit.sha)?pd.commit.sha.substring(0,7):'ok';
         return new Response(JSON.stringify({ok:true,commit}), {headers});
+      } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
+    }
+    if (action === 'cf-deploy-worker') {
+      // Proxies a Worker script update to the Cloudflare API — runs server-side so
+      // the browser never touches api.cloudflare.com (avoids CORS on iPhone Safari).
+      try {
+        const apiToken = body.apiToken;
+        const src = body.workerSource;
+        if (!apiToken || typeof apiToken !== 'string') return new Response(JSON.stringify({ok:false,error:'Missing apiToken'}), {status:400,headers});
+        if (!src || typeof src !== 'string' || src.length < 100) return new Response(JSON.stringify({ok:false,error:'Missing or too-short workerSource'}), {status:400,headers});
+        const CF_ACCOUNT = '3e33cb7e32f60a1266e6e50ed47d9b4b';
+        const CF_NAME = 'bvmm-proxy';
+        const cfUrl = 'https://api.cloudflare.com/client/v4/accounts/'+CF_ACCOUNT+'/workers/scripts/'+CF_NAME;
+        const metadataBlob = new Blob([JSON.stringify({ main_module:'worker.js', compatibility_date:'2026-04-09' })], { type:'application/json' });
+        const scriptBlob = new Blob([src], { type:'application/javascript+module' });
+        const fd = new FormData();
+        fd.append('metadata', metadataBlob, 'metadata.json');
+        fd.append('worker.js', scriptBlob, 'worker.js');
+        const cfResp = await fetch(cfUrl, { method:'PUT', headers:{ 'Authorization':'Bearer '+apiToken }, body: fd });
+        const cfText = await cfResp.text();
+        let cfData; try { cfData = JSON.parse(cfText); } catch(_) { cfData = null; }
+        if (!cfResp.ok || !cfData || !cfData.success) {
+          let msg = 'HTTP '+cfResp.status;
+          if (cfData && cfData.errors && cfData.errors.length) msg = cfData.errors.map(function(e){ return e.message || JSON.stringify(e); }).join('; ');
+          else if (cfText) msg += ' — '+cfText.substring(0,200);
+          return new Response(JSON.stringify({ok:false,error:msg}), {headers});
+        }
+        return new Response(JSON.stringify({ok:true}), {headers});
       } catch (e) { return new Response(JSON.stringify({ok:false,error:e.message}), {headers}); }
     }
     if (action === 'img-upload') {
