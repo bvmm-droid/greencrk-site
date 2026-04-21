@@ -3832,7 +3832,7 @@ function downloadAll(key) {
       var btn = this, res = document.getElementById('bw-result');
       btn.disabled = true; btn.textContent = 'Testing...'; res.innerHTML = '';
       try { localStorage.setItem('bvmm_auth', secret); } catch(e) {}
-      _origFetch(WORKER, {
+      fetch(WORKER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-bvmm-auth': secret },
         body: JSON.stringify({ action: 'kv-get', key: '__bvmm_auth_probe__' })
@@ -3924,7 +3924,7 @@ function downloadAll(key) {
       if (img.naturalWidth > 0) loaded = true;
     } catch(e) { loaded = false; }
     if (!loaded) {
-      var resp = await _origFetch(WORKER, {
+      var resp = await fetch(WORKER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-bvmm-auth': localStorage.getItem('bvmm_auth')||'' },
         body: JSON.stringify({ action: 'img-fetch', url: sourceUrl })
@@ -4616,7 +4616,7 @@ function downloadAll(key) {
 
       // Direct fetch — bypass my own interceptor by using _origFetch so I don't
       // accidentally inject x-bvmm-auth onto Cloudflare API calls.
-      var resp = await _origFetch(url, {
+      var resp = await fetch(url, {
         method: 'PUT',
         headers: {
           'Authorization': 'Bearer ' + apiToken,
@@ -4673,7 +4673,7 @@ function downloadAll(key) {
       // PUT /accounts/{account_id}/workers/scripts/{script_name}/secrets
       // Body: { "name": "BVMM_TOOL", "text": "<value>", "type": "secret_text" }
       var url = 'https://api.cloudflare.com/client/v4/accounts/' + CF_ACCOUNT_ID + '/workers/scripts/' + CF_WORKER_NAME + '/secrets';
-      var resp = await _origFetch(url, {
+      var resp = await fetch(url, {
         method: 'PUT',
         headers: {
           'Authorization': 'Bearer ' + apiToken,
@@ -4709,7 +4709,7 @@ function downloadAll(key) {
       // Success — verify end-to-end by hitting the worker with this secret
       st.innerHTML = '<span style="color:#1A0A04">Verifying round-trip...</span>';
       try {
-        var testResp = await _origFetch(WORKER, {
+        var testResp = await fetch(WORKER, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-bvmm-auth': secret },
           body: JSON.stringify({ action: 'kv-get', key: '__sync_verify__' })
