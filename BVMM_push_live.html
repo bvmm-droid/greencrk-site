@@ -228,7 +228,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
     <div class="deploy-row"><span class="deploy-row-name">Meat Market Manager</span><span class="deploy-row-status" id="fs-mgr">Ready</span></div>
   </div>
   <div id="s1" class="step"></div>
-  <button class="secondary-btn" id="openSiteBtn" style="display:none" onclick="window.open('https://greencrk.com','_blank')">→ Open greencrk.com</button>
+  <button class="secondary-btn" id="openSiteBtn" style="display:none" onclick="window.open('https://greencrk.com?t=' + Date.now(), '_blank')">→ Open greencrk.com</button>
   <div id="last-deployed" style="display:none">Last pushed: just now</div>
 
   <!-- GROUP 1: EVERYDAY QUICK ACTIONS -->
@@ -240,7 +240,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
       <button class="action-btn" onclick="quickClose()"><span class="ab-icon">🔒</span>Mark Closed Today</button>
       <button class="action-btn" onclick="quickSpecial()"><span class="ab-icon">⭐</span>Set Today's Special</button>
       <button class="action-btn" onclick="quickClear()"><span class="ab-icon">✕</span>Clear Banner</button>
-      <button class="action-btn" onclick="window.open('https://greencrk.com','_blank')"><span class="ab-icon">👁</span>View Live Site</button>
+      <button class="action-btn" onclick="window.open('https://greencrk.com?t=' + Date.now(), '_blank')"><span class="ab-icon">👁</span>View Live Site</button>
       <button class="action-btn" onclick="undoLast()"><span class="ab-icon">↶</span>Undo Last Change</button>
       <button class="action-btn" onclick="openBulkIncrease()"><span class="ab-icon">📈</span>Bulk Price Increase</button>
     </div>
@@ -254,7 +254,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
     <div class="action-grid" style="grid-template-columns:1fr 1fr;gap:8px">
       <button class="action-btn" onclick="stagingUploadFile()"><span class="ab-icon">📁</span>Upload File to Preview</button>
       <button class="action-btn" onclick="stagingPushPending()"><span class="ab-icon">📋</span>Push Changes to Preview</button>
-      <button class="action-btn" id="stagingOpenBtn" onclick="window.open('https://greencrk.com/preview.html','_blank')" style="grid-column-start:1;grid-column-end:-1"><span class="ab-icon">👁</span>Open Preview in New Tab</button>
+      <button class="action-btn" id="stagingOpenBtn" onclick="window.open('https://greencrk.com/preview.html?t=' + Date.now(), '_blank')" style="grid-column-start:1;grid-column-end:-1"><span class="ab-icon">👁</span>Open Preview (fresh load)</button>
       <button class="action-btn" onclick="stagingPromote()" style="grid-column-start:1;grid-column-end:-1;background:#2E7D32;color:#fff;border-color:#2E7D32"><span class="ab-icon">✅</span>Promote Preview → Live</button>
     </div>
     <div id="stagingStatus" class="step" style="margin-top:10px;display:none"></div>
@@ -283,7 +283,7 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
         <button class="action-btn" id="bvmm-btn-clear"><span class="ab-icon">🧹</span>Clear Stuck State</button>
         <button class="action-btn" id="bvmm-btn-wiz"><span class="ab-icon">🛡</span>Setup Wizard</button>
         <button class="action-btn" id="bvmm-btn-uploadurl" style="grid-column-start: 1; grid-column-end: -1"><span class="ab-icon">📋</span>Copy GitHub Upload URL</button>
-        <button class="action-btn" id="bvmm-btn-update" style="grid-column-start: 1; grid-column-end: -1; background: rgb(46, 125, 50); color: rgb(255, 255, 255); border-color: rgb(46, 125, 50);"><span class="ab-icon">🚀</span>Update Worker (No Cloudflare)</button>
+        <button class="action-btn" id="bvmm-btn-update" onclick="if(typeof bvmmSelfUpdate==='function'){bvmmSelfUpdate()}else{alert('Worker update function not loaded yet. Pull-to-refresh and try again.')}" style="grid-column-start: 1; grid-column-end: -1; background: rgb(46, 125, 50); color: rgb(255, 255, 255); border-color: rgb(46, 125, 50);"><span class="ab-icon">🚀</span>Update Worker (No Cloudflare)</button>
       </div>
       <p class="caption" style="margin-top:12px"><b>Run Diagnostics:</b> Checks 6 things and shows what's broken. <b>Force Reload Tool:</b> Dumps Safari's cache and reloads this page — fixes "button doesn't respond" bugs. <b>Clear Stuck State:</b> If the tool seems frozen mid-push. <b>Setup Wizard:</b> Walks you through tool authentication (rarely needed). <b>Copy GitHub Upload URL:</b> Copies the upload page URL to your clipboard, so you can paste in Safari to drop a new tool version fast. <b>Update Worker:</b> Deploys new Worker code without logging into Cloudflare. Only tap this if someone tells you to.</p>
     </div>
@@ -5331,7 +5331,7 @@ function downloadAll(key) {
 // Secrets: GITHUB_TOKEN, OPENAI_API_KEY, SERP_API_KEY, PEXELS_API_KEY, UNSPLASH_KEY, BVMM_TOOL
 // KV: BVMM_DATA
 
-const ALLOWED_FILES = ['index.html', 'BVMM_push_live.html'];
+const ALLOWED_FILES = ['index.html', 'BVMM_push_live.html', 'preview.html'];
 const ALLOWED_IMG_EXTS = ['jpg','jpeg','png','webp','gif'];
 
 function isAllowedFile(name) {
