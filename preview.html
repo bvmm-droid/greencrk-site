@@ -573,8 +573,8 @@ html{scroll-behavior:smooth;overflow-x:clip}
   --gold2:#8A9FB2;
   --mint:#5C3A2D;
   --white:#2C1810;
-  --mid:rgba(92,58,45,.75);
-  --muted:rgba(92,58,45,.62);
+  --mid:rgba(92,58,45,.55);
+  --muted:rgba(92,58,45,.50);
   --border:rgba(92,58,45,.15);
   --border2:rgba(92,58,45,.08);
 }
@@ -679,8 +679,8 @@ nav .nav-center-logo{
 }
 .hero-eye{font-size:.54rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(44,24,16,.65);font-weight:700;margin-bottom:14px}
 .hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.8rem,7vw,5rem);line-height:1.06;font-weight:700;color:#2C1810;margin-bottom:4px}
-.hero h1 em{display:block;font-style:italic;font-weight:400;color:#6B8970;font-size:clamp(2.2rem,5.5vw,4rem)}
-.hero-sub{font-size:.78rem;color:rgba(44,24,16,.78);line-height:1.85;font-weight:500;letter-spacing:.12em;text-transform:uppercase;max-width:440px;margin:14px auto 28px}
+.hero h1 em{display:block;font-style:italic;font-weight:400;color:#A9B7A0;font-size:clamp(2.2rem,5.5vw,4rem)}
+.hero-sub{font-size:.78rem;color:rgba(44,24,16,.6);line-height:1.85;font-weight:500;letter-spacing:.12em;text-transform:uppercase;max-width:440px;margin:14px auto 28px}
 .hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
 .btn-pill-dark{background:#5C3A2D;color:#F4F1EB;font-family:'Playfair Display',serif;font-size:.95rem;font-style:italic;font-weight:700;padding:14px 34px;border-radius:100px;text-decoration:none;border:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;white-space:nowrap}
 .btn-pill-dark:hover{background:#7a4e3d;transform:translateY(-2px);box-shadow:0 6px 24px rgba(92,58,45,.25)}
@@ -1331,20 +1331,16 @@ footer{background:#0a0806;border-top:1px solid rgba(255,255,255,.07);padding:48p
   border:none;
   border-radius:0;
   padding:8px;
-  color:#2a1810;
+  color:#fff;
   font-family:'Inter',sans-serif;
   font-size:.72rem;
-  font-weight:600;
+  font-weight:500;
   cursor:pointer;
-  transition:opacity .2s, color .3s;
+  transition:opacity .2s;
   white-space:nowrap;
 }
 .nav-search-pill:hover{opacity:.7;}
-.nav-search-pill svg{opacity:.95;flex-shrink:0;stroke-width:2.5}
-
-/* When nav becomes dark floating pill (scrolled), flip text to white for contrast */
-nav.scrolled .nav-search-pill{color:#fff}
-nav.scrolled .nav-search-pill svg{opacity:1}
+.nav-search-pill svg{opacity:.9;flex-shrink:0}
 
 /* ── NAV ICON ANIMATIONS ── */
 @keyframes iconBounce{
@@ -1531,51 +1527,6 @@ nav.scrolled {
 .deli-section{margin-bottom:28px}
 .deli-section-head{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:400;color:var(--white);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .deli-section-sub{font-family:'Inter',sans-serif;font-size:.6rem;font-weight:400;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-left:8px}
-
-/* ═══ PHASE 1 ADDITIONS ═══ */
-
-/* TRUST LINE (single elegant line under header) */
-.trust-line{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-family:'Inter',sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(44,24,16,.92);text-align:center}
-.trust-line a{color:inherit;text-decoration:none}
-.trust-line .dot{color:var(--gold);font-weight:700;margin:0 2px}
-#hoursBadge{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-
-/* STICKY CHIP BAR */
-.chipbar{position:sticky;top:0;z-index:85;background:rgba(17,12,10,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap;padding:10px 12px;display:flex;gap:6px;align-items:center}
-.chipbar::-webkit-scrollbar{display:none}
-.chip{font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,242,236,.95);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:8px 16px;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .18s;flex-shrink:0;min-height:32px;display:inline-flex;align-items:center}
-.chip:hover{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.35)}
-.chip.active{background:var(--gold);color:#1a0a04;border-color:var(--gold);box-shadow:0 2px 8px rgba(169,133,81,.3)}
-
-/* LCARD-MROW — new butcher grid card (photo-on-top, 2-col) */
-.butcher-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 0;margin-bottom:16px}
-.lcard-mrow{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,border-color .15s;-webkit-tap-highlight-color:transparent;position:relative}
-.lcard-mrow:active{transform:scale(.98)}
-.lcard-mrow:hover{border-color:rgba(169,133,81,.35)}
-.lcard-mrow[data-missing="1"]{display:none}
-.lcard-mrow-img{position:relative;width:100%;height:130px;background:var(--card2);overflow:hidden}
-.lcard-mrow-img img{width:100%;height:100%;object-fit:cover;display:block}
-.lcard-mrow-body{padding:10px 12px}
-.lcard-mrow-body .mi-name{font-family:'Cormorant Garamond','Playfair Display',serif;font-size:.95rem;font-weight:600;color:var(--white);line-height:1.25;margin-bottom:6px;letter-spacing:.01em}
-.lcard-mrow-body .mi-price{font-family:'Inter',sans-serif;font-size:.75rem;font-weight:700;color:var(--gold);letter-spacing:.02em}
-.lcard-mrow-body .mi-price.call-price{color:#e8a33d}
-.lcard-mrow-body .mi-price.call-price a{color:inherit;text-decoration:none}
-@media(max-width:360px){.butcher-grid{gap:10px}.lcard-mrow-img{height:110px}.lcard-mrow-body{padding:8px 10px}.lcard-mrow-body .mi-name{font-size:.85rem}}
-
-/* SOLD-OUT OVERLAY */
-.lcard.sold-out,.lcard-mrow.sold-out{position:relative;pointer-events:none;opacity:.75}
-.lcard.sold-out::after,.lcard-mrow.sold-out::after{content:'Sold Out — Back Soon';position:absolute;inset:0;background:rgba(0,0,0,.72);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-radius:inherit;text-align:center;padding:10px}
-
-/* ORDER SHEET NOTES TEXTAREA */
-.os-notes-wrap{margin:14px 0 6px}
-.os-notes-label{display:block;font-family:'Inter',sans-serif;font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.os-notes-input{width:100%;min-height:60px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Inter',sans-serif;font-size:.82rem;color:var(--white);resize:vertical;-webkit-appearance:none}
-.os-notes-input::placeholder{color:rgba(245,242,236,.4)}
-.os-notes-input:focus{outline:none;border-color:var(--gold)}
-
-/* MGROUP FILTERING (for chip bar) */
-.mgroup[data-cat-hidden="1"]{display:none}
-/* ═══ END PHASE 1 ADDITIONS ═══ */
 </style>
 </head>
 <body>
@@ -1604,17 +1555,6 @@ nav.scrolled {
   </div>
 
 </nav>
-
-<!-- TRUST LINE — Phase 1 (moved to very top, under nav) -->
-<div class="trust-line">
-  <span>Est. 1983</span>
-  <span class="dot">·</span>
-  <span>Family Owned</span>
-  <span class="dot">·</span>
-  <a href="https://www.google.com/maps/place/?q=place_id:ChIJuWRRQdXS6YkReKv6IeiuifA" target="_blank">⭐ 4.7 (90 Google reviews)</a>
-  <span class="dot">·</span>
-  <span id="hoursBadge"></span>
-</div>
 
 <!-- SEARCH DROPDOWN -->
 <div class="search-drop" id="searchDrop">
@@ -1650,7 +1590,7 @@ nav.scrolled {
 
     <div style="display:flex;flex-direction:row;gap:10px;justify-content:center;margin-top:4px">
       <a href="javascript:void(0)" onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})" style="background:var(--gold);color:#111;font-family:'Playfair Display',serif;font-size:.85rem;font-style:italic;font-weight:600;padding:12px 24px;border-radius:100px;border:none;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;flex-shrink:0">View Our Menu</a>
-      <a href="javascript:void(0)" onclick="document.getElementById('catering').scrollIntoView({behavior:'smooth'})" style="background:transparent;color:#2a1810;font-family:'Playfair Display',serif;font-size:.85rem;font-style:italic;font-weight:600;padding:12px 24px;border-radius:100px;border:1.5px solid rgba(42,24,16,.4);text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;flex-shrink:0">Catering &amp; Events</a>
+      <a href="javascript:void(0)" onclick="document.getElementById('catering').scrollIntoView({behavior:'smooth'})" style="background:transparent;color:#f5f2ec;font-family:'Playfair Display',serif;font-size:.85rem;font-style:italic;padding:12px 24px;border-radius:100px;border:1px solid rgba(255,255,255,.5);text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;flex-shrink:0">Catering &amp; Events</a>
     </div>
   </div>
 </section>
@@ -1697,6 +1637,16 @@ nav.scrolled {
   </div>
 </div>
 
+<!-- TRUST BAR -->
+<div class="trust">
+  <div class="trust-item reveal reveal-delay-1">USDA Prime</div>
+  <div class="trust-item reveal reveal-delay-2">Dry-Aged</div>
+  <div class="trust-item reveal reveal-delay-3">House-Made</div>
+  <div class="trust-item reveal reveal-delay-4">Est. 1983</div>
+  <div class="trust-item reveal reveal-delay-5"><a href="https://www.google.com/maps/place/?q=place_id:ChIJuWRRQdXS6YkReKv6IeiuifA" target="_blank" style="color:inherit;text-decoration:none">⭐ 4.7 Google (90 reviews)</a></div>
+  <div class="trust-item reveal reveal-delay-6" id="hoursBadge"></div>
+</div>
+
 <!-- SHOP THE COUNTER -->
 <div id="showcase">
   <div class="showcase-inner">
@@ -1739,21 +1689,6 @@ nav.scrolled {
 </div>
 
 <!-- LUNCH SPECIALS -->
-
-
-<!-- CHIP BAR — Phase 1 sticky category nav -->
-<div class="chipbar" id="chipBar">
-  <button class="chip active" onclick="chipSelect(this,'all')">All</button>
-  <button class="chip" onclick="chipSelect(this,'beef')">Beef</button>
-  <button class="chip" onclick="chipSelect(this,'pork')">Pork</button>
-  <button class="chip" onclick="chipSelect(this,'chicken')">Chicken</button>
-  <button class="chip" onclick="chipSelect(this,'lamb')">Lamb</button>
-  <button class="chip" onclick="chipSelect(this,'seafood')">Seafood</button>
-  <button class="chip" onclick="chipSelect(this,'deli')">Deli</button>
-  <button class="chip" onclick="chipSelect(this,'heroes')">Heroes</button>
-  <button class="chip" onclick="chipSelect(this,'catering')">Catering</button>
-</div>
-<!-- END CHIP BAR -->
 
 <!-- MENU (restructured: 4 tabs) -->
 <section class="section" id="menu" style="background:var(--bg2)">
@@ -1953,100 +1888,110 @@ nav.scrolled {
         </div>
         <div style="margin-top:14px"><a href="tel:+16316690612" style="display:inline-flex;align-items:center;gap:6px;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);text-decoration:none;border:1px solid rgba(169,183,160,.3);padding:7px 14px;border-radius:100px">(631) 669-0612 — Ask About Wagyu</a></div>
       </div>
-      <div class="mgroup" data-cat="beef" id="mg-steaks">
+      <div class="mgroup">
         <div class="mgroup-head">Steaks</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Prime Dry Aged Porterhouse',49.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/prime-dry-aged-porterhouse.webp" alt="Prime Dry Aged Porterhouse" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Prime Dry Aged Porterhouse</div><div class="lcard-desc" style="font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.35">Dry aged in-house</div><div class="mi-price">$100.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Prime T-Bone',49.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/prime-t-bone.webp" alt="Prime T-Bone" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Prime T-Bone</div><div class="mi-price">$100.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Bone-In Rib Eye',49.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/bone-in-rib-eye.webp" alt="Bone-In Rib Eye" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Bone-In Rib Eye</div><div class="mi-price">$100.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Boneless Prime Rib Eye',59.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/boneless-prime-rib-eye.webp" alt="Boneless Prime Rib Eye" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Boneless Prime Rib Eye</div><div class="mi-price">$300.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Prime Dry Aged Shell Steak',49.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/prime-dry-aged-shell-steak.webp" alt="Prime Dry Aged Shell Steak" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Prime Dry Aged Shell Steak</div><div class="mi-price">$100.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Prime Sirloin Steak',32.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/prime-sirloin-steak.webp" alt="Prime Sirloin Steak" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Prime Sirloin Steak</div><div class="mi-price">$32.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Prime Filet Mignon',34.50,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/prime-filet-mignon.webp" alt="Prime Filet Mignon" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Prime Filet Mignon</div><div class="mi-price">$34.50</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Skirt Steak (Prime)',45.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/skirt-steak-prime.webp" alt="Skirt Steak (Prime)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Skirt Steak (Prime)</div><div class="mi-price">$45.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Flank Steak (Prime)',22.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/flank-steak-prime.webp" alt="Flank Steak (Prime)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Flank Steak (Prime)</div><div class="mi-price">$22.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Western London Broil',29.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/western-london-broil.webp" alt="Western London Broil" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Western London Broil</div><div class="mi-price">$29.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('London Broil (Prime Top Round)',19.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/london-broil-prime-top-round.webp" alt="London Broil (Prime Top Round)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">London Broil (Prime Top Round)</div><div class="mi-price">$19.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Pepper Steak (Prime)',18.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/pepper-steak-prime.webp" alt="Pepper Steak (Prime)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Pepper Steak (Prime)</div><div class="mi-price">$18.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Marinated Beef Strips',18.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/marinated-beef-strips.webp" alt="Marinated Beef Strips" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Marinated Beef Strips</div><div class="mi-price">$18.00</div></div></div></div></div>
-      <div class="mgroup" data-cat="beef" id="mg-roasts">
+        <div class="mrow" onclick="openOrderSheet('Prime Dry Aged Porterhouse',49.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1544025162-d76694265947?w=60&h=60&fit=crop&q=80" alt="Prime Dry Aged Porterhouse" loading="lazy"><div><div class="mi-name">Prime Dry Aged Porterhouse</div><div class="mi-desc">Dry aged in-house</div></div><div class="mi-price">$100.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Prime T-Bone',49.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1544025162-d76694265947?w=60&h=60&fit=crop&q=80" alt="Prime T-Bone" loading="lazy"><div><div class="mi-name">Prime T-Bone</div></div><div class="mi-price">$100.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Bone-In Rib Eye',49.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Bone-In Rib Eye" loading="lazy"><div><div class="mi-name">Bone-In Rib Eye</div></div><div class="mi-price">$100.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Boneless Prime Rib Eye',59.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Boneless Prime Rib Eye" loading="lazy"><div><div class="mi-name">Boneless Prime Rib Eye</div></div><div class="mi-price">$300.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Prime Dry Aged Shell Steak',49.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=60&h=60&fit=crop&q=80" alt="Prime Dry Aged Shell Steak" loading="lazy"><div><div class="mi-name">Prime Dry Aged Shell Steak</div></div><div class="mi-price">$100.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Prime Sirloin Steak',32.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=60&h=60&fit=crop&q=80" alt="Prime Sirloin Steak" loading="lazy"><div><div class="mi-name">Prime Sirloin Steak</div></div><div class="mi-price">$32.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Prime Filet Mignon',34.50,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=60&h=60&fit=crop&q=80" alt="Prime Filet Mignon" loading="lazy"><div><div class="mi-name">Prime Filet Mignon</div></div><div class="mi-price">$34.50</div></div>
+        <div class="mrow" onclick="openOrderSheet('Skirt Steak (Prime)',45.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=60&h=60&fit=crop&q=80" alt="Skirt Steak (Prime)" loading="lazy"><div><div class="mi-name">Skirt Steak (Prime)</div></div><div class="mi-price">$45.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Flank Steak (Prime)',22.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=60&h=60&fit=crop&q=80" alt="Flank Steak (Prime)" loading="lazy"><div><div class="mi-name">Flank Steak (Prime)</div></div><div class="mi-price">$22.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Western London Broil',29.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1606728035253-49e8a23146de?w=60&h=60&fit=crop&q=80" alt="Western London Broil" loading="lazy"><div><div class="mi-name">Western London Broil</div></div><div class="mi-price">$29.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('London Broil (Prime Top Round)',19.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1606728035253-49e8a23146de?w=60&h=60&fit=crop&q=80" alt="London Broil (Prime Top Round)" loading="lazy"><div><div class="mi-name">London Broil (Prime Top Round)</div></div><div class="mi-price">$19.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Pepper Steak (Prime)',18.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Pepper Steak (Prime)" loading="lazy"><div><div class="mi-name">Pepper Steak (Prime)</div></div><div class="mi-price">$18.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Marinated Beef Strips',18.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=60&h=60&fit=crop&q=80" alt="Marinated Beef Strips" loading="lazy"><div><div class="mi-name">Marinated Beef Strips</div></div><div class="mi-price">$18.00</div></div>
+      </div>
+      <div class="mgroup">
         <div class="mgroup-head">Roasts</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Bone-In Prime Rib',147.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/bone-in-prime-rib.webp" alt="Bone-In Prime Rib" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Bone-In Prime Rib</div><div class="mi-price">$147.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Boneless Prime Rib',59.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/boneless-prime-rib.webp" alt="Boneless Prime Rib" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Boneless Prime Rib</div><div class="mi-price">$300.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Prime Filet Roast',69.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/prime-filet-roast.webp" alt="Prime Filet Roast" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Prime Filet Roast</div><div class="mi-price">$69.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Roast Beef (Prime Top Round)',57.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/roast-beef-prime-top-round.webp" alt="Roast Beef (Prime Top Round)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Roast Beef (Prime Top Round)</div><div class="mi-price">$57.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Prime French Pot Roast',16.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/prime-french-pot-roast.webp" alt="Prime French Pot Roast" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Prime French Pot Roast</div><div class="mi-price">$16.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Prime Brisket',24.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/prime-brisket.webp" alt="Prime Brisket" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Prime Brisket</div><div class="mi-price">$24.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Silver Tip (Prime)',18.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/silver-tip-prime.webp" alt="Silver Tip (Prime)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Silver Tip (Prime)</div><div class="mi-price">$18.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Eye Round (Prime)',16.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/eye-round-prime.webp" alt="Eye Round (Prime)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Eye Round (Prime)</div><div class="mi-price">$16.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Bottom Round Prime',14.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/bottom-round-prime.webp" alt="Bottom Round Prime" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Bottom Round Prime</div><div class="mi-price">$14.00</div></div></div></div></div>
-      <div class="mgroup" data-cat="beef" id="mg-ground-other">
+        <div class="mrow" onclick="openOrderSheet('Bone-In Prime Rib',147.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Bone-In Prime Rib" loading="lazy"><div><div class="mi-name">Bone-In Prime Rib</div></div><div class="mi-price">$147.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Boneless Prime Rib',59.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Boneless Prime Rib" loading="lazy"><div><div class="mi-name">Boneless Prime Rib</div></div><div class="mi-price">$300.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Prime Filet Roast',69.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=60&h=60&fit=crop&q=80" alt="Prime Filet Roast" loading="lazy"><div><div class="mi-name">Prime Filet Roast</div></div><div class="mi-price">$69.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Roast Beef (Prime Top Round)',57.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Roast Beef (Prime Top Round)" loading="lazy"><div><div class="mi-name">Roast Beef (Prime Top Round)</div></div><div class="mi-price">$57.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Prime French Pot Roast',16.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=60&h=60&fit=crop&q=80" alt="Prime French Pot Roast" loading="lazy"><div><div class="mi-name">Prime French Pot Roast</div></div><div class="mi-price">$16.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Prime Brisket',24.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Prime Brisket" loading="lazy"><div><div class="mi-name">Prime Brisket</div></div><div class="mi-price">$24.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Silver Tip (Prime)',18.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Silver Tip (Prime)" loading="lazy"><div><div class="mi-name">Silver Tip (Prime)</div></div><div class="mi-price">$18.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Eye Round (Prime)',16.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Eye Round (Prime)" loading="lazy"><div><div class="mi-name">Eye Round (Prime)</div></div><div class="mi-price">$16.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Bottom Round Prime',14.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Bottom Round Prime" loading="lazy"><div><div class="mi-name">Bottom Round Prime</div></div><div class="mi-price">$14.00</div></div>
+      </div>
+      <div class="mgroup">
         <div class="mgroup-head">Ground &amp; Other</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Ground Beef (Prime)',15.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/ground-beef-prime.webp" alt="Ground Beef (Prime)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Ground Beef (Prime)</div><div class="mi-price">$15.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Box of Prime Burgers',39.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/box-of-prime-burgers.webp" alt="Box of Prime Burgers" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Box of Prime Burgers</div><div class="mi-price">$39.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Stew Beef (Prime)',18.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/stew-beef-prime.webp" alt="Stew Beef (Prime)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Stew Beef (Prime)</div><div class="mi-price">$18.00</div></div></div></div></div>
+        <div class="mrow" onclick="openOrderSheet('Ground Beef (Prime)',15.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=60&h=60&fit=crop&q=80" alt="Ground Beef (Prime)" loading="lazy"><div><div class="mi-name">Ground Beef (Prime)</div></div><div class="mi-price">$15.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Box of Prime Burgers',39.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=60&h=60&fit=crop&q=80" alt="Box of Prime Burgers" loading="lazy"><div><div class="mi-name">Box of Prime Burgers</div></div><div class="mi-price">$39.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Stew Beef (Prime)',18.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Stew Beef (Prime)" loading="lazy"><div><div class="mi-name">Stew Beef (Prime)</div></div><div class="mi-price">$18.00</div></div>
+      </div>
     </div>
 
     <!-- POULTRY & PORK (combines old Veal/Pork + Poultry tabs) -->
-      <div class="mgroup" data-cat="chicken" id="mg-chicken" style="margin-top:24px">
+      <div class="mgroup" style="margin-top:24px">
         <div class="mgroup-head">Chicken</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Whole Chicken (All Natural)',19.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/whole-chicken-all-natural.webp" alt="Whole Chicken (All Natural)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Whole Chicken (All Natural)</div><div class="mi-price">$19.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Boneless / Skinless Chicken Breast',12.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/boneless-skinless-chicken-breast.webp" alt="Boneless / Skinless Chicken Breast" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Boneless / Skinless Chicken Breast</div><div class="mi-price">$12.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Legs &amp; Thighs',9.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/legs-thighs.webp" alt="Legs &amp; Thighs" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Legs &amp; Thighs</div><div class="mi-price">$9.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Wings',7.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/wings.webp" alt="Wings" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Wings</div><div class="mi-price">$7.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Chicken Sausage',10.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/chicken-sausage.webp" alt="Chicken Sausage" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Chicken Sausage</div><div class="mi-price">$10.00</div></div></div></div></div>
-      <div class="mgroup" data-cat="chicken" id="mg-turkey">
+        <div class="mrow" onclick="openOrderSheet('Whole Chicken (All Natural)',19.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=60&h=60&fit=crop&q=80" alt="Whole Chicken (All Natural)" loading="lazy"><div><div class="mi-name">Whole Chicken (All Natural)</div></div><div class="mi-price">$19.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Boneless / Skinless Chicken Breast',12.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=60&h=60&fit=crop&q=80" alt="Boneless / Skinless Chicken Breast" loading="lazy"><div><div class="mi-name">Boneless / Skinless Chicken Breast</div></div><div class="mi-price">$12.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Legs &amp; Thighs',9.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=60&h=60&fit=crop&q=80" alt="Legs &amp; Thighs" loading="lazy"><div><div class="mi-name">Legs &amp; Thighs</div></div><div class="mi-price">$9.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Wings',7.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=60&h=60&fit=crop&q=80" alt="Wings" loading="lazy"><div><div class="mi-name">Wings</div></div><div class="mi-price">$7.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Chicken Sausage',10.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=60&h=60&fit=crop&q=80" alt="Chicken Sausage" loading="lazy"><div><div class="mi-name">Chicken Sausage</div></div><div class="mi-price">$10.00</div></div>
+      </div>
+      <div class="mgroup">
         <div class="mgroup-head">Turkey</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Boneless Turkey Breast (All Natural)',17.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/boneless-turkey-breast-all-natural.webp" alt="Boneless Turkey Breast (All Natural)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Boneless Turkey Breast (All Natural)</div><div class="mi-price">$17.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Bone-In Turkey Breast',12.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/bone-in-turkey-breast.webp" alt="Bone-In Turkey Breast" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Bone-In Turkey Breast</div><div class="mi-price">$12.00</div></div></div></div></div>
-      <div class="mgroup" data-cat="beef" id="mg-veal">
+        <div class="mrow" onclick="openOrderSheet('Boneless Turkey Breast (All Natural)',17.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=60&h=60&fit=crop&q=80" alt="Boneless Turkey Breast (All Natural)" loading="lazy"><div><div class="mi-name">Boneless Turkey Breast (All Natural)</div></div><div class="mi-price">$17.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Bone-In Turkey Breast',12.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=60&h=60&fit=crop&q=80" alt="Bone-In Turkey Breast" loading="lazy"><div><div class="mi-name">Bone-In Turkey Breast</div></div><div class="mi-price">$12.00</div></div>
+      </div>
+      <div class="mgroup">
         <div class="mgroup-head">Veal</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Top Round Veal Cutlets',36.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/top-round-veal-cutlets.webp" alt="Top Round Veal Cutlets" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Top Round Veal Cutlets</div><div class="lcard-desc" style="font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.35">Hand-pounded to order</div><div class="mi-price">$36.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Osso Bucco',35.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/osso-bucco.webp" alt="Osso Bucco" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Osso Bucco</div><div class="lcard-desc" style="font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.35">Bone-in cross cuts for braising</div><div class="mi-price">$35.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Veal For Stew',21.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/veal-for-stew.webp" alt="Veal For Stew" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Veal For Stew</div><div class="mi-price">$21.00</div></div></div></div></div>
-      <div class="mgroup" data-cat="pork" id="mg-berkshire-pork">
+        <div class="mrow" onclick="openOrderSheet('Top Round Veal Cutlets',36.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Top Round Veal Cutlets" loading="lazy"><div><div class="mi-name">Top Round Veal Cutlets</div><div class="mi-desc">Hand-pounded to order</div></div><div class="mi-price">$36.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Osso Bucco',35.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Osso Bucco" loading="lazy"><div><div class="mi-name">Osso Bucco</div><div class="mi-desc">Bone-in cross cuts for braising</div></div><div class="mi-price">$35.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Veal For Stew',21.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=60&h=60&fit=crop&q=80" alt="Veal For Stew" loading="lazy"><div><div class="mi-name">Veal For Stew</div></div><div class="mi-price">$21.00</div></div>
+      </div>
+      <div class="mgroup">
         <div class="mgroup-head">Berkshire Pork</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Bone-In Berkshire Pork Chop',21.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/bone-in-berkshire-pork-chop.webp" alt="Bone-In Berkshire Pork Chop" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Bone-In Berkshire Pork Chop</div><div class="mi-price">$21.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Boneless Berkshire Pork Chop',24.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/boneless-berkshire-pork-chop.webp" alt="Boneless Berkshire Pork Chop" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Boneless Berkshire Pork Chop</div><div class="mi-price">$24.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Bone-In Berkshire Pork Roast',42.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/bone-in-berkshire-pork-roast.webp" alt="Bone-In Berkshire Pork Roast" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Bone-In Berkshire Pork Roast</div><div class="mi-price">$42.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Boneless Berkshire Pork Roast',28.80,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/boneless-berkshire-pork-roast.webp" alt="Boneless Berkshire Pork Roast" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Boneless Berkshire Pork Roast</div><div class="mi-price">$28.80</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Pork Tenderloin',12.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/pork-tenderloin.webp" alt="Pork Tenderloin" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Pork Tenderloin</div><div class="mi-price">$12.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Pork Tenderloin Cutlets',20.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/pork-tenderloin-cutlets.webp" alt="Pork Tenderloin Cutlets" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Pork Tenderloin Cutlets</div><div class="mi-price">$20.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Pork Belly (Boneless)',14.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/pork-belly-boneless.webp" alt="Pork Belly (Boneless)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Pork Belly (Boneless)</div><div class="mi-price">$14.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Pork Bracioles',12.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/pork-bracioles.webp" alt="Pork Bracioles" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Pork Bracioles</div><div class="mi-price">$12.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Baby Back Ribs',9.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/baby-back-ribs.webp" alt="Baby Back Ribs" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Baby Back Ribs</div><div class="mi-price">$9.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('St. Louis Ribs',8.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/st-louis-ribs.webp" alt="St. Louis Ribs" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">St. Louis Ribs</div><div class="mi-price">$8.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Bone-In Pork Butt',7.98,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/bone-in-pork-butt.webp" alt="Bone-In Pork Butt" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Bone-In Pork Butt</div><div class="mi-price">$7.98</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Boneless Pork Butt',4.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/boneless-pork-butt.webp" alt="Boneless Pork Butt" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Boneless Pork Butt</div><div class="mi-price">$4.99</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Fresh Ham Bone-In',3.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/fresh-ham-bone-in.webp" alt="Fresh Ham Bone-In" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Fresh Ham Bone-In</div><div class="mi-price">$3.99</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Fresh Ham Boneless',17.97,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/fresh-ham-boneless.webp" alt="Fresh Ham Boneless" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Fresh Ham Boneless</div><div class="mi-price">$17.97</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Sausage',10.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/sausage.webp" alt="Sausage" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Sausage</div><div class="lcard-desc" style="font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.35">Sweet or hot, house-made</div><div class="mi-price">$10.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Chevalatta (Ring Sausage)',22.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/chevalatta-ring-sausage.webp" alt="Chevalatta (Ring Sausage)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Chevalatta (Ring Sausage)</div><div class="mi-price">$22.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Baked Potato Sausage',12.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/baked-potato-sausage.webp" alt="Baked Potato Sausage" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Baked Potato Sausage</div><div class="mi-price">$12.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Double Smoked Bacon',24.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/double-smoked-bacon.webp" alt="Double Smoked Bacon" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Double Smoked Bacon</div><div class="mi-price">$24.00</div></div></div></div></div>
-      <div class="mgroup" data-cat="lamb" id="mg-lamb">
+        <div class="mrow" onclick="openOrderSheet('Bone-In Berkshire Pork Chop',21.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Bone-In Berkshire Pork Chop" loading="lazy"><div><div class="mi-name">Bone-In Berkshire Pork Chop</div></div><div class="mi-price">$21.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Boneless Berkshire Pork Chop',24.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Boneless Berkshire Pork Chop" loading="lazy"><div><div class="mi-name">Boneless Berkshire Pork Chop</div></div><div class="mi-price">$24.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Bone-In Berkshire Pork Roast',42.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Bone-In Berkshire Pork Roast" loading="lazy"><div><div class="mi-name">Bone-In Berkshire Pork Roast</div></div><div class="mi-price">$42.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Boneless Berkshire Pork Roast',28.80,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Boneless Berkshire Pork Roast" loading="lazy"><div><div class="mi-name">Boneless Berkshire Pork Roast</div></div><div class="mi-price">$28.80</div></div>
+        <div class="mrow" onclick="openOrderSheet('Pork Tenderloin',12.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=60&h=60&fit=crop&q=80" alt="Pork Tenderloin" loading="lazy"><div><div class="mi-name">Pork Tenderloin</div></div><div class="mi-price">$12.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Pork Tenderloin Cutlets',20.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Pork Tenderloin Cutlets" loading="lazy"><div><div class="mi-name">Pork Tenderloin Cutlets</div></div><div class="mi-price">$20.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Pork Belly (Boneless)',14.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Pork Belly (Boneless)" loading="lazy"><div><div class="mi-name">Pork Belly (Boneless)</div></div><div class="mi-price">$14.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Pork Bracioles',12.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Pork Bracioles" loading="lazy"><div><div class="mi-name">Pork Bracioles</div></div><div class="mi-price">$12.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Baby Back Ribs',9.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=60&h=60&fit=crop&q=80" alt="Baby Back Ribs" loading="lazy"><div><div class="mi-name">Baby Back Ribs</div></div><div class="mi-price">$9.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('St. Louis Ribs',8.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=60&h=60&fit=crop&q=80" alt="St. Louis Ribs" loading="lazy"><div><div class="mi-name">St. Louis Ribs</div></div><div class="mi-price">$8.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Bone-In Pork Butt',7.98,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Bone-In Pork Butt" loading="lazy"><div><div class="mi-name">Bone-In Pork Butt</div></div><div class="mi-price">$7.98</div></div>
+        <div class="mrow" onclick="openOrderSheet('Boneless Pork Butt',4.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=60&h=60&fit=crop&q=80" alt="Boneless Pork Butt" loading="lazy"><div><div class="mi-name">Boneless Pork Butt</div></div><div class="mi-price">$4.99</div></div>
+        <div class="mrow" onclick="openOrderSheet('Fresh Ham Bone-In',3.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1519984388953-d2406bc725e1?w=60&h=60&fit=crop&q=80" alt="Fresh Ham Bone-In" loading="lazy"><div><div class="mi-name">Fresh Ham Bone-In</div></div><div class="mi-price">$3.99</div></div>
+        <div class="mrow" onclick="openOrderSheet('Fresh Ham Boneless',17.97,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1519984388953-d2406bc725e1?w=60&h=60&fit=crop&q=80" alt="Fresh Ham Boneless" loading="lazy"><div><div class="mi-name">Fresh Ham Boneless</div></div><div class="mi-price">$17.97</div></div>
+        <div class="mrow" onclick="openOrderSheet('Sausage',10.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=60&h=60&fit=crop&q=80" alt="Sausage" loading="lazy"><div><div class="mi-name">Sausage</div><div class="mi-desc">Sweet or hot, house-made</div></div><div class="mi-price">$10.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Chevalatta (Ring Sausage)',22.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=60&h=60&fit=crop&q=80" alt="Chevalatta (Ring Sausage)" loading="lazy"><div><div class="mi-name">Chevalatta (Ring Sausage)</div></div><div class="mi-price">$22.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Baked Potato Sausage',12.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=60&h=60&fit=crop&q=80" alt="Baked Potato Sausage" loading="lazy"><div><div class="mi-name">Baked Potato Sausage</div></div><div class="mi-price">$12.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Double Smoked Bacon',24.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=60&h=60&fit=crop&q=80" alt="Double Smoked Bacon" loading="lazy"><div><div class="mi-name">Double Smoked Bacon</div></div><div class="mi-price">$24.00</div></div>
+      </div>
+      <div class="mgroup">
         <div class="mgroup-head">Lamb</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Lamb Chops — Rib',42.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/lamb-chops-rib.webp" alt="Lamb Chops — Rib" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Lamb Chops — Rib</div><div class="mi-price">$42.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Bone-In Leg of Lamb',22.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/bone-in-leg-of-lamb.webp" alt="Bone-In Leg of Lamb" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Bone-In Leg of Lamb</div><div class="mi-price">$22.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Boneless American Leg of Lamb',26.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/boneless-american-leg-of-lamb.webp" alt="Boneless American Leg of Lamb" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Boneless American Leg of Lamb</div><div class="mi-price">$26.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Lamb Shanks',20.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/lamb-shanks.webp" alt="Lamb Shanks" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Lamb Shanks</div><div class="mi-price">$20.00</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Ground Lamb',16.00,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/ground-lamb.webp" alt="Ground Lamb" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Ground Lamb</div><div class="mi-price">$16.00</div></div></div></div></div>
+        <div class="mrow" onclick="openOrderSheet('Lamb Chops — Rib',42.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=60&h=60&fit=crop&q=80" alt="Lamb Chops — Rib" loading="lazy"><div><div class="mi-name">Lamb Chops — Rib</div></div><div class="mi-price">$42.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Bone-In Leg of Lamb',22.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=60&h=60&fit=crop&q=80" alt="Bone-In Leg of Lamb" loading="lazy"><div><div class="mi-name">Bone-In Leg of Lamb</div></div><div class="mi-price">$22.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Boneless American Leg of Lamb',26.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=60&h=60&fit=crop&q=80" alt="Boneless American Leg of Lamb" loading="lazy"><div><div class="mi-name">Boneless American Leg of Lamb</div></div><div class="mi-price">$26.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Lamb Shanks',20.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=60&h=60&fit=crop&q=80" alt="Lamb Shanks" loading="lazy"><div><div class="mi-name">Lamb Shanks</div></div><div class="mi-price">$20.00</div></div>
+        <div class="mrow" onclick="openOrderSheet('Ground Lamb',16.00,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=60&h=60&fit=crop&q=80" alt="Ground Lamb" loading="lazy"><div><div class="mi-name">Ground Lamb</div></div><div class="mi-price">$16.00</div></div>
+      </div>
 
     <!-- SEAFOOD -->
-      <div class="mgroup" data-cat="seafood" id="mg-fish">
+      <div class="mgroup">
         <div class="mgroup-head">Fish</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Salmon Fillet',12.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/salmon-fillet.webp" alt="Salmon Fillet" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Salmon Fillet</div><div class="lcard-desc" style="font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.35">Atlantic, skin-on or skinless</div><div class="mi-price">$12.99/lb</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Tilapia Fillet',7.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/tilapia-fillet.webp" alt="Tilapia Fillet" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Tilapia Fillet</div><div class="mi-price">$7.99/lb</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Flounder / Sole',9.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/flounder-sole.webp" alt="Flounder / Sole" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Flounder / Sole</div><div class="mi-price">$9.99/lb</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Swordfish Steak',14.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/swordfish-steak.webp" alt="Swordfish Steak" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Swordfish Steak</div><div class="mi-price">$14.99/lb</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Tuna Steak',15.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/tuna-steak.webp" alt="Tuna Steak" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Tuna Steak</div><div class="mi-price">$15.99/lb</div></div></div></div></div>
-      <div class="mgroup" data-cat="seafood" id="mg-shellfish">
+        <div class="mrow" onclick="openOrderSheet('Salmon Fillet',12.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?w=60&h=60&fit=crop&q=80" alt="Salmon Fillet" loading="lazy"><div><div class="mi-name">Salmon Fillet</div><div class="mi-desc">Atlantic, skin-on or skinless</div></div><div class="mi-price">$12.99/lb</div></div>
+        <div class="mrow" onclick="openOrderSheet('Tilapia Fillet',7.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?w=60&h=60&fit=crop&q=80" alt="Tilapia Fillet" loading="lazy"><div><div class="mi-name">Tilapia Fillet</div></div><div class="mi-price">$7.99/lb</div></div>
+        <div class="mrow" onclick="openOrderSheet('Flounder / Sole',9.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?w=60&h=60&fit=crop&q=80" alt="Flounder / Sole" loading="lazy"><div><div class="mi-name">Flounder / Sole</div></div><div class="mi-price">$9.99/lb</div></div>
+        <div class="mrow" onclick="openOrderSheet('Swordfish Steak',14.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1506354666786-959d6d497f1a?w=60&h=60&fit=crop&q=80" alt="Swordfish Steak" loading="lazy"><div><div class="mi-name">Swordfish Steak</div></div><div class="mi-price">$14.99/lb</div></div>
+        <div class="mrow" onclick="openOrderSheet('Tuna Steak',15.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=60&h=60&fit=crop&q=80" alt="Tuna Steak" loading="lazy"><div><div class="mi-name">Tuna Steak</div></div><div class="mi-price">$15.99/lb</div></div>
+      </div>
+      <div class="mgroup">
         <div class="mgroup-head">Shellfish</div>
-        <div class="butcher-grid"><div class="lcard-mrow" onclick="openOrderSheet('Jumbo Shrimp (16-20 ct)',13.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/jumbo-shrimp-16-20-ct.webp" alt="Jumbo Shrimp (16-20 ct)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Jumbo Shrimp (16-20 ct)</div><div class="mi-price">$13.99/lb</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Large Shrimp (21-25 ct)',11.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/large-shrimp-21-25-ct.webp" alt="Large Shrimp (21-25 ct)" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Large Shrimp (21-25 ct)</div><div class="mi-price">$11.99/lb</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Sea Scallops',18.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/sea-scallops.webp" alt="Sea Scallops" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Sea Scallops</div><div class="mi-price">$18.99/lb</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Lump Crab Meat',19.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/lump-crab-meat.webp" alt="Lump Crab Meat" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Lump Crab Meat</div><div class="mi-price">$19.99/lb</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Stuffed Clams',2.99,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/stuffed-clams.webp" alt="Stuffed Clams" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Stuffed Clams</div><div class="lcard-desc" style="font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.35">House-made, per piece</div><div class="mi-price">$2.99 ea</div></div></div>
-        <div class="lcard-mrow" onclick="openOrderSheet('Stuffed Shrimp',3.49,'','Butcher')"><div class="lcard-mrow-img"><img class="mi-thumb" src="images/stuffed-shrimp.webp" alt="Stuffed Shrimp" loading="lazy" onerror="this.closest('.lcard-mrow').setAttribute('data-missing','1')"></div><div class="lcard-mrow-body"><div class="mi-name">Stuffed Shrimp</div><div class="lcard-desc" style="font-size:.7rem;color:var(--muted);margin-top:4px;line-height:1.35">Crab stuffed, per piece</div><div class="mi-price">$3.49 ea</div></div></div></div></div>
+        <div class="mrow" onclick="openOrderSheet('Jumbo Shrimp (16-20 ct)',13.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=60&h=60&fit=crop&q=80" alt="Jumbo Shrimp (16-20 ct)" loading="lazy"><div><div class="mi-name">Jumbo Shrimp (16-20 ct)</div></div><div class="mi-price">$13.99/lb</div></div>
+        <div class="mrow" onclick="openOrderSheet('Large Shrimp (21-25 ct)',11.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=60&h=60&fit=crop&q=80" alt="Large Shrimp (21-25 ct)" loading="lazy"><div><div class="mi-name">Large Shrimp (21-25 ct)</div></div><div class="mi-price">$11.99/lb</div></div>
+        <div class="mrow" onclick="openOrderSheet('Sea Scallops',18.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1560717789-0ac7b4033d5c?w=60&h=60&fit=crop&q=80" alt="Sea Scallops" loading="lazy"><div><div class="mi-name">Sea Scallops</div></div><div class="mi-price">$18.99/lb</div></div>
+        <div class="mrow" onclick="openOrderSheet('Lump Crab Meat',19.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1559847844-5315695dadae?w=60&h=60&fit=crop&q=80" alt="Lump Crab Meat" loading="lazy"><div><div class="mi-name">Lump Crab Meat</div></div><div class="mi-price">$19.99/lb</div></div>
+        <div class="mrow" onclick="openOrderSheet('Stuffed Clams',2.99,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1560717789-0ac7b4033d5c?w=60&h=60&fit=crop&q=80" alt="Stuffed Clams" loading="lazy"><div><div class="mi-name">Stuffed Clams</div><div class="mi-desc">House-made, per piece</div></div><div class="mi-price">$2.99 ea</div></div>
+        <div class="mrow" onclick="openOrderSheet('Stuffed Shrimp',3.49,'','Butcher')"><img class="mi-thumb" src="https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=60&h=60&fit=crop&q=80" alt="Stuffed Shrimp" loading="lazy"><div><div class="mi-name">Stuffed Shrimp</div><div class="mi-desc">Crab stuffed, per piece</div></div><div class="mi-price">$3.49 ea</div></div>
+      </div>
 
     <!-- KITCHEN (pasta, apps, salads, sides, soups) -->
     
@@ -4891,10 +4836,6 @@ document.addEventListener('DOMContentLoaded', function(){
     <button class="os-qty-btn" onclick="osAdjust(-1)">−</button>
     <span class="os-qty-num" id="osQty">1</span>
     <button class="os-qty-btn" onclick="osAdjust(1)">+</button>
-  </div>
-  <div class="os-notes-wrap">
-    <label class="os-notes-label" for="osNotes">Notes for the butcher (optional)</label>
-    <textarea class="os-notes-input" id="osNotes" placeholder="e.g. cut thick, trim fat, ready by 4pm"></textarea>
   </div>
   <button class="os-add-btn" id="osAddBtn" onclick="osAddToCart()">Add to Order — <span id="osTotal"></span></button>
   <div style="height:env(safe-area-inset-bottom,0px)"></div>
@@ -8310,16 +8251,16 @@ if('serviceWorker' in navigator){
 .bvmm-sr-card:hover,
 .bvmm-sr-card:active { background: rgba(255,255,255,.14); }
 .bvmm-sr-thumb {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 10px;
   background: #fff;
   object-fit: cover;
   flex-shrink: 0;
 }
-.bvmm-sr-body { flex: 1; min-width: 0; }
+.bvmm-sr-body { flex: 1; min-width: 0; overflow: hidden; }
 .bvmm-sr-tag {
-  font-size: .62rem;
+  font-size: .58rem;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: rgba(255,255,255,.5);
@@ -8337,7 +8278,7 @@ if('serviceWorker' in navigator){
   white-space: nowrap;
 }
 .bvmm-sr-price {
-  font-size: .88rem;
+  font-size: .82rem;
   color: rgba(255,255,255,.85);
   font-weight: 500;
   margin-top: 2px;
@@ -8346,14 +8287,16 @@ if('serviceWorker' in navigator){
   background: #c9a96a;
   color: #1a1208;
   border: none;
-  padding: 8px 14px;
-  border-radius: 20px;
+  padding: 10px 14px;
+  border-radius: 999px;
   font-size: .72rem;
-  font-weight: 700;
-  letter-spacing: .05em;
+  font-weight: 800;
+  letter-spacing: .04em;
   text-transform: uppercase;
   cursor: pointer;
   flex-shrink: 0;
+  min-width: 64px;
+  box-shadow: 0 2px 8px rgba(201,169,106,.3);
   transition: background .15s, transform .1s;
 }
 .bvmm-sr-add:hover { background: #d6b77a; }
@@ -8361,22 +8304,41 @@ if('serviceWorker' in navigator){
 </style>
 <script>
 (function(){
-  // Default fallback logo when a product has no photo
+  // Default fallback logo when a product truly has no image
   var BVMM_LOGO = 'https://lirp.cdn-website.com/49a4f2f4/dms3rep/multi/opt/bvmm+black-1920w.png';
 
-  // Check if a photo src looks like a real uploaded BVMM photo (not a stock placeholder)
-  function isRealPhoto(src) {
-    if (!src) return false;
-    if (src.indexOf('unsplash.com') !== -1) return false;  // stock
-    if (src.indexOf('placeholder') !== -1) return false;
-    return true;
+  // Pull a usable image URL from any product element
+  // (tries <img> first, then background-image on any descendant)
+  function findImageUrl(el) {
+    if (!el) return null;
+    var img = el.querySelector('img');
+    if (img) {
+      var src = img.getAttribute('src') || img.src;
+      if (src) return src;
+    }
+    // Try background-image on known photo classes and any descendant
+    var photoEls = el.querySelectorAll('.og-photo, [style*="background-image"]');
+    for (var i = 0; i < photoEls.length; i++) {
+      var style = photoEls[i].getAttribute('style') || '';
+      var m = style.match(/background-image:\s*url\(["']?([^"')]+)["']?\)/);
+      if (m && m[1]) return m[1];
+    }
+    return null;
   }
 
-  // Parse onclick="openOrderSheet('Name', 45.00, 'desc', 'cat')" to get args
+  // Parse onclick="openOrderSheet('Name', 45.00, 'desc', 'cat')"
   function parseOrderArgs(el) {
     var onclick = el.getAttribute('onclick') || '';
     var m = onclick.match(/openOrderSheet\(([^)]+)\)/);
-    return m ? m[1] : null;
+    if (m) return { fn: 'openOrderSheet', args: m[1] };
+    // og-card uses ogAdd('id', this)
+    var btn = el.querySelector('.og-add[onclick^="ogAdd"]');
+    if (btn) {
+      var oc = btn.getAttribute('onclick') || '';
+      var m2 = oc.match(/ogAdd\(([^)]+)\)/);
+      if (m2) return { fn: 'ogAdd', args: m2[1], btnEl: btn };
+    }
+    return null;
   }
 
   // Build one search result card
@@ -8384,25 +8346,26 @@ if('serviceWorker' in navigator){
     var card = document.createElement('div');
     card.className = 'bvmm-sr-card';
 
-    // Thumbnail: try to grab real photo from product, fall back to BVMM logo
+    // Thumbnail: use the product's own image, fall back to BVMM logo
     var thumb = document.createElement('img');
     thumb.className = 'bvmm-sr-thumb';
-    var srcImg = el.querySelector('img');
-    var srcUrl = srcImg ? srcImg.getAttribute('src') : null;
-    thumb.src = isRealPhoto(srcUrl) ? srcUrl : BVMM_LOGO;
+    var url = findImageUrl(el);
+    thumb.src = url || BVMM_LOGO;
     thumb.alt = name;
     thumb.loading = 'lazy';
-    thumb.onerror = function(){ thumb.src = BVMM_LOGO; };
+    thumb.onerror = function(){ if (thumb.src !== BVMM_LOGO) thumb.src = BVMM_LOGO; };
     card.appendChild(thumb);
 
-    // Body: category tag, name, price
+    // Body
     var body = document.createElement('div');
     body.className = 'bvmm-sr-body';
     body.innerHTML =
-      '<div class="bvmm-sr-tag">' + (category || '') + '</div>' +
+      '<div class="bvmm-sr-tag"></div>' +
       '<div class="bvmm-sr-name"></div>' +
-      '<div class="bvmm-sr-price">' + (price || '') + '</div>';
+      '<div class="bvmm-sr-price"></div>';
+    body.querySelector('.bvmm-sr-tag').textContent = category || '';
     body.querySelector('.bvmm-sr-name').textContent = name;
+    body.querySelector('.bvmm-sr-price').textContent = price || '';
     card.appendChild(body);
 
     // Add to Cart button
@@ -8411,14 +8374,20 @@ if('serviceWorker' in navigator){
     addBtn.textContent = '+ Add';
     addBtn.onclick = function(e) {
       e.stopPropagation();
-      var args = parseOrderArgs(el);
-      if (args) {
-        try { eval('openOrderSheet(' + args + ')'); } catch(err) {}
-      }
+      e.preventDefault();
+      var parsed = parseOrderArgs(el);
+      if (!parsed) return;
+      try {
+        if (parsed.fn === 'openOrderSheet') {
+          eval('openOrderSheet(' + parsed.args + ')');
+        } else if (parsed.fn === 'ogAdd') {
+          eval('ogAdd(' + parsed.args.replace(/this/, 'parsed.btnEl') + ')');
+        }
+      } catch(err) { console.warn('Add failed:', err); }
     };
     card.appendChild(addBtn);
 
-    // Tapping the card (not the button) jumps to the product in the menu
+    // Tapping the card (not the button) jumps to the product
     card.onclick = function(e) {
       if (e.target === addBtn || addBtn.contains(e.target)) return;
       if (typeof toggleNavSearch === 'function') toggleNavSearch();
@@ -8430,13 +8399,11 @@ if('serviceWorker' in navigator){
     return card;
   }
 
-  // Our own gSearch: filter products, then build the visible results list with photos
   function bvmmSearch(q) {
     q = (q || '').trim().toLowerCase();
     var list = document.getElementById('searchResultsList');
     var sc = document.getElementById('searchCount');
 
-    // When empty, restore the menu and clear results
     if (!q) {
       document.querySelectorAll('.search-hidden').forEach(function(el){ el.classList.remove('search-hidden'); });
       document.querySelectorAll('.deli-section-head').forEach(function(h){ h.style.display = ''; });
@@ -8451,74 +8418,79 @@ if('serviceWorker' in navigator){
       return;
     }
 
-    // Match function — matches as whole or word-by-word
     function matches(text) {
       text = (text || '').toLowerCase();
       if (text.indexOf(q) > -1) return true;
-      var words = q.split(/\s+/);
-      return words.every(function(w){ return text.indexOf(w) > -1; });
+      return q.split(/\s+/).every(function(w){ return text.indexOf(w) > -1; });
     }
 
     var results = [];
+    var seenKeys = {};
+    function addResult(el, name, price, category) {
+      // Dedup by name+price so duplicate HTML rows don't show twice
+      var key = (name || '') + '|' + (price || '');
+      if (seenKeys[key]) return;
+      seenKeys[key] = true;
+      results.push({ el: el, name: name, price: price, category: category });
+    }
 
-    // Deli cards (.lcard)
+    // Deli sandwiches/wraps
     document.querySelectorAll('.lcard').forEach(function(card){
-      var text = card.textContent;
-      var hit = matches(text);
+      var hit = matches(card.textContent);
       card.classList.toggle('search-hidden', !hit);
       if (hit) {
-        var nameEl = card.querySelector('.lcard-name');
-        var priceEl = card.querySelector('.lcard-price');
-        var tagEl = card.querySelector('.lcard-tag');
-        if (nameEl) results.push({
-          el: card,
-          name: nameEl.textContent.trim(),
-          price: priceEl ? priceEl.textContent.trim() : '',
-          category: tagEl ? tagEl.textContent.trim() : 'Deli'
-        });
+        var n = card.querySelector('.lcard-name');
+        var p = card.querySelector('.lcard-price');
+        var t = card.querySelector('.lcard-tag');
+        if (n) addResult(card, n.textContent.trim(), p ? p.textContent.trim() : '', t ? t.textContent.trim() : 'Deli');
       }
     });
 
-    // Butcher rows (.mrow)
+    // Butcher small rows
     document.querySelectorAll('.mrow').forEach(function(row){
-      var text = row.textContent;
-      var hit = matches(text);
+      var hit = matches(row.textContent);
       row.classList.toggle('search-hidden', !hit);
       if (hit) {
-        var nameEl = row.querySelector('.mi-name');
-        var priceEl = row.querySelector('.mi-price');
-        if (nameEl) results.push({
-          el: row,
-          name: nameEl.textContent.trim(),
-          price: priceEl ? priceEl.textContent.trim() : '',
-          category: 'Butcher'
-        });
+        var n = row.querySelector('.mi-name');
+        var p = row.querySelector('.mi-price');
+        if (n) addResult(row, n.textContent.trim(), p ? p.textContent.trim() : '', 'Butcher');
       }
     });
 
-    // Catering items (.c-item)
+    // Butcher pretty cards (the ones with photos + descriptions)
+    document.querySelectorAll('.og-card').forEach(function(card){
+      var hit = matches(card.textContent);
+      card.classList.toggle('search-hidden', !hit);
+      if (hit) {
+        var n = card.querySelector('.og-name');
+        var p = card.querySelector('.og-price');
+        var u = card.querySelector('.og-unit');
+        var c = card.querySelector('.og-cat-chip');
+        var priceText = p ? p.textContent.trim() + (u ? u.textContent.trim() : '') : '';
+        if (n) addResult(card, n.textContent.trim(), priceText, c ? c.textContent.trim() : 'Butcher');
+      }
+    });
+
+    // Catering items
     document.querySelectorAll('.c-item').forEach(function(item){
-      var text = item.textContent;
-      var hit = matches(text);
+      var hit = matches(item.textContent);
       item.classList.toggle('search-hidden', !hit);
       if (hit) {
-        // Try common name/price selectors, fall back to textContent split
-        var nameEl = item.querySelector('.c-item-name, .lcard-name, .mi-name');
-        var priceEl = item.querySelector('.c-item-price, .lcard-price, .mi-price');
-        var name = nameEl ? nameEl.textContent.trim() : item.textContent.trim().split('$')[0].trim();
-        var price = priceEl ? priceEl.textContent.trim() : '';
+        var n = item.querySelector('.c-item-name, .lcard-name, .mi-name');
+        var p = item.querySelector('.c-item-price, .lcard-price, .mi-price');
+        var name = n ? n.textContent.trim() : item.textContent.trim().split('$')[0].trim();
+        var price = p ? p.textContent.trim() : '';
         if (!price) {
           var pm = item.textContent.match(/\$[\d.,]+/);
           if (pm) price = pm[0];
         }
-        if (name) results.push({ el: item, name: name, price: price, category: 'Catering' });
+        if (name) addResult(item, name, price, 'Catering');
       }
     });
 
-    // Hide empty section headers / groups
+    // Tidy up section headers / groups
     document.querySelectorAll('.deli-section-head').forEach(function(h){
-      var next = h.nextElementSibling;
-      var hasVisible = false;
+      var next = h.nextElementSibling, hasVisible = false;
       while (next && !next.classList.contains('deli-section-head')) {
         if (next.classList.contains('lcard') && !next.classList.contains('search-hidden')) { hasVisible = true; break; }
         next = next.nextElementSibling;
@@ -8526,12 +8498,10 @@ if('serviceWorker' in navigator){
       h.style.display = hasVisible ? '' : 'none';
     });
     document.querySelectorAll('.mgroup').forEach(function(g){
-      var visible = g.querySelectorAll('.mrow:not(.search-hidden)').length;
-      g.style.display = visible ? '' : 'none';
+      g.style.display = g.querySelectorAll('.mrow:not(.search-hidden)').length ? '' : 'none';
     });
     document.querySelectorAll('.c-sub-head').forEach(function(h){
-      var next = h.nextElementSibling;
-      var hasVisible = false;
+      var next = h.nextElementSibling, hasVisible = false;
       while (next && !next.classList.contains('c-sub-head')) {
         if (next.classList.contains('c-item') && !next.classList.contains('search-hidden')) { hasVisible = true; break; }
         next = next.nextElementSibling;
@@ -8539,18 +8509,27 @@ if('serviceWorker' in navigator){
       h.style.display = hasVisible ? '' : 'none';
     });
 
-    // Show all menu panels while searching so all matches can be seen
     var tabs = document.querySelector('.menu-tabs');
     if (tabs) tabs.style.display = 'none';
     document.querySelectorAll('.mpanel').forEach(function(p){ p.style.display = 'block'; });
 
-    // Count display
+    // Deduplicate: same product name appears in multiple sections (Beef Cuts, Specials, etc.)
+    // Show each unique product once. Keep the first one we found.
+    var seen = {};
+    var deduped = [];
+    results.forEach(function(r) {
+      var key = (r.name || '').toLowerCase().trim();
+      if (!key || seen[key]) return;
+      seen[key] = true;
+      deduped.push(r);
+    });
+    results = deduped;
+
     if (sc) {
       sc.style.display = 'block';
       sc.textContent = results.length + (results.length === 1 ? ' item found' : ' items found');
     }
 
-    // Build visible results list with photos
     if (list) {
       list.innerHTML = '';
       results.slice(0, 20).forEach(function(r) {
@@ -8560,10 +8539,8 @@ if('serviceWorker' in navigator){
     }
   }
 
-  // Install our search — last definition wins
   function install() {
     window.gSearch = bvmmSearch;
-    // If the search bar already has a value, re-run
     var input = document.getElementById('globalSearch');
     if (input && input.value) bvmmSearch(input.value);
   }
@@ -8576,99 +8553,6 @@ if('serviceWorker' in navigator){
 })();
 </script>
 <!-- ══════════ END SEARCH v2 ══════════ -->
-
-
-<!-- ═══ PHASE 1 SCRIPTS ═══ -->
-<script>
-(function(){
-  // ── CHIP BAR ──
-  window.chipSelect = function(btn, key) {
-    // Update active state
-    document.querySelectorAll('.chipbar .chip').forEach(function(c){ c.classList.remove('active'); });
-    if (btn) btn.classList.add('active');
-
-    // "deli" → Deli tab
-    if (key === 'deli') {
-      if (typeof showTab === 'function') showTab('deli', document.querySelectorAll('.mtab')[0]);
-      var menuEl = document.getElementById('menu');
-      if (menuEl) menuEl.scrollIntoView({behavior:'smooth', block:'start'});
-      // show all butcher mgroups (reset filter)
-      document.querySelectorAll('#tab-beef .mgroup[data-cat]').forEach(function(g){ g.removeAttribute('data-cat-hidden'); });
-      return;
-    }
-
-    // "heroes" → Deli tab + scroll to Heroes by the Foot heading
-    if (key === 'heroes') {
-      if (typeof showTab === 'function') showTab('deli', document.querySelectorAll('.mtab')[0]);
-      setTimeout(function(){
-        // Find "Heroes by the Foot" heading inside deli tab
-        var heads = document.querySelectorAll('#tab-deli .deli-section-head');
-        for (var i=0;i<heads.length;i++){
-          if (heads[i].textContent.toLowerCase().indexOf('hero') !== -1) {
-            heads[i].scrollIntoView({behavior:'smooth', block:'start'});
-            return;
-          }
-        }
-        var menuEl = document.getElementById('menu');
-        if (menuEl) menuEl.scrollIntoView({behavior:'smooth', block:'start'});
-      }, 150);
-      return;
-    }
-
-    // "catering" → catering section
-    if (key === 'catering') {
-      var catEl = document.getElementById('catering');
-      if (catEl) catEl.scrollIntoView({behavior:'smooth', block:'start'});
-      return;
-    }
-
-    // Butcher categories: switch to beef tab + filter mgroups
-    if (typeof showTab === 'function') {
-      var beefBtn = document.querySelectorAll('.mtab')[1]; // "Butcher" is the 2nd tab
-      showTab('beef', beefBtn);
-    }
-    var menuEl2 = document.getElementById('menu');
-    if (menuEl2) menuEl2.scrollIntoView({behavior:'smooth', block:'start'});
-
-    document.querySelectorAll('#tab-beef .mgroup[data-cat]').forEach(function(g){
-      if (key === 'all' || g.dataset.cat === key) {
-        g.removeAttribute('data-cat-hidden');
-      } else {
-        g.setAttribute('data-cat-hidden', '1');
-      }
-    });
-  };
-
-  // ── LIVE HOURS WIDGET (drop-in for #hoursBadge) ──
-  var HOURS = {0:null, 1:null, 2:[10,17], 3:[10,17], 4:[10,17], 5:[10,17], 6:[10,17]};
-  var DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  function fmtTime(h24){var h=h24%12;if(h===0)h=12;return h+' '+(h24<12?'AM':'PM');}
-  function nextOpen(today){for(var i=1;i<=7;i++){var d=(today+i)%7;if(HOURS[d])return{day:d,hours:HOURS[d]};}return null;}
-  function status(){
-    var now=new Date(),day=now.getDay(),nowMin=now.getHours()*60+now.getMinutes(),th=HOURS[day];
-    if(!th){var n=nextOpen(day);if(!n)return{t:'Closed',c:'#999',s:'closed'};var lbl=(n.day===(day+1)%7)?'Tomorrow':DAY_NAMES[n.day];return{t:'Opens '+lbl+' at '+fmtTime(n.hours[0]),c:'#999',s:'closed'};}
-    var oM=th[0]*60,cM=th[1]*60;
-    if(nowMin<oM)return{t:'Opens today at '+fmtTime(th[0]),c:'#999',s:'closed'};
-    if(nowMin>=cM){var n2=nextOpen(day);if(!n2)return{t:'Closed',c:'#999',s:'closed'};var lbl2=(n2.day===(day+1)%7)?'Tomorrow':DAY_NAMES[n2.day];return{t:'Opens '+lbl2+' at '+fmtTime(n2.hours[0]),c:'#999',s:'closed'};}
-    if(cM-nowMin<=30)return{t:'Closing in '+(cM-nowMin)+' min',c:'#E8A33D',s:'closing'};
-    return{t:'Open until '+fmtTime(th[1]),c:'#4CAF50',s:'open'};
-  }
-  function renderHours(){
-    var el=document.getElementById('hoursBadge');
-    if(!el)return;
-    var s=status();
-    el.innerHTML='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+s.c+';margin-right:6px;vertical-align:middle;box-shadow:0 0 0 2px rgba(255,255,255,.15)"></span><span style="vertical-align:middle">'+s.t+'</span>';
-    el.setAttribute('data-status', s.s);
-  }
-
-  function init(){
-    renderHours();
-    setInterval(renderHours, 60000);
-  }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded', init);}else{init();}
-})();
-</script>
-<!-- ═══ END PHASE 1 SCRIPTS ═══ -->
 
 </body>
 </html>
