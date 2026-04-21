@@ -2,6 +2,10 @@
 <!-- BVMM Manager — v4 skin redesign (Home + Edit only). All plumbing, auth, and IDs preserved. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="bvmm-tool-version" content="2026-04-22-5">
 <title>Meat Market Manager</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -179,6 +183,21 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
 
 <!-- ════ HOME ════ -->
 <div id="panel-home" class="panel active">
+
+  <!-- MISSING-KEYS BANNER (auto-shows if localStorage was wiped by Safari ITP) -->
+  <div id="bvmmMissingKeysBanner" style="display:none;background:#FFF3E0;border:2px solid #C43B00;border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="font-size:1.4rem;flex-shrink:0;line-height:1">⚠️</div>
+      <div style="flex:1">
+        <div style="font-weight:800;color:#C43B00;font-size:.82rem;margin-bottom:4px">Your saved keys appear wiped</div>
+        <div style="font-size:.7rem;color:#5C3A2D;line-height:1.5;margin-bottom:10px">Safari wipes site data automatically after ~7 days of no visits (privacy feature). If you exported a backup to iCloud, tap below to restore everything in one tap.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="window.importSettings && window.importSettings()" style="background:#C43B00;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:.72rem;font-weight:700;cursor:pointer;flex:1;min-width:130px">📥 Restore from iCloud</button>
+          <button onclick="document.getElementById('bvmmMissingKeysBanner').style.display='none';localStorage.setItem('bvmm_banner_dismissed','1')" style="background:#fff;color:#5C3A2D;border:1px solid #C43B00;border-radius:8px;padding:9px 14px;font-size:.72rem;font-weight:700;cursor:pointer">Dismiss</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- DASHBOARD CARD (unchanged — all IDs preserved) -->
   <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
@@ -5165,40 +5184,37 @@ function downloadAll(key) {
     return (localStorage.getItem('mmm_key_github') || localStorage.getItem('bvmm_gh_tok') || '').trim();
   }
 
-  async function githubPut(filename, base64content, commitMsg) {
-    var token = getStoredGithubToken();
-    if (!token) throw new Error('GitHub token not saved. Go to More → Settings → API Keys → GitHub Token → paste your token → tap Save.');
-    var apiBase = 'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/';
-    var gh = {
-      'Authorization': 'token ' + token,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github+json'
-    };
-    // Fetch current SHA (required to update an existing file)
-    var sha = null;
-    try {
-      var gr = await fetch(apiBase + filename, { headers: gh });
-      if (gr.ok) { var gd = await gr.json(); sha = gd.sha || null; }
-      else if (gr.status === 401) throw new Error('GitHub token rejected (401). Token may be expired or lack "repo" scope. Generate a new one at https://github.com/settings/tokens/new');
-      else if (gr.status === 403) throw new Error('GitHub token missing "repo" permission (403). Regenerate with "repo" scope at https://github.com/settings/tokens/new');
-    } catch(e) {
-      if (e.message && e.message.indexOf('GitHub token') === 0) throw e;
-    }
-    var pb = { message: commitMsg || ('Update ' + filename + ' via BVMM tool'), content: base64content };
-    if (sha) pb.sha = sha;
-    var pr = await fetch(apiBase + filename, {
-      method: 'PUT',
-      headers: gh,
-      body: JSON.stringify(pb)
+  // ── Route file push through the Worker (which has GITHUB_TOKEN as a server-side secret).
+  // This keeps GitHub tokens OFF the phone — Safari ITP can wipe localStorage all it wants,
+  // pushes still work because the token lives on Cloudflare's servers.
+  function githubPut(filename, base64content, commitMsg) {
+    return new Promise(function(resolve, reject) {
+      if (typeof WORKER === 'undefined' || !WORKER) {
+        reject(new Error('WORKER URL not defined'));
+        return;
+      }
+      // Use the existing pushFile() function if available — it already has the
+      // correct XHR + retry-on-SHA-conflict logic proven in production.
+      if (typeof pushFile === 'function') {
+        pushFile(filename, base64content, function(ok, msgOrCommit) {
+          if (ok) resolve(msgOrCommit || 'ok');
+          else reject(new Error(msgOrCommit || 'Push failed'));
+        });
+        return;
+      }
+      // Fallback: direct Worker call if pushFile() somehow not loaded
+      fetch(WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deploy', filename: filename, content: base64content })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d && d.ok) resolve(d.commit || 'ok');
+        else reject(new Error((d && d.error) || 'Push failed'));
+      })
+      .catch(function(e){ reject(e); });
     });
-    var rawText = await pr.text();
-    var pd; try { pd = JSON.parse(rawText); } catch(_) { pd = null; }
-    if (!pr.ok) {
-      var msg = (pd && pd.message) ? pd.message : ('HTTP ' + pr.status);
-      if (pr.status === 401) msg = 'GitHub token rejected. Generate a new one at https://github.com/settings/tokens/new (scope: repo)';
-      throw new Error('GitHub: ' + msg);
-    }
-    return (pd && pd.commit && pd.commit.sha) ? pd.commit.sha.substring(0, 7) : 'ok';
   }
 
   // ── PUSH FILE PICKER CONTENT TO preview.html ──────────────
@@ -5260,36 +5276,23 @@ function downloadAll(key) {
     // 1. Push the backup HTML file via direct GitHub
     await githubPut(backupPath, encodeForGithub(liveHtml), 'Auto-backup before Promote');
 
-    // 2. Update backups/manifest.json — fetch, prepend, push
-    var manifestApi = 'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/backups/manifest.json';
-    var token = getStoredGithubToken();
-    var gh = {
-      'Authorization': 'token ' + token,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github+json'
-    };
+    // 2. Update backups/manifest.json — read from public raw (no auth needed), write through Worker
+    var rawManifest = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/backups/manifest.json?nocache=' + Date.now();
     var entries = [];
-    var sha = null;
     try {
-      var mr = await fetch(manifestApi, { headers: gh });
+      var mr = await fetch(rawManifest);
       if (mr.ok) {
-        var md = await mr.json();
-        sha = md.sha || null;
-        try {
-          var existing = atob((md.content || '').replace(/\n/g, ''));
-          entries = JSON.parse(existing) || [];
-        } catch(_) { entries = []; }
+        var existingText = await mr.text();
+        try { entries = JSON.parse(existingText) || []; } catch(_) { entries = []; }
       }
     } catch(_) {}
     entries.unshift({ ts: ts, file: backupPath, summary: 'Pre-promote backup', date: new Date().toISOString() });
     if (entries.length > 50) entries = entries.slice(0, 50);
     var manifestJson = JSON.stringify(entries, null, 2);
-    var pb = { message: 'Manifest update for ' + backupPath, content: encodeForGithub(manifestJson) };
-    if (sha) pb.sha = sha;
     try {
-      await fetch(manifestApi, { method: 'PUT', headers: gh, body: JSON.stringify(pb) });
+      await githubPut('backups/manifest.json', encodeForGithub(manifestJson), 'Manifest update for ' + backupPath);
     } catch(_) {
-      // Best-effort — if manifest update fails, the backup file still exists.
+      // Best-effort — if manifest update fails, the backup file still exists in the repo.
     }
     return backupPath;
   }
@@ -5374,14 +5377,21 @@ function downloadAll(key) {
       reader.onload = function(e) {
         var parsed;
         try { parsed = JSON.parse(e.target.result); }
-        catch(err) { setSettingsStatus('❌ Not valid JSON: ' + err.message, 'err'); return; }
-        if (!parsed || !parsed.keys || typeof parsed.keys !== 'object') {
-          setSettingsStatus('❌ Not a BVMM settings backup file.', 'err');
+        catch(err) {
+          if (typeof setSettingsStatus === 'function') setSettingsStatus('❌ Not valid JSON: ' + err.message, 'err');
+          else alert('Not valid JSON: ' + err.message);
           return;
         }
-        var keyList = Object.keys(parsed.keys).filter(function(k){ return k.indexOf('bvmm_') === 0; });
+        if (!parsed || !parsed.keys || typeof parsed.keys !== 'object') {
+          alert('Not a BVMM settings backup file.');
+          return;
+        }
+        // Accept BOTH bvmm_* (draft state) AND mmm_key_* (API keys like GitHub token)
+        var keyList = Object.keys(parsed.keys).filter(function(k){
+          return k.indexOf('bvmm_') === 0 || k.indexOf('mmm_key_') === 0;
+        });
         if (keyList.length === 0) {
-          setSettingsStatus('❌ Backup file contains no bvmm_* keys.', 'err');
+          alert('Backup file contains no recognized keys.');
           return;
         }
         if (!confirm('Restore ' + keyList.length + ' settings from backup?\n\nKeys with the same name will be OVERWRITTEN on this device.')) return;
@@ -5389,12 +5399,52 @@ function downloadAll(key) {
         keyList.forEach(function(k) {
           try { localStorage.setItem(k, parsed.keys[k]); restored++; } catch(e){}
         });
-        setSettingsStatus('✅ Restored ' + restored + ' settings. Tap Home → If Something\'s Wrong → Force Reload Tool to see them in the fields.', 'ok');
+        // Hide the missing-keys banner if we just restored
+        var banner = document.getElementById('bvmmMissingKeysBanner');
+        if (banner) banner.style.display = 'none';
+        // Re-render API keys UI if present
+        try { if (typeof buildApiKeysList === 'function') buildApiKeysList(); } catch(e){}
+        var msg = '✅ Restored ' + restored + ' settings. Reload the tool to see them in all fields.';
+        if (typeof setSettingsStatus === 'function') setSettingsStatus(msg, 'ok');
+        alert(msg);
       };
       reader.readAsText(f);
     };
     inp.click();
   };
+
+  // ── AUTO-SHOW BANNER IF KEYS APPEAR WIPED ────────────────
+  // Runs once on tool load. Shows the missing-keys banner if critical keys
+  // are empty but localStorage itself is working (i.e. this isn't a first-time user).
+  function checkMissingKeysOnLoad() {
+    try {
+      var banner = document.getElementById('bvmmMissingKeysBanner');
+      if (!banner) return;
+
+      var githubToken = localStorage.getItem('mmm_key_github') || localStorage.getItem('bvmm_gh_tok') || '';
+      var authSecret = localStorage.getItem('bvmm_auth') || '';
+      var dismissed = localStorage.getItem('bvmm_banner_dismissed') === '1';
+
+      // Signals this person HAS used the tool before (but keys got wiped):
+      //   - They have an auth secret or any bvmm_* state (from ever saving anything)
+      //   - OR they have previous backup/manifest flags
+      var hasUsedBefore = false;
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && (k.indexOf('bvmm_') === 0)) { hasUsedBefore = true; break; }
+      }
+
+      // Only show banner if: GitHub token missing, user dismissed ≠ true, and has signs of prior use
+      if (!githubToken && !dismissed && hasUsedBefore) {
+        banner.style.display = 'block';
+      }
+    } catch(e) {}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkMissingKeysOnLoad);
+  } else {
+    checkMissingKeysOnLoad();
+  }
 })();
 </script>
 <!-- ════════ END STAGING + SETTINGS BACKUP ════════ -->
@@ -5409,7 +5459,18 @@ const ALLOWED_FILES = ['index.html', 'BVMM_push_live.html', 'preview.html'];
 const ALLOWED_IMG_EXTS = ['jpg','jpeg','png','webp','gif'];
 
 function isAllowedFile(name) {
-  return typeof name === 'string' && ALLOWED_FILES.indexOf(name) >= 0;
+  if (typeof name !== 'string') return false;
+  // Block path traversal
+  if (name.indexOf('..') >= 0) return false;
+  // Exact-match root files
+  if (ALLOWED_FILES.indexOf(name) >= 0) return true;
+  // Allow backup archive writes under backups/ (timestamped site snapshots + manifest)
+  if (name.indexOf('backups/') === 0) {
+    // Only allow known safe patterns: backups/index_TIMESTAMP.html or backups/manifest.json
+    if (name === 'backups/manifest.json') return true;
+    if (/^backups\/index_[A-Za-z0-9_\-]+\.html$/.test(name)) return true;
+  }
+  return false;
 }
 function isAllowedImage(name) {
   if (typeof name !== 'string') return false;
