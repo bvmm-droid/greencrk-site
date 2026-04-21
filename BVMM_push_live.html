@@ -4593,43 +4593,46 @@ function downloadAll(key) {
     st.textContent = 'Uploading to Cloudflare...'; st.style.color = '#1A0A04';
     try {
       var url = 'https://api.cloudflare.com/client/v4/accounts/' + CF_ACCOUNT_ID + '/workers/scripts/' + CF_WORKER_NAME;
-      // Use multipart/form-data — Cloudflare requires metadata + script parts
-      var metadata = JSON.stringify({
+
+      // Use browser-native FormData — avoids hand-crafted multipart issues in Safari.
+      // We do NOT set Content-Type; the browser adds it with the correct boundary automatically.
+      var metadataBlob = new Blob([JSON.stringify({
         main_module: 'worker.js',
         compatibility_date: '2026-04-09'
-      });
-      var boundary = '----bvmm' + Date.now();
-      var parts = [];
-      parts.push('--' + boundary);
-      parts.push('Content-Disposition: form-data; name="metadata"; filename="metadata.json"');
-      parts.push('Content-Type: application/json');
-      parts.push('');
-      parts.push(metadata);
-      parts.push('--' + boundary);
-      parts.push('Content-Disposition: form-data; name="worker.js"; filename="worker.js"');
-      parts.push('Content-Type: application/javascript+module');
-      parts.push('');
-      parts.push(src.trim());
-      parts.push('--' + boundary + '--');
-      parts.push('');
-      var body = parts.join('\r\n');
+      })], { type: 'application/json' });
+      var scriptBlob = new Blob([src.trim()], { type: 'application/javascript+module' });
 
-      // Direct fetch — bypass my own interceptor by using _origFetch so I don't
-      // accidentally inject x-bvmm-auth onto Cloudflare API calls.
-      var resp = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'Bearer ' + apiToken,
-          'Content-Type': 'multipart/form-data; boundary=' + boundary
-        },
-        body: body
-      });
-      var data = await resp.json();
+      var fd = new FormData();
+      fd.append('metadata', metadataBlob, 'metadata.json');
+      fd.append('worker.js', scriptBlob, 'worker.js');
+
+      var resp;
+      try {
+        resp = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + apiToken },
+          body: fd,
+          mode: 'cors'
+        });
+      } catch(fetchErr) {
+        btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
+        // Safari's "Load failed" usually means CORS blocked the request before it reached Cloudflare.
+        // Tell the user exactly what's happening and offer the manual path.
+        st.innerHTML = '<div style="color:#C43B00;line-height:1.5">✗ Browser blocked the request (' + (fetchErr.message || 'Load failed') + ').<br><br>This happens on some iPhones when Cloudflare\'s API rejects cross-origin calls. Use the manual paste method instead — Settings tab → Cloudflare Worker card → Download Latest Worker Code, then Open Worker Editor, Select All / Delete / Paste / Deploy.</div>';
+        return;
+      }
+
+      // Read response safely — sometimes CF returns non-JSON error pages
+      var rawText = await resp.text();
+      var data;
+      try { data = JSON.parse(rawText); } catch(_) { data = null; }
+
       btn.disabled = false; btn.textContent = '🚀 Deploy Worker Now';
-      if (!resp.ok || !data.success) {
-        var errMsg = 'Unknown error';
-        if (data.errors && data.errors.length) errMsg = data.errors.map(function(e){ return e.message || JSON.stringify(e); }).join('; ');
-        else if (data.error) errMsg = data.error;
+      if (!resp.ok || !data || !data.success) {
+        var errMsg = 'HTTP ' + resp.status;
+        if (data && data.errors && data.errors.length) errMsg = data.errors.map(function(e){ return e.message || JSON.stringify(e); }).join('; ');
+        else if (data && data.error) errMsg = data.error;
+        else if (rawText) errMsg += ' — ' + rawText.substring(0, 120);
         st.textContent = '✗ ' + errMsg;
         st.style.color = '#C43B00';
         return;
