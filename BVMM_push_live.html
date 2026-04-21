@@ -247,6 +247,20 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
     <p class="caption" style="margin-top:10px"><b>Mark Closed Today:</b> Shows a "Closed today" banner on the site for just today. <b>Set Today's Special:</b> Banner at top of the site. <b>Clear Banner:</b> Removes today's banner. <b>View Live Site:</b> Opens greencrk.com in a new tab. <b>Undo Last Change:</b> Reverses your most recent edit (before pushing). <b>Bulk Price Increase:</b> Raise all prices in a category by a %.</p>
   </div>
 
+  <!-- GROUP 1.5: STAGING WORKFLOW (preview before live) — added Apr 2026 -->
+  <div class="card" style="margin-top:10px;border:1.5px solid rgba(46,125,50,.3);background:linear-gradient(135deg,#f4fbf3 0%,#fff 100%)">
+    <div class="section-label" style="color:#2E7D32">🧪 Preview Before Live</div>
+    <div style="font-size:.7rem;color:#8a7a6c;margin-bottom:12px;line-height:1.45">Push a new version to <b>greencrk.com/preview.html</b> first — review it on your phone, then promote to live when you're happy. Your real site is untouched until you promote.</div>
+    <div class="action-grid" style="grid-template-columns:1fr 1fr;gap:8px">
+      <button class="action-btn" onclick="stagingUploadFile()"><span class="ab-icon">📁</span>Upload File to Preview</button>
+      <button class="action-btn" onclick="stagingPushPending()"><span class="ab-icon">📋</span>Push Changes to Preview</button>
+      <button class="action-btn" id="stagingOpenBtn" onclick="window.open('https://greencrk.com/preview.html','_blank')" style="grid-column-start:1;grid-column-end:-1"><span class="ab-icon">👁</span>Open Preview in New Tab</button>
+      <button class="action-btn" onclick="stagingPromote()" style="grid-column-start:1;grid-column-end:-1;background:#2E7D32;color:#fff;border-color:#2E7D32"><span class="ab-icon">✅</span>Promote Preview → Live</button>
+    </div>
+    <div id="stagingStatus" class="step" style="margin-top:10px;display:none"></div>
+    <p class="caption" style="margin-top:10px"><b>Upload File:</b> Pick an HTML file Claude gave you — goes to preview URL. <b>Push Changes:</b> Apply your pending price/photo/banner edits to preview URL instead of live. <b>Promote:</b> Replaces live greencrk.com with whatever's on preview.html (auto-saves a rollback first).</p>
+  </div>
+
   <!-- GROUP 2: SITE BACKUPS & ROLLBACK -->
   <details class="v4-details">
     <summary>💾 Backups &amp; Rollback</summary>
@@ -563,6 +577,18 @@ details.v4-details .caption-intro{font-size:.7rem;color:#8a7a6c;margin-top:8px;m
       <div style="font-size:.65rem;color:#bbb;margin-top:10px;line-height:1.6">
         🔒 Keys are saved locally on your device only — never sent anywhere except the service they belong to.
       </div>
+    </div>
+
+    <!-- KEYS & SETTINGS BACKUP — added Apr 2026 -->
+    <div class="card" style="border:1.5px solid rgba(46,125,50,.3);background:linear-gradient(135deg,#f4fbf3 0%,#fff 100%)">
+      <div class="section-label" style="color:#2E7D32">🔐 Keys &amp; Settings Backup</div>
+      <p style="font-size:.7rem;color:#5C3A2D;margin-bottom:12px;line-height:1.55">Download a single file with every API key, token, and draft saved on this device. Save it to iCloud Drive or email it to yourself. If you ever clear Safari, switch phones, or lose access, Import restores everything in one tap.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="exportSettings()" style="background:#2E7D32;color:#fff;border:none;border-radius:10px;padding:12px 10px;font-size:.75rem;font-weight:800;cursor:pointer">🔐 Export All Settings</button>
+        <button onclick="importSettings()" style="background:#fff;color:#2E7D32;border:1.5px solid #2E7D32;border-radius:10px;padding:12px 10px;font-size:.75rem;font-weight:800;cursor:pointer">📥 Import Settings</button>
+      </div>
+      <div id="settingsBackupStatus" class="step" style="margin-top:10px;display:none"></div>
+      <p style="font-size:.65rem;color:#888;margin-top:10px;line-height:1.5">💡 Export after any big change — new API key, new GitHub token, etc. The backup file is plain text; anyone who gets it has your keys. Treat it like a password.</p>
     </div>
 
     <div class="card">
@@ -5100,7 +5126,204 @@ function downloadAll(key) {
 
 </script>
 
+<!-- ════════ STAGING + SETTINGS BACKUP — added Apr 2026 ════════ -->
+<script>
+(function(){
+  'use strict';
 
+  // Any localStorage key starting with "bvmm_" is considered tool-owned
+  // and will be included in Export/Import. This list exists mainly as
+  // documentation of what we expect to be there.
+  var KNOWN_KEYS = [
+    'bvmm_gh_tok', 'bvmm_auth_secret',
+    'bvmm_pexels_key', 'bvmm_unsplash_key',
+    'bvmm_openai_key', 'bvmm_claude_key',
+    'bvmm_bing_key', 'bvmm_google_cse_key', 'bvmm_google_cse_cx',
+    'bvmm_deepai_key', 'bvmm_flickr_key', 'bvmm_500px_key',
+    'bvmm_imgur_key', 'bvmm_edamam_id', 'bvmm_edamam_key',
+    'bvmm_spoonacular_key', 'bvmm_nutritionix_id', 'bvmm_nutritionix_key',
+    'bvmm_draft', 'bvmm_last_deployed', 'bvmm_last_deployed_summary',
+    'bvmm_pending_changes', 'bvmm_sq_mode'
+  ];
+
+  function setStagingStatus(msg, type) {
+    var el = document.getElementById('stagingStatus');
+    if (!el) { console.log('[staging]', msg); return; }
+    el.textContent = msg;
+    el.className = 'step show ' + (type || 'info');
+    el.style.display = 'block';
+  }
+
+  function setSettingsStatus(msg, type) {
+    var el = document.getElementById('settingsBackupStatus');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'step show ' + (type || 'info');
+    el.style.display = 'block';
+  }
+
+  function encodeForGithub(html) {
+    try { return btoa(unescape(encodeURIComponent(html))); }
+    catch(e) { return btoa(html); }
+  }
+
+  // ── PUSH FILE PICKER CONTENT TO preview.html ──────────────
+  window.stagingUploadFile = function() {
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.html,.htm,text/html';
+    inp.onchange = function() {
+      var f = inp.files && inp.files[0];
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function(e) { stagingPushHTML(e.target.result, f.name); };
+      reader.onerror = function() { setStagingStatus('Could not read file.', 'err'); };
+      reader.readAsText(f);
+    };
+    inp.click();
+  };
+
+  function stagingPushHTML(html, originalName) {
+    if (typeof pushFile !== 'function') {
+      setStagingStatus('pushFile() unavailable — this is not the full tool.', 'err');
+      return;
+    }
+    setStagingStatus('Pushing ' + (originalName || 'file') + ' (' + Math.round(html.length/1024) + ' KB) to preview.html …', 'info');
+    pushFile('preview.html', encodeForGithub(html), function(ok, msg) {
+      if (!ok) { setStagingStatus('Push failed: ' + (msg || ''), 'err'); return; }
+      setStagingStatus('✅ Live at greencrk.com/preview.html — tap Open Preview to review, then Promote when happy.', 'ok');
+    });
+  }
+
+  // ── APPLY MY PENDING CHANGES TO preview.html ──────────────
+  window.stagingPushPending = function() {
+    if (typeof RAW === 'undefined') { setStagingStatus('RAW URL not defined.', 'err'); return; }
+    if (typeof applyChanges !== 'function') { setStagingStatus('applyChanges() missing.', 'err'); return; }
+    setStagingStatus('Fetching current site …', 'info');
+    fetch(RAW + '?nocache=' + Date.now())
+      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(function(siteHTML) {
+        var modified = applyChanges(siteHTML);
+        stagingPushHTML(modified, 'your pending changes');
+      })
+      .catch(function(e) { setStagingStatus('Error: ' + e.message, 'err'); });
+  };
+
+  // ── PROMOTE preview.html → index.html ─────────────────────
+  window.stagingPromote = function() {
+    var ok = confirm('Promote preview.html to live index.html?\n\nThis REPLACES greencrk.com with whatever is on the preview page right now. A rollback is auto-saved first.');
+    if (!ok) return;
+    var previewRaw = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/preview.html';
+    setStagingStatus('Fetching preview.html …', 'info');
+    fetch(previewRaw + '?nocache=' + Date.now())
+      .then(function(r) {
+        if (r.status === 404) throw new Error('No preview.html in the repo yet. Upload one first.');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(html) {
+        // Fetch live site first so we can save it as a rollback, then push preview as new live
+        if (typeof RAW !== 'undefined') {
+          fetch(RAW + '?nocache=' + Date.now())
+            .then(function(r){ return r.ok ? r.text() : ''; })
+            .then(function(liveHTML){
+              try { if (liveHTML && typeof saveRollback === 'function') saveRollback(liveHTML); } catch(e){}
+              setStagingStatus('Promoting to live …', 'info');
+              pushFile('index.html', encodeForGithub(html), function(ok, msg) {
+                if (!ok) { setStagingStatus('Promote failed: ' + (msg || ''), 'err'); return; }
+                setStagingStatus('🎉 LIVE on greencrk.com! Wait ~30 seconds for the CDN to refresh, then check it.', 'ok');
+              });
+            })
+            .catch(function() {
+              // Even if rollback save fails, continue with promote
+              setStagingStatus('Promoting to live (no rollback saved) …', 'info');
+              pushFile('index.html', encodeForGithub(html), function(ok, msg) {
+                if (!ok) { setStagingStatus('Promote failed: ' + (msg || ''), 'err'); return; }
+                setStagingStatus('🎉 LIVE on greencrk.com! Wait ~30 seconds for the CDN to refresh.', 'ok');
+              });
+            });
+        } else {
+          pushFile('index.html', encodeForGithub(html), function(ok, msg) {
+            if (!ok) { setStagingStatus('Promote failed: ' + (msg || ''), 'err'); return; }
+            setStagingStatus('🎉 LIVE on greencrk.com!', 'ok');
+          });
+        }
+      })
+      .catch(function(e) { setStagingStatus('Error: ' + e.message, 'err'); });
+  };
+
+  // ── EXPORT ALL SETTINGS TO JSON FILE ─────────────────────
+  window.exportSettings = function() {
+    var bundle = {
+      _exported_at: new Date().toISOString(),
+      _format: 'bvmm-settings-v1',
+      _note: 'Keys & drafts from BVMM_push_live tool. Treat like a password — anyone who has this file has your API keys.',
+      keys: {}
+    };
+    // Sweep all bvmm_* keys from localStorage
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf('bvmm_') === 0) {
+        bundle.keys[k] = localStorage.getItem(k);
+      }
+    }
+    var count = Object.keys(bundle.keys).length;
+    if (count === 0) {
+      setSettingsStatus('Nothing to export — no saved keys found on this device.', 'err');
+      return;
+    }
+    var json = JSON.stringify(bundle, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'bvmm-settings-backup-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 300);
+    setSettingsStatus('✅ Downloaded backup of ' + count + ' settings. Save it to iCloud Drive, Google Drive, or email it to yourself.', 'ok');
+  };
+
+  // ── IMPORT SETTINGS FROM JSON FILE ───────────────────────
+  window.importSettings = function() {
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json,application/json';
+    inp.onchange = function() {
+      var f = inp.files && inp.files[0];
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var parsed;
+        try { parsed = JSON.parse(e.target.result); }
+        catch(err) { setSettingsStatus('❌ Not valid JSON: ' + err.message, 'err'); return; }
+        if (!parsed || !parsed.keys || typeof parsed.keys !== 'object') {
+          setSettingsStatus('❌ Not a BVMM settings backup file.', 'err');
+          return;
+        }
+        var keyList = Object.keys(parsed.keys).filter(function(k){ return k.indexOf('bvmm_') === 0; });
+        if (keyList.length === 0) {
+          setSettingsStatus('❌ Backup file contains no bvmm_* keys.', 'err');
+          return;
+        }
+        if (!confirm('Restore ' + keyList.length + ' settings from backup?\n\nKeys with the same name will be OVERWRITTEN on this device.')) return;
+        var restored = 0;
+        keyList.forEach(function(k) {
+          try { localStorage.setItem(k, parsed.keys[k]); restored++; } catch(e){}
+        });
+        setSettingsStatus('✅ Restored ' + restored + ' settings. Tap Home → If Something\'s Wrong → Force Reload Tool to see them in the fields.', 'ok');
+      };
+      reader.readAsText(f);
+    };
+    inp.click();
+  };
+})();
+</script>
+<!-- ════════ END STAGING + SETTINGS BACKUP ════════ -->
 
 <script type="text/x-worker-source" id="bvmm-worker-source">
 // BVMM Worker v3 - bvmm-proxy
