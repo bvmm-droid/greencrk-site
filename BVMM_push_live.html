@@ -5159,9 +5159,15 @@ function downloadAll(key) {
   // ── Direct GitHub push — bypasses the Worker entirely.
   // GitHub's REST API supports CORS from any origin, so browsers can call it directly.
   // This avoids the Worker's filename whitelist AND avoids CORS issues with Cloudflare.
+  function getStoredGithubToken() {
+    // Tool's Settings → API Keys → GitHub Token saves under mmm_key_github.
+    // Older docs reference bvmm_gh_tok — check both for safety.
+    return (localStorage.getItem('mmm_key_github') || localStorage.getItem('bvmm_gh_tok') || '').trim();
+  }
+
   async function githubPut(filename, base64content, commitMsg) {
-    var token = localStorage.getItem('bvmm_gh_tok');
-    if (!token) throw new Error('GitHub token not saved. Go to Settings → API Keys → paste GitHub Token, then retry.');
+    var token = getStoredGithubToken();
+    if (!token) throw new Error('GitHub token not saved. Go to More → Settings → API Keys → GitHub Token → paste your token → tap Save.');
     var apiBase = 'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/';
     var gh = {
       'Authorization': 'token ' + token,
@@ -5173,7 +5179,11 @@ function downloadAll(key) {
     try {
       var gr = await fetch(apiBase + filename, { headers: gh });
       if (gr.ok) { var gd = await gr.json(); sha = gd.sha || null; }
-    } catch(_) {}
+      else if (gr.status === 401) throw new Error('GitHub token rejected (401). Token may be expired or lack "repo" scope. Generate a new one at https://github.com/settings/tokens/new');
+      else if (gr.status === 403) throw new Error('GitHub token missing "repo" permission (403). Regenerate with "repo" scope at https://github.com/settings/tokens/new');
+    } catch(e) {
+      if (e.message && e.message.indexOf('GitHub token') === 0) throw e;
+    }
     var pb = { message: commitMsg || ('Update ' + filename + ' via BVMM tool'), content: base64content };
     if (sha) pb.sha = sha;
     var pr = await fetch(apiBase + filename, {
@@ -5185,6 +5195,7 @@ function downloadAll(key) {
     var pd; try { pd = JSON.parse(rawText); } catch(_) { pd = null; }
     if (!pr.ok) {
       var msg = (pd && pd.message) ? pd.message : ('HTTP ' + pr.status);
+      if (pr.status === 401) msg = 'GitHub token rejected. Generate a new one at https://github.com/settings/tokens/new (scope: repo)';
       throw new Error('GitHub: ' + msg);
     }
     return (pd && pd.commit && pd.commit.sha) ? pd.commit.sha.substring(0, 7) : 'ok';
@@ -5230,9 +5241,62 @@ function downloadAll(key) {
       .catch(function(e) { setStagingStatus('Error: ' + e.message, 'err'); });
   };
 
+  // ── Save a timestamped backup of the current live index.html via direct GitHub.
+  // Mirrors the existing pushBackup() flow but without going through the Worker.
+  async function backupLiveBeforePromote() {
+    var liveResp = await fetch('https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?nocache=' + Date.now());
+    if (!liveResp.ok) throw new Error('Could not fetch current live site to back up.');
+    var liveHtml = await liveResp.text();
+
+    // Timestamp (YYYY-MM-DD_HH-MMam_EST format — matches existing manifest style)
+    var now = new Date();
+    var est = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    var y = est.getFullYear(), mo = String(est.getMonth()+1).padStart(2,'0'), d = String(est.getDate()).padStart(2,'0');
+    var h = est.getHours(), ampm = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
+    var min = String(est.getMinutes()).padStart(2,'0');
+    var ts = y + '-' + mo + '-' + d + '_' + h + '-' + min + ampm + '_EST';
+    var backupPath = 'backups/index_' + ts + '.html';
+
+    // 1. Push the backup HTML file via direct GitHub
+    await githubPut(backupPath, encodeForGithub(liveHtml), 'Auto-backup before Promote');
+
+    // 2. Update backups/manifest.json — fetch, prepend, push
+    var manifestApi = 'https://api.github.com/repos/bvmm-droid/greencrk-site/contents/backups/manifest.json';
+    var token = getStoredGithubToken();
+    var gh = {
+      'Authorization': 'token ' + token,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github+json'
+    };
+    var entries = [];
+    var sha = null;
+    try {
+      var mr = await fetch(manifestApi, { headers: gh });
+      if (mr.ok) {
+        var md = await mr.json();
+        sha = md.sha || null;
+        try {
+          var existing = atob((md.content || '').replace(/\n/g, ''));
+          entries = JSON.parse(existing) || [];
+        } catch(_) { entries = []; }
+      }
+    } catch(_) {}
+    entries.unshift({ ts: ts, file: backupPath, summary: 'Pre-promote backup', date: new Date().toISOString() });
+    if (entries.length > 50) entries = entries.slice(0, 50);
+    var manifestJson = JSON.stringify(entries, null, 2);
+    var pb = { message: 'Manifest update for ' + backupPath, content: encodeForGithub(manifestJson) };
+    if (sha) pb.sha = sha;
+    try {
+      await fetch(manifestApi, { method: 'PUT', headers: gh, body: JSON.stringify(pb) });
+    } catch(_) {
+      // Best-effort — if manifest update fails, the backup file still exists.
+    }
+    return backupPath;
+  }
+
   // ── PROMOTE preview.html → index.html ─────────────────────
   window.stagingPromote = async function() {
-    var ok = confirm('Promote preview.html to live index.html?\n\nThis REPLACES greencrk.com with whatever is on the preview page right now. A rollback is auto-saved first.');
+    var ok = confirm('Promote preview.html to live index.html?\n\nThis REPLACES greencrk.com with whatever is on the preview page right now. The current live site will be auto-saved to Version History first.');
     if (!ok) return;
     var previewRaw = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/preview.html';
     setStagingStatus('Fetching preview.html …', 'info');
@@ -5242,20 +5306,21 @@ function downloadAll(key) {
       if (!pResp.ok) throw new Error('HTTP ' + pResp.status);
       var html = await pResp.text();
 
-      // Save current live as a rollback first (best-effort, via existing Worker path)
+      // Save current live as a timestamped backup + manifest entry
+      setStagingStatus('Backing up current live site to Version History …', 'info');
+      var backupPath = null;
       try {
-        if (typeof RAW !== 'undefined' && typeof saveRollback === 'function') {
-          var liveResp = await fetch(RAW + '?nocache=' + Date.now());
-          if (liveResp.ok) {
-            var liveHtml = await liveResp.text();
-            try { saveRollback(liveHtml); } catch(_) {}
-          }
+        backupPath = await backupLiveBeforePromote();
+      } catch(backupErr) {
+        if (!confirm('Backup failed: ' + backupErr.message + '\n\nPromote anyway without a backup?')) {
+          setStagingStatus('Cancelled.', 'err'); return;
         }
-      } catch(_) {}
+      }
 
       setStagingStatus('Promoting to live …', 'info');
-      var commit = await githubPut('index.html', encodeForGithub(html), 'Promote preview to live via BVMM tool');
-      setStagingStatus('🎉 LIVE on greencrk.com! (commit ' + commit + ') Wait ~30 seconds for the CDN to refresh.', 'ok');
+      var commit = await githubPut('index.html', encodeForGithub(html), backupPath ? ('Promote preview (backup: ' + backupPath + ')') : 'Promote preview to live');
+      var backupNote = backupPath ? ' · backed up to ' + backupPath : '';
+      setStagingStatus('🎉 LIVE on greencrk.com! (commit ' + commit + ')' + backupNote + ' — wait ~30 seconds for CDN.', 'ok');
     } catch(e) {
       setStagingStatus('Error: ' + e.message, 'err');
     }
