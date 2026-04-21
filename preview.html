@@ -573,8 +573,8 @@ html{scroll-behavior:smooth;overflow-x:clip}
   --gold2:#8A9FB2;
   --mint:#5C3A2D;
   --white:#2C1810;
-  --mid:rgba(92,58,45,.55);
-  --muted:rgba(92,58,45,.50);
+  --mid:rgba(92,58,45,.75);
+  --muted:rgba(92,58,45,.62);
   --border:rgba(92,58,45,.15);
   --border2:rgba(92,58,45,.08);
 }
@@ -679,8 +679,8 @@ nav .nav-center-logo{
 }
 .hero-eye{font-size:.54rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(44,24,16,.65);font-weight:700;margin-bottom:14px}
 .hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.8rem,7vw,5rem);line-height:1.06;font-weight:700;color:#2C1810;margin-bottom:4px}
-.hero h1 em{display:block;font-style:italic;font-weight:400;color:#A9B7A0;font-size:clamp(2.2rem,5.5vw,4rem)}
-.hero-sub{font-size:.78rem;color:rgba(44,24,16,.6);line-height:1.85;font-weight:500;letter-spacing:.12em;text-transform:uppercase;max-width:440px;margin:14px auto 28px}
+.hero h1 em{display:block;font-style:italic;font-weight:400;color:#6B8970;font-size:clamp(2.2rem,5.5vw,4rem)}
+.hero-sub{font-size:.78rem;color:rgba(44,24,16,.78);line-height:1.85;font-weight:500;letter-spacing:.12em;text-transform:uppercase;max-width:440px;margin:14px auto 28px}
 .hero-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
 .btn-pill-dark{background:#5C3A2D;color:#F4F1EB;font-family:'Playfair Display',serif;font-size:.95rem;font-style:italic;font-weight:700;padding:14px 34px;border-radius:100px;text-decoration:none;border:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s;white-space:nowrap}
 .btn-pill-dark:hover{background:#7a4e3d;transform:translateY(-2px);box-shadow:0 6px 24px rgba(92,58,45,.25)}
@@ -1331,16 +1331,20 @@ footer{background:#0a0806;border-top:1px solid rgba(255,255,255,.07);padding:48p
   border:none;
   border-radius:0;
   padding:8px;
-  color:#fff;
+  color:#2a1810;
   font-family:'Inter',sans-serif;
   font-size:.72rem;
-  font-weight:500;
+  font-weight:600;
   cursor:pointer;
-  transition:opacity .2s;
+  transition:opacity .2s, color .3s;
   white-space:nowrap;
 }
 .nav-search-pill:hover{opacity:.7;}
-.nav-search-pill svg{opacity:.9;flex-shrink:0}
+.nav-search-pill svg{opacity:.95;flex-shrink:0;stroke-width:2.5}
+
+/* When nav becomes dark floating pill (scrolled), flip text to white for contrast */
+nav.scrolled .nav-search-pill{color:#fff}
+nav.scrolled .nav-search-pill svg{opacity:1}
 
 /* ── NAV ICON ANIMATIONS ── */
 @keyframes iconBounce{
@@ -1531,17 +1535,17 @@ nav.scrolled {
 /* ═══ PHASE 1 ADDITIONS ═══ */
 
 /* TRUST LINE (single elegant line under header) */
-.trust-line{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-family:'Inter',sans-serif;font-size:.62rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,242,236,.55);text-align:center}
+.trust-line{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-family:'Inter',sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(44,24,16,.92);text-align:center}
 .trust-line a{color:inherit;text-decoration:none}
 .trust-line .dot{color:var(--gold);font-weight:700;margin:0 2px}
 #hoursBadge{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 
 /* STICKY CHIP BAR */
-.chipbar{position:sticky;top:0;z-index:85;background:rgba(17,12,10,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap;padding:10px 12px;display:flex;gap:6px;align-items:center}
+.chipbar{position:sticky;top:0;z-index:85;background:rgba(17,12,10,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;white-space:nowrap;padding:10px 12px;display:flex;gap:6px;align-items:center}
 .chipbar::-webkit-scrollbar{display:none}
-.chip{font-family:'Inter',sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,242,236,.55);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:100px;padding:8px 16px;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .18s;flex-shrink:0;min-height:32px;display:inline-flex;align-items:center}
-.chip:hover{background:rgba(255,255,255,.1);color:var(--white)}
-.chip.active{background:var(--gold);color:#1a0a04;border-color:transparent}
+.chip{font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,242,236,.95);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:8px 16px;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:all .18s;flex-shrink:0;min-height:32px;display:inline-flex;align-items:center}
+.chip:hover{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.35)}
+.chip.active{background:var(--gold);color:#1a0a04;border-color:var(--gold);box-shadow:0 2px 8px rgba(169,133,81,.3)}
 
 /* LCARD-MROW — new butcher grid card (photo-on-top, 2-col) */
 .butcher-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 0;margin-bottom:16px}
@@ -1601,6 +1605,17 @@ nav.scrolled {
 
 </nav>
 
+<!-- TRUST LINE — Phase 1 (moved to very top, under nav) -->
+<div class="trust-line">
+  <span>Est. 1983</span>
+  <span class="dot">·</span>
+  <span>Family Owned</span>
+  <span class="dot">·</span>
+  <a href="https://www.google.com/maps/place/?q=place_id:ChIJuWRRQdXS6YkReKv6IeiuifA" target="_blank">⭐ 4.7 (90 Google reviews)</a>
+  <span class="dot">·</span>
+  <span id="hoursBadge"></span>
+</div>
+
 <!-- SEARCH DROPDOWN -->
 <div class="search-drop" id="searchDrop">
   <div class="search-drop-inner">
@@ -1635,7 +1650,7 @@ nav.scrolled {
 
     <div style="display:flex;flex-direction:row;gap:10px;justify-content:center;margin-top:4px">
       <a href="javascript:void(0)" onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})" style="background:var(--gold);color:#111;font-family:'Playfair Display',serif;font-size:.85rem;font-style:italic;font-weight:600;padding:12px 24px;border-radius:100px;border:none;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;flex-shrink:0">View Our Menu</a>
-      <a href="javascript:void(0)" onclick="document.getElementById('catering').scrollIntoView({behavior:'smooth'})" style="background:transparent;color:#f5f2ec;font-family:'Playfair Display',serif;font-size:.85rem;font-style:italic;padding:12px 24px;border-radius:100px;border:1px solid rgba(255,255,255,.5);text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;flex-shrink:0">Catering &amp; Events</a>
+      <a href="javascript:void(0)" onclick="document.getElementById('catering').scrollIntoView({behavior:'smooth'})" style="background:transparent;color:#2a1810;font-family:'Playfair Display',serif;font-size:.85rem;font-style:italic;font-weight:600;padding:12px 24px;border-radius:100px;border:1.5px solid rgba(42,24,16,.4);text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;flex-shrink:0">Catering &amp; Events</a>
     </div>
   </div>
 </section>
@@ -1680,17 +1695,6 @@ nav.scrolled {
       <div class="witem"><span class="witem-tag">Kitchen</span><div class="witem-name">House Meat Sauce</div><div class="witem-price">$10.99/qt</div></div>
     </div>
   </div>
-</div>
-
-<!-- TRUST LINE — Phase 1 -->
-<div class="trust-line">
-  <span>Est. 1983</span>
-  <span class="dot">·</span>
-  <span>Family Owned</span>
-  <span class="dot">·</span>
-  <a href="https://www.google.com/maps/place/?q=place_id:ChIJuWRRQdXS6YkReKv6IeiuifA" target="_blank">⭐ 4.7 (90 Google reviews)</a>
-  <span class="dot">·</span>
-  <span id="hoursBadge"></span>
 </div>
 
 <!-- SHOP THE COUNTER -->
