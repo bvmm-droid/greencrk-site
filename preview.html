@@ -8665,5 +8665,224 @@ if('serviceWorker' in navigator){
 </script>
 <!-- ═══ END PHASE 1 SCRIPTS ═══ -->
 
+<!-- ═══ BVMM ADMIN MODE — activate with ?admin=1 ═══ -->
+<style>
+#bvmm-admin-panel {
+  position: fixed; bottom: 16px; left: 16px; z-index: 99998;
+  width: 260px; max-height: 82vh; display: flex; flex-direction: column;
+  background: #2a1810; color: #f5f0e8;
+  border: 1px solid rgba(245,240,232,.12);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px; overflow: hidden;
+}
+#bvmm-admin-panel.bap-hidden { display: none; }
+.bap-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; background: rgba(0,0,0,.25);
+  font-weight: 600; letter-spacing: .3px; cursor: default;
+}
+.bap-header-title { display: flex; align-items: center; gap: 8px; }
+.bap-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #8fbf5f; box-shadow: 0 0 0 2px rgba(143,191,95,.2);
+}
+.bap-close {
+  background: transparent; border: none; color: #f5f0e8;
+  font-size: 22px; line-height: 1; cursor: pointer;
+  padding: 0 4px; opacity: .7;
+}
+.bap-close:hover { opacity: 1; }
+.bap-body { padding: 14px; overflow-y: auto; flex: 1; }
+.bap-section-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.4px;
+  opacity: .55; margin: 0 0 10px;
+}
+.bap-rows { display: flex; flex-direction: column; gap: 2px; }
+.bap-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 8px; border-radius: 8px; cursor: pointer;
+  min-height: 40px;
+}
+.bap-row:hover { background: rgba(255,255,255,.05); }
+.bap-row input[type=checkbox] {
+  width: 20px; height: 20px; margin: 0; accent-color: #8fbf5f;
+  cursor: pointer; flex-shrink: 0;
+}
+.bap-row span { flex: 1; font-size: 14px; }
+.bap-footer {
+  display: flex; gap: 8px; padding: 12px 14px;
+  background: rgba(0,0,0,.2); border-top: 1px solid rgba(255,255,255,.08);
+}
+.bap-footer button {
+  flex: 1; padding: 9px 10px; border-radius: 8px;
+  border: 1px solid rgba(245,240,232,.2);
+  background: transparent; color: #f5f0e8;
+  cursor: pointer; font-size: 13px; font-weight: 500;
+  font-family: inherit;
+}
+.bap-footer button:active { background: rgba(255,255,255,.1); }
+.bap-footer button.bap-primary {
+  background: #8fbf5f; color: #2a1810;
+  border-color: #8fbf5f; font-weight: 600;
+}
+#bvmm-admin-reopen {
+  position: fixed; bottom: 16px; left: 16px; z-index: 99997;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #2a1810; color: #f5f0e8;
+  border: 1px solid rgba(245,240,232,.15);
+  font-size: 22px; cursor: pointer; display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  font-family: inherit;
+}
+#bvmm-admin-reopen.bap-show { display: block; }
+.bvmm-admin-mode { outline: 2px dashed rgba(143,191,95,.3); outline-offset: -2px; }
+.bap-mode-badge {
+  position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+  background: rgba(42,24,16,.92); color: #8fbf5f;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; z-index: 99996;
+  border: 1px solid rgba(143,191,95,.3);
+  font-family: -apple-system, sans-serif;
+  pointer-events: none;
+}
+</style>
+
+<script>
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('admin') !== '1') return;
+
+  var SECTIONS = [
+    {id:'home',     label:'Hero / Logo'},
+    {id:'weekly',   label:'Weekly Strip'},
+    {id:'showcase', label:'Butcher Case'},
+    {id:'menu',     label:'Deli / Sandwiches'},
+    {id:'order',    label:'Online Ordering'},
+    {id:'catering', label:'Catering'},
+    {id:'recipe',   label:'Recipes'},
+    {id:'about',    label:'Our Story'},
+    {id:'contact',  label:'Find Us'},
+    {id:'footer',   label:'Footer'}
+  ];
+
+  var STATE_KEY = 'bvmm_admin_sections_v1';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(STATE_KEY) || '{}'); } catch(e) {}
+
+  function toggleSection(id, show) {
+    var els = document.querySelectorAll('[id="' + id + '"]');
+    for (var i = 0; i < els.length; i++) {
+      els[i].style.display = show ? '' : 'none';
+    }
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+
+  function build() {
+    // apply saved state immediately
+    SECTIONS.forEach(function(s){
+      var shown = state[s.id] !== false;
+      toggleSection(s.id, shown);
+    });
+
+    // check for ?only= to focus on single section
+    var only = params.get('only');
+    if (only) {
+      SECTIONS.forEach(function(s){
+        toggleSection(s.id, s.id === only);
+      });
+    }
+
+    document.body.classList.add('bvmm-admin-mode');
+
+    // mode badge
+    var badge = document.createElement('div');
+    badge.className = 'bap-mode-badge';
+    badge.textContent = 'Admin Mode' + (only ? ' · ' + only : '');
+    document.body.appendChild(badge);
+
+    // panel
+    var panel = document.createElement('div');
+    panel.id = 'bvmm-admin-panel';
+    panel.innerHTML = [
+      '<div class="bap-header">',
+      '  <div class="bap-header-title"><span class="bap-dot"></span>Admin</div>',
+      '  <button class="bap-close" aria-label="Close">×</button>',
+      '</div>',
+      '<div class="bap-body">',
+      '  <div class="bap-section-title">Show / Hide Sections</div>',
+      '  <div class="bap-rows"></div>',
+      '</div>',
+      '<div class="bap-footer">',
+      '  <button class="bap-all-off">Hide All</button>',
+      '  <button class="bap-all-on bap-primary">Show All</button>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(panel);
+
+    var rowsEl = panel.querySelector('.bap-rows');
+    SECTIONS.forEach(function(s){
+      var shown = state[s.id] !== false;
+      var row = document.createElement('label');
+      row.className = 'bap-row';
+      row.innerHTML = '<input type="checkbox" data-id="' + s.id + '"' +
+                      (shown ? ' checked' : '') + '><span>' + s.label + '</span>';
+      rowsEl.appendChild(row);
+    });
+
+    // reopen button
+    var reopen = document.createElement('button');
+    reopen.id = 'bvmm-admin-reopen';
+    reopen.innerHTML = '🔧';
+    reopen.setAttribute('aria-label', 'Open admin panel');
+    document.body.appendChild(reopen);
+
+    // wiring
+    panel.querySelector('.bap-close').addEventListener('click', function(){
+      panel.classList.add('bap-hidden');
+      reopen.classList.add('bap-show');
+    });
+
+    reopen.addEventListener('click', function(){
+      panel.classList.remove('bap-hidden');
+      reopen.classList.remove('bap-show');
+    });
+
+    rowsEl.addEventListener('change', function(e){
+      var t = e.target;
+      if (!t.matches('input[type=checkbox]')) return;
+      var id = t.getAttribute('data-id');
+      state[id] = t.checked;
+      saveState();
+      toggleSection(id, t.checked);
+    });
+
+    panel.querySelector('.bap-all-on').addEventListener('click', function(){
+      SECTIONS.forEach(function(s){ state[s.id] = true; toggleSection(s.id, true); });
+      rowsEl.querySelectorAll('input').forEach(function(i){ i.checked = true; });
+      saveState();
+    });
+
+    panel.querySelector('.bap-all-off').addEventListener('click', function(){
+      SECTIONS.forEach(function(s){ state[s.id] = false; toggleSection(s.id, false); });
+      rowsEl.querySelectorAll('input').forEach(function(i){ i.checked = false; });
+      saveState();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', build);
+  } else {
+    build();
+  }
+})();
+</script>
+<!-- ═══ END BVMM ADMIN MODE ═══ -->
+
 </body>
 </html>
