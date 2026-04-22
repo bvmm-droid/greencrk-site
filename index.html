@@ -1114,7 +1114,7 @@ nav.scrolled {
   </button>
 
   <!-- CENTER: Brand -->
-  <a href="#home" class="nav-center-logo" onclick="adminSecretTap()" style="justify-content:center;border:none;line-height:1;text-decoration:none;display:flex;align-items:center"></a>
+  <a href="#home" class="nav-center-logo" id="bvmm-logo-link" style="justify-content:center;border:none;line-height:1;text-decoration:none;display:flex;align-items:center"></a>
 
   <!-- RIGHT: Search + Cart -->
   <div class="nav-right">
@@ -3419,20 +3419,34 @@ function cCalcItem(item){
 
 /* ── ADMIN / PROFIT MARGIN ENGINE ── */
 var adminMode=false;
-var adminClickCount=0;
-var adminClickTimer=null;
-
-// Triple-tap the logo to activate — then enter PIN
-function adminSecretTap(){
-  adminClickCount++;
-  clearTimeout(adminClickTimer);
-  if(adminClickCount>=3){
-    adminClickCount=0;
-    toggleAdmin(true);
-  } else {
-    adminClickTimer=setTimeout(function(){adminClickCount=0;},800);
+// Long-press the logo (1 second) to open admin login
+(function(){
+  var el = document.getElementById('bvmm-logo-link');
+  if (!el) return;
+  var timer = null;
+  var triggered = false;
+  function start(e){
+    triggered = false;
+    timer = setTimeout(function(){
+      triggered = true;
+      bvmmShowLoginModal();
+    }, 900);
   }
-}
+  function cancel(){
+    clearTimeout(timer);
+  }
+  el.addEventListener('touchstart', start, {passive:true});
+  el.addEventListener('touchend', cancel);
+  el.addEventListener('touchmove', cancel);
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mouseup', cancel);
+  el.addEventListener('mouseleave', cancel);
+  // Prevent navigation if long-press triggered
+  el.addEventListener('click', function(e){
+    if(triggered){ e.preventDefault(); triggered = false; }
+  });
+})();
+function adminSecretTap(){} // legacy stub
 
 function toggleAdmin(on){
   if(on){
