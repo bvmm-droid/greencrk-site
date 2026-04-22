@@ -5173,9 +5173,10 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
     if(!el) return;
     var tok = getToken();
     if(!tok){
-      el.innerHTML='<div class="bdp-backups-empty">Session expired — log in again.</div>';
+      el.innerHTML='<div class="bdp-backups-empty">❌ No session token — log out and back in.</div>';
       return;
     }
+    el.innerHTML='<div class="bdp-backups-empty">Checking Worker…</div>';
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, 8000) : null;
     fetch(WORKER, {
@@ -5184,8 +5185,16 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
       body: JSON.stringify({action:'list-backups', token: tok}),
       signal: ctrl ? ctrl.signal : undefined
     })
-    .then(function(r){ clearTimeout(timer); return r.json(); })
+    .then(function(r){
+      clearTimeout(timer);
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
     .then(function(res){
+      if(res.error === 'Session expired — please log in again.'){
+        el.innerHTML='<div class="bdp-backups-empty">❌ Session expired — log out and back in.</div>';
+        return;
+      }
       if(!res.ok || !res.backups || !res.backups.length){
         el.innerHTML='<div class="bdp-backups-empty">No backups yet.</div>';
         return;
@@ -5197,9 +5206,9 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
           '</div>';
       }).join('');
     })
-    .catch(function(){
+    .catch(function(err){
       clearTimeout(timer);
-      el.innerHTML='<div class="bdp-backups-empty">Could not load backups.</div>';
+      el.innerHTML='<div class="bdp-backups-empty">❌ ' + (err.name==='AbortError' ? 'Worker timed out (8s)' : 'Error: ' + err.message) + '</div>';
     });
   }
 
