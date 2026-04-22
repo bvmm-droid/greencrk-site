@@ -5169,16 +5169,23 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
 
   // Load backup list
   function loadBackups(){
+    var el = document.getElementById('bdp-backups-list');
+    if(!el) return;
     var tok = getToken();
-    if(!tok) return;
+    if(!tok){
+      el.innerHTML='<div class="bdp-backups-empty">Session expired — log in again.</div>';
+      return;
+    }
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, 8000) : null;
     fetch(WORKER, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({action:'list-backups', token: tok})
+      body: JSON.stringify({action:'list-backups', token: tok}),
+      signal: ctrl ? ctrl.signal : undefined
     })
-    .then(function(r){ return r.json(); })
+    .then(function(r){ clearTimeout(timer); return r.json(); })
     .then(function(res){
-      var el = document.getElementById('bdp-backups-list');
       if(!res.ok || !res.backups || !res.backups.length){
         el.innerHTML='<div class="bdp-backups-empty">No backups yet.</div>';
         return;
@@ -5191,8 +5198,8 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
       }).join('');
     })
     .catch(function(){
-      document.getElementById('bdp-backups-list').innerHTML =
-        '<div class="bdp-backups-empty">Could not load backups.</div>';
+      clearTimeout(timer);
+      el.innerHTML='<div class="bdp-backups-empty">Could not load backups.</div>';
     });
   }
 
