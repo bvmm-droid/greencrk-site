@@ -5262,8 +5262,9 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
         return;
       }
       el.innerHTML = res.backups.slice(0,5).map(function(b){
+        var label = b.label || (b.filename ? b.filename.replace(/^backups\//,'').replace(/\.html?$/i,'') : 'Backup');
         return '<div class="bdp-backup-row">' +
-          '<span class="bdp-backup-name">' + b.label + '</span>' +
+          '<span class="bdp-backup-name">' + label + '</span>' +
           '<button class="bdp-backup-restore" onclick="bvmmRestore(\'' + b.filename + '\')">Restore</button>' +
           '</div>';
       }).join('');
