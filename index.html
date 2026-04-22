@@ -5081,25 +5081,60 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
   // File picker
   var fileInput = document.getElementById('bdp-file-input');
   var dropZone  = document.getElementById('bdp-drop');
+  var lastHandledFileKey = null;
 
-  fileInput.addEventListener('change', function(e){
-    // Immediate feedback so we can SEE the event fired
-    setStatus('ok','📥 File picker returned...');
-    var f = this.files && this.files[0];
-    if(!f){
-      setStatus('err','File picker closed without a file. Tap the box and try again.');
-      return;
-    }
-    // Accept .html files (validate by name, not MIME — iOS is unreliable with MIME)
+  // Process the selected file — called from multiple triggers below
+  function handlePickedFile(f, source){
+    if(!f) return false;
+    // Dedupe: don't re-process the same file twice
+    var key = f.name + '|' + f.size + '|' + (f.lastModified||'');
+    if(key === lastHandledFileKey) return true;
+    lastHandledFileKey = key;
+
     if(!/\.html?$/i.test(f.name)){
       setStatus('err','Please select an .html file (got: '+f.name+').');
       document.getElementById('bdp-push-btn').disabled = true;
-      return;
+      return true;
     }
     var sizeKB = Math.round(f.size/1024);
     document.getElementById('bdp-filename').textContent = '✓ ' + f.name + ' (' + sizeKB + ' KB)';
     document.getElementById('bdp-push-btn').disabled = false;
-    setStatus('ok','File ready. Tap Push Live.');
+    setStatus('ok','File ready ['+source+']. Tap Push Live.');
+    return true;
+  }
+
+  // Trigger 1: normal change event (works on desktop, sometimes iOS)
+  fileInput.addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    if(f){ handlePickedFile(f,'change'); }
+    else { setStatus('err','Picker closed without a file. Try again.'); }
+  });
+
+  // Trigger 2: input event — some iOS versions fire this instead of change
+  fileInput.addEventListener('input', function(){
+    var f = this.files && this.files[0];
+    if(f) handlePickedFile(f,'input');
+  });
+
+  // Trigger 3: window focus — when user returns from the iOS file picker,
+  // the window regains focus. Poll for ~3 seconds to catch the file even if
+  // change/input never fires.
+  var pollTimer = null;
+  window.addEventListener('focus', function(){
+    if(pollTimer) clearInterval(pollTimer);
+    var tries = 0;
+    pollTimer = setInterval(function(){
+      tries++;
+      var f = fileInput.files && fileInput.files[0];
+      if(f){
+        handlePickedFile(f,'focus-poll');
+        clearInterval(pollTimer);
+        pollTimer = null;
+      } else if(tries > 30){ // ~3 seconds at 100ms
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }, 100);
   });
 
   dropZone.addEventListener('dragover', function(e){
@@ -5123,13 +5158,9 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
       dt.items.add(f);
       fileInput.files = dt.files;
     }catch(err){
-      // Fallback: just stash the file on the input element
       fileInput._droppedFile = f;
     }
-    var sizeKB = Math.round(f.size/1024);
-    document.getElementById('bdp-filename').textContent = '✓ ' + f.name + ' (' + sizeKB + ' KB)';
-    document.getElementById('bdp-push-btn').disabled = false;
-    setStatus('ok','File ready. Tap Push Live.');
+    handlePickedFile(f,'drop');
   });
 
   function setStatus(type, msg){
