@@ -5044,12 +5044,12 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
     <span class="bdp-toggle" id="bdp-toggle-icon">▼</span>
   </div>
   <div class="bdp-body" id="bdp-body">
-    <div class="bdp-drop" id="bdp-drop" onclick="document.getElementById('bdp-file-input').click()">
-      <input type="file" id="bdp-file-input" accept=".html,text/html" style="display:none">
+    <label class="bdp-drop" id="bdp-drop" for="bdp-file-input">
+      <input type="file" id="bdp-file-input" accept=".html,text/html" style="position:absolute;left:-9999px;opacity:0;pointer-events:none">
       <div class="bdp-drop-icon">📄</div>
       <div class="bdp-drop-label">Drop <strong>index.html</strong> here<br>or tap to choose</div>
       <div class="bdp-filename" id="bdp-filename"></div>
-    </div>
+    </label>
     <button class="bdp-push" id="bdp-push-btn" onclick="bvmmDeploy()" disabled>⬆ Push Live</button>
     <div class="bdp-status" id="bdp-status"></div>
     <div class="bdp-backups-title">Recent Backups</div>
@@ -5082,10 +5082,12 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
   var fileInput = document.getElementById('bdp-file-input');
   var dropZone  = document.getElementById('bdp-drop');
 
-  fileInput.addEventListener('change', function(){
+  fileInput.addEventListener('change', function(e){
+    // Immediate feedback so we can SEE the event fired
+    setStatus('ok','📥 File picker returned...');
     var f = this.files && this.files[0];
     if(!f){
-      setStatus('err','File picker closed — no file selected. Tap the box and try again.');
+      setStatus('err','File picker closed without a file. Tap the box and try again.');
       return;
     }
     // Accept .html files (validate by name, not MIME — iOS is unreliable with MIME)
