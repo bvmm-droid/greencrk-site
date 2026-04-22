@@ -4882,9 +4882,15 @@ if('serviceWorker' in navigator){
     document.querySelectorAll('#bsp-rows input').forEach(function(i){i.checked=show;});
   };
 
-  // ── On load: restore session ────────────────────────────────────
+  // ── On load: restore session or trigger login via URL ──────────
   document.addEventListener('DOMContentLoaded',function(){
-    if(getSession()) enterAdmin();
+    if(getSession()){
+      enterAdmin();
+    } else if(window.location.search.indexOf('admin')>-1 || window.location.hash === '#admin'){
+      // Clean the URL so it doesn't show ?admin in the bar
+      history.replaceState(null,'',window.location.pathname);
+      bvmmShowLoginModal();
+    }
   });
 })();
 </script>
