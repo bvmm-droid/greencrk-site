@@ -8213,6 +8213,11 @@ body.admin-mode .bvmm-img-pending img {
       btn.disabled = true;
       setStatus('ok', 'Uploading…');
       uploadToWorker(modalState.fileBlob).then(function(newSrc){
+        // Blob URL for in-session preview: the just-uploaded GitHub path
+        // won't be servable by Pages for ~30s while it rebuilds. Blob URL
+        // dies on page reload but newSrc is what the rewriter uses, so
+        // after Push Live + Pages rebuild, the real URL takes over.
+        var blobPreview = URL.createObjectURL(modalState.fileBlob);
         // Pending edit keyed by cardAnchor — scoped rewriter only mutates
         // <img> tags inside cards whose subtree contains this anchor.
         api.setPending(imgEditKey(modalState.cardAnchor), {
@@ -8221,10 +8226,11 @@ body.admin-mode .bvmm-img-pending img {
           newSrc: newSrc,
           cardAnchor: modalState.cardAnchor,
           cardName: modalState.cardName,
-          attribution: null
+          attribution: null,
+          previewUrl: blobPreview
         });
         var img = modalState.container.querySelector('img');
-        if(img) img.src = newSrc;
+        if(img) img.src = blobPreview;
         modalState.container.classList.add('bvmm-img-pending');
         setStatus('ok', '✓ Uploaded. Commit to publish.');
         setTimeout(closeUploadModal, 900);
