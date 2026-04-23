@@ -7661,8 +7661,8 @@ body.admin-mode .bvmm-img-pending img {
 }
 .bvmm-result {
   position: relative;
-  aspect-ratio: 1 / 1;
-  background: #f2efe9;
+  aspect-ratio: 4 / 3;
+  background: #1a1a1a;
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
@@ -7671,7 +7671,7 @@ body.admin-mode .bvmm-img-pending img {
 .bvmm-result img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 .bvmm-result.selected {
@@ -7975,7 +7975,7 @@ body.admin-mode .bvmm-img-pending img {
     if(source === 'pexels'){
       return (data.photos || []).map(function(p){
         return {
-          thumbUrl: p.src && (p.src.tiny || p.src.small || p.src.medium),
+          thumbUrl: p.src && (p.src.medium || p.src.small || p.src.tiny),
           fullUrl:  p.src && (p.src.large2x || p.src.large || p.src.original),
           credit: {
             name: p.photographer || 'Pexels',
@@ -7989,7 +7989,7 @@ body.admin-mode .bvmm-img-pending img {
       return (data.results || []).map(function(p){
         var u = p.urls || {};
         return {
-          thumbUrl: u.thumb || u.small,
+          thumbUrl: u.small || u.thumb,
           fullUrl:  u.regular || u.full,
           credit: {
             name: (p.user && p.user.name) || 'Unsplash',
