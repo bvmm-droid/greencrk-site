@@ -6006,11 +6006,12 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
         }
       } else if(p.type==='image'){
         title = 'Image — ' + (p.cardName || 'item');
+        var afterSrc = p.previewUrl || p.newSrc;
         rows =
           '<div class="bvmm-diff-img-pair">' +
             '<img src="'+esc(p.origSrc)+'" alt="before" onerror="this.style.opacity=0.25">' +
             '<span class="bvmm-diff-img-arrow">→</span>' +
-            '<img src="'+esc(p.newSrc)+'" alt="after" onerror="this.style.opacity=0.25">' +
+            '<img src="'+esc(afterSrc)+'" alt="after" onerror="this.style.opacity=0.25">' +
           '</div>';
         if(p.attribution){
           rows += '<div class="bvmm-diff-img-attr">'+esc(p.attribution)+'</div>';
@@ -8233,11 +8234,16 @@ body.admin-mode .bvmm-img-pending img {
           newSrc: newSrc,
           cardAnchor: modalState.cardAnchor,
           cardName: modalState.cardName,
-          attribution: altText
+          attribution: altText,
+          previewUrl: sel.fullUrl || null
         });
         var img = modalState.container.querySelector('img');
         if(img){
-          img.src = newSrc;
+          // Use the original stock URL for immediate visual preview — the
+          // newSrc path won't be servable until Pages rebuilds (~30s).
+          // Push Live uses newSrc in the source, so after rebuild + refresh
+          // the real path takes over.
+          img.src = sel.fullUrl || newSrc;
           if(altText) img.alt = altText;
         }
         modalState.container.classList.add('bvmm-img-pending');
