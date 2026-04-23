@@ -1302,7 +1302,7 @@ nav.scrolled {
   <div id="deli-sandwiches" class="deli-section">
     <div class="deli-section-head" data-bvmm-edit="auto_deli_section_head_7cc7ab">Sandwiches & Wraps</div>
     <div class="lunch-grid">
-      <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',1600,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img alt="Photo by Polina Tankilevitch on Pexels" src="images/uploaded/20260423-1decb550.jpg" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$1600</div></div></div>
+      <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',16,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Rustic London',16,'Prime steak on rustic bread with sautéed mushrooms and onions','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Rustic London</div><div class="lcard-desc">Prime steak on rustic bread with sautéed mushrooms and onions</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Reubenville',18,'Corned beef, swiss cheese, sauerkraut, mustard on rye bread','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Reubenville</div><div class="lcard-desc">Corned beef, swiss cheese, sauerkraut, mustard on rye bread</div><div class="lcard-price">$18</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Dave's Philly Cheesesteak',18,'Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Dave's Philly Cheesesteak</div><div class="lcard-desc">Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero</div><div class="lcard-price">$18</div></div></div>
@@ -8411,53 +8411,75 @@ body.admin-mode .bvmm-img-pending img {
     }
     var replacements = 0;
     var usedFallback = false;
-    var result = api.scope.withinCardCounted(src, p.cardAnchor, function(cardHtml){
-      // Primary: exact origSrc match.
-      var re = new RegExp('(<img[^>]*\\ssrc=")' + escReg(p.origSrc) + '("[^>]*>)', 'g');
-      var afterPrimary = cardHtml.replace(re, function(whole, pre, post){
-        replacements++;
-        var imgTag = pre + p.newSrc + post;
-        if(p.attribution){
-          var safeAlt = String(p.attribution).replace(/"/g, '&quot;');
-          if(/\salt="[^"]*"/.test(imgTag)){
-            imgTag = imgTag.replace(/\salt="[^"]*"/, ' alt="' + safeAlt + '"');
-          } else {
-            imgTag = imgTag.replace(/^<img\b/, '<img alt="' + safeAlt + '"');
-          }
-        }
-        return imgTag;
-      });
-      if(replacements > 0) return afterPrimary;
+    var usedNameAnchor = false;
 
-      // Fallback: origSrc is stale (live source moved on since capture).
-      // Scope is already ONE card — replace the first <img>'s src wholesale.
-      // Only kicks in when the strict match fails, so D3a safety holds.
-      var fallbackRe = /(<img[^>]*\ssrc=")([^"]*)("[^>]*>)/;
-      var afterFallback = cardHtml.replace(fallbackRe, function(whole, pre, _oldSrc, post){
-        replacements++;
-        usedFallback = true;
-        var imgTag = pre + p.newSrc + post;
-        if(p.attribution){
-          var safeAlt = String(p.attribution).replace(/"/g, '&quot;');
-          if(/\salt="[^"]*"/.test(imgTag)){
-            imgTag = imgTag.replace(/\salt="[^"]*"/, ' alt="' + safeAlt + '"');
-          } else {
-            imgTag = imgTag.replace(/^<img\b/, '<img alt="' + safeAlt + '"');
+    function runWithAnchor(anchor){
+      return api.scope.withinCardCounted(src, anchor, function(cardHtml){
+        // Primary: exact origSrc match.
+        var re = new RegExp('(<img[^>]*\\ssrc=")' + escReg(p.origSrc) + '("[^>]*>)', 'g');
+        var afterPrimary = cardHtml.replace(re, function(whole, pre, post){
+          replacements++;
+          var imgTag = pre + p.newSrc + post;
+          if(p.attribution){
+            var safeAlt = String(p.attribution).replace(/"/g, '&quot;');
+            if(/\salt="[^"]*"/.test(imgTag)){
+              imgTag = imgTag.replace(/\salt="[^"]*"/, ' alt="' + safeAlt + '"');
+            } else {
+              imgTag = imgTag.replace(/^<img\b/, '<img alt="' + safeAlt + '"');
+            }
           }
-        }
-        return imgTag;
+          return imgTag;
+        });
+        if(replacements > 0) return afterPrimary;
+
+        // Inner fallback: origSrc is stale — swap the first <img>'s src in the card.
+        var fallbackRe = /(<img[^>]*\ssrc=")([^"]*)("[^>]*>)/;
+        return cardHtml.replace(fallbackRe, function(whole, pre, _oldSrc, post){
+          replacements++;
+          usedFallback = true;
+          var imgTag = pre + p.newSrc + post;
+          if(p.attribution){
+            var safeAlt = String(p.attribution).replace(/"/g, '&quot;');
+            if(/\salt="[^"]*"/.test(imgTag)){
+              imgTag = imgTag.replace(/\salt="[^"]*"/, ' alt="' + safeAlt + '"');
+            } else {
+              imgTag = imgTag.replace(/^<img\b/, '<img alt="' + safeAlt + '"');
+            }
+          }
+          return imgTag;
+        });
       });
-      return afterFallback;
-    });
+    }
+
+    // 1. Try the exact openOrderSheet anchor captured at edit time.
+    var result = runWithAnchor(p.cardAnchor);
+
+    // 2. If no card matched (source moved on since capture — e.g. a rename
+    //    or price change committed earlier), try the card's display name as
+    //    a looser anchor. Name is unique enough within a catalog.
+    if(result.cardsTouched === 0 && p.cardName){
+      var nameNeedle = '<div class="lcard-name">' + p.cardName + '</div>';
+      if(src.indexOf(nameNeedle) !== -1){
+        result = runWithAnchor(nameNeedle);
+        if(result.cardsTouched > 0) usedNameAnchor = true;
+      } else {
+        // Try counter-row variant too
+        var nameNeedle2 = '<div class="mi-name">' + p.cardName + '</div>';
+        if(src.indexOf(nameNeedle2) !== -1){
+          result = runWithAnchor(nameNeedle2);
+          if(result.cardsTouched > 0) usedNameAnchor = true;
+        }
+      }
+    }
+
     if(result.cardsTouched === 0){
-      throw new Error('No card matched anchor: ' + p.cardAnchor);
+      throw new Error('No card matched anchor or name: ' + (p.cardName || p.cardAnchor));
     }
     if(replacements === 0){
-      throw new Error('No <img> found inside matched card(s) for anchor: ' + p.cardAnchor);
+      throw new Error('No <img> found inside matched card(s) for: ' + (p.cardName || p.cardAnchor));
     }
-    if(usedFallback){
-      // Non-fatal — surface in console so future issues are debuggable.
-      try { console.warn('[C.2d] image rewriter used fallback (stale origSrc): ' + p.origSrc); } catch(_){}
+    if(usedFallback || usedNameAnchor){
+      try { console.warn('[C.2d] image rewriter used fallback (stale anchor/src): anchor=' + p.cardAnchor + ' name=' + p.cardName); } catch(_){}
     }
     return result.html;
   }
