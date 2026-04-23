@@ -7738,11 +7738,11 @@ body.admin-mode .bvmm-img-pending img {
       </div>
       <img id="bvmm-stock-preview" alt="selected photo preview">
       <div id="bvmm-img-attribution"></div>
+      <div class="bvmm-img-row" id="bvmm-img-use-stock-row" style="display:none;">
+        <button type="button" class="bvmm-img-btn-upload" id="bvmm-img-use-stock" disabled>Use this photo</button>
+      </div>
       <div id="bvmm-img-search-results">
         <div class="bvmm-search-hint" style="grid-column:1/-1;">Type a query and tap Go</div>
-      </div>
-      <div class="bvmm-img-row">
-        <button type="button" class="bvmm-img-btn-upload" id="bvmm-img-use-stock" disabled>Use this photo</button>
       </div>
     </div>
 
@@ -7904,6 +7904,8 @@ body.admin-mode .bvmm-img-pending img {
     if(bigPrev) bigPrev.classList.remove('show');
     var useBtn = document.getElementById('bvmm-img-use-stock');
     if(useBtn) useBtn.disabled = true;
+    var useRow = document.getElementById('bvmm-img-use-stock-row');
+    if(useRow) useRow.style.display = 'none';
     showTab('upload');
 
     document.getElementById('bvmm-img-upload-overlay').classList.add('show');
@@ -8070,13 +8072,14 @@ body.admin-mode .bvmm-img-pending img {
         modalState.stockSelected = r;
         modalState.stockSelected.source = modalState.activeSource;
         document.getElementById('bvmm-img-use-stock').disabled = false;
+        document.getElementById('bvmm-img-use-stock-row').style.display = 'flex';
         // Show large preview of the full-res photo
         var bigPreview = document.getElementById('bvmm-stock-preview');
         bigPreview.src = r.fullUrl;
         bigPreview.classList.add('show');
         // Scroll the modal so the user SEES the preview immediately,
         // not somewhere above the scroll position.
-        try { bigPreview.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_){}
+        try { bigPreview.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(_){}
         var attrEl = document.getElementById('bvmm-img-attribution');
         var name = r.credit.name || '';
         var sourceLabel = modalState.activeSource === 'unsplash' ? 'Unsplash'
@@ -8285,6 +8288,7 @@ body.admin-mode .bvmm-img-pending img {
         // Clear previous selection — source changed
         modalState.stockSelected = null;
         document.getElementById('bvmm-img-use-stock').disabled = true;
+        document.getElementById('bvmm-img-use-stock-row').style.display = 'none';
         document.getElementById('bvmm-img-attribution').innerHTML = '';
         document.getElementById('bvmm-stock-preview').classList.remove('show');
         var results = document.getElementById('bvmm-img-search-results');
@@ -8298,6 +8302,7 @@ body.admin-mode .bvmm-img-pending img {
       if(!q){ setStatus('err', 'Enter a search query'); return; }
       setStatus('ok', 'Searching ' + modalState.activeSource + '…');
       document.getElementById('bvmm-img-use-stock').disabled = true;
+      document.getElementById('bvmm-img-use-stock-row').style.display = 'none';
       document.getElementById('bvmm-img-attribution').innerHTML = '';
       document.getElementById('bvmm-stock-preview').classList.remove('show');
       modalState.stockSelected = null;
