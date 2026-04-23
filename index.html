@@ -7372,6 +7372,436 @@ var BVMM_HOURS = {
 <!-- ═══ END PHASE C.2c ═══ -->
 
 
+<!-- ═══ BVMM PHASE C.2d: IMAGE UPLOAD (GitHub repo storage) ═══ -->
+<!--
+  Mounts a camera pencil on .lcard-img-placeholder and .lcard-mrow-img.
+  Tap → native iOS file chooser (camera OR camera roll) → resize client-side
+  to 1200px max side → POST base64 JPEG to Worker (action: img-upload-github) →
+  stash pending image edit → commit via existing Phase C pipeline.
+
+  Depends on: window.__bvmmPhaseC (Phase C base).
+  Coexists with: Phase C.2a card editing (different pencil, different position).
+-->
+<style>
+/* Camera pencil — top-LEFT of the image placeholder, so it doesn't collide
+   with the text-edit pencil at top-right of the parent card. */
+body.admin-mode .lcard-img-placeholder,
+body.admin-mode .lcard-mrow-img { position: relative; }
+
+.bvmm-img-pencil { display: none; }
+body.admin-mode .bvmm-img-pencil {
+  display: flex;
+  position: absolute;
+  top: 4px; left: 4px;
+  background: rgba(143,191,95,.95);
+  color: #2a1810;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 7;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  line-height: 1;
+}
+body.admin-mode .bvmm-img-pencil:active { transform: scale(.94); }
+
+/* Pending image highlight — yellow ring around the img itself */
+body.admin-mode .bvmm-img-pending img {
+  outline: 2px solid #f5c542 !important;
+  outline-offset: -2px;
+  box-shadow: 0 0 0 3px rgba(245,197,66,.25);
+}
+
+/* Upload modal */
+#bvmm-img-upload-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 10001;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#bvmm-img-upload-overlay.show { display: flex; }
+#bvmm-img-upload-panel {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 100%;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+#bvmm-img-upload-panel h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #2a1810;
+}
+#bvmm-img-upload-panel .bvmm-sub {
+  font-size: 13px;
+  color: #6a5a50;
+  margin-bottom: 14px;
+}
+#bvmm-img-current,
+#bvmm-img-preview {
+  width: 100%;
+  height: 160px;
+  background: #f2efe9;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  margin-bottom: 12px;
+}
+#bvmm-img-preview { display: none; }
+#bvmm-img-preview.show { display: block; }
+.bvmm-img-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.bvmm-img-row button {
+  flex: 1;
+  padding: 11px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.bvmm-img-btn-pick {
+  background: #f2efe9;
+  color: #2a1810;
+}
+.bvmm-img-btn-upload {
+  background: #8fbf5f;
+  color: #2a1810;
+}
+.bvmm-img-btn-upload:disabled {
+  background: #cfcfcf;
+  color: #888;
+  cursor: not-allowed;
+}
+.bvmm-img-btn-cancel {
+  background: transparent;
+  color: #8a7a70;
+}
+#bvmm-img-upload-file { display: none; }
+#bvmm-img-status {
+  font-size: 13px;
+  margin-top: 10px;
+  min-height: 18px;
+}
+#bvmm-img-status.ok  { color: #4a7c2f; }
+#bvmm-img-status.err { color: #b33; }
+</style>
+
+<div id="bvmm-img-upload-overlay" aria-hidden="true">
+  <div id="bvmm-img-upload-panel">
+    <h3>Replace image</h3>
+    <div class="bvmm-sub" id="bvmm-img-panel-sub">…</div>
+    <img id="bvmm-img-current" alt="current">
+    <img id="bvmm-img-preview" alt="preview">
+    <input id="bvmm-img-upload-file" type="file" accept="image/*">
+    <div class="bvmm-img-row">
+      <button type="button" class="bvmm-img-btn-pick"   id="bvmm-img-pick">Choose photo</button>
+      <button type="button" class="bvmm-img-btn-upload" id="bvmm-img-upload" disabled>Upload</button>
+    </div>
+    <div class="bvmm-img-row">
+      <button type="button" class="bvmm-img-btn-cancel" id="bvmm-img-cancel">Cancel</button>
+    </div>
+    <div id="bvmm-img-status"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  if(!window.__bvmmPhaseC){
+    console.error('Phase C.2d requires Phase C base. Aborting.');
+    return;
+  }
+  var api = window.__bvmmPhaseC;
+
+  // Selectors of image placeholders we attach a camera pencil to.
+  // D3a scope: lcard and lcard-mrow only — no other card type has an <img>.
+  var IMG_CONTAINERS = '.lcard-img-placeholder, .lcard-mrow-img';
+
+  var WORKER = 'https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
+  var MAX_SIDE = 1200;          // Downscale cap (longest side)
+  var JPEG_QUALITY = 0.85;      // Canvas → JPEG quality
+
+  // Parse the parent card's openOrderSheet('name', price, 'desc', 'cat') args
+  // so the pending entry can label itself with the item name.
+  function parseCardName(imgContainer){
+    var card = imgContainer.closest('.lcard, .lcard-mrow');
+    if(!card) return null;
+    var oc = card.getAttribute('onclick') || '';
+    var m = /openOrderSheet\('((?:\\'|[^'])*?)'/.exec(oc);
+    return m ? m[1].replace(/\\'/g, "'") : null;
+  }
+
+  // Extract the current img src from the container.
+  function currentSrc(imgContainer){
+    var img = imgContainer.querySelector('img');
+    return img ? img.getAttribute('src') : null;
+  }
+
+  // Image edits are keyed by the original src URL. Unsplash URLs (and later CF
+  // Images URLs) are globally unique per card in this codebase, so this is
+  // sufficient to find + rewrite duplicate occurrences of the same card.
+  function imgEditKey(origSrc){
+    return 'img:' + origSrc;
+  }
+
+  // ── Camera pencil attachment ────────────────────────────────────
+  function attachImgPencils(){
+    document.querySelectorAll(IMG_CONTAINERS).forEach(function(container){
+      if(container.querySelector(':scope > .bvmm-img-pencil')) return;
+      if(!container.querySelector('img')) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bvmm-img-pencil';
+      btn.textContent = '📷';
+      btn.title = 'Replace image';
+      btn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        ev.preventDefault();
+        openUploadModal(container);
+      });
+      btn.addEventListener('mousedown',  function(ev){ ev.stopPropagation(); });
+      btn.addEventListener('touchstart', function(ev){ ev.stopPropagation(); }, {passive:true});
+      container.appendChild(btn);
+      // If this container currently has a pending edit, flag it visually
+      var src = currentSrc(container);
+      if(src && api.getPending()[imgEditKey(src)]){
+        container.classList.add('bvmm-img-pending');
+      }
+    });
+  }
+
+  // Re-attach on DOM changes (cards rendered after initial load by menu planner etc.)
+  function observe(){
+    var mo = new MutationObserver(function(){ attachImgPencils(); });
+    mo.observe(document.body, { childList:true, subtree:true });
+  }
+
+  // ── Upload modal state ──────────────────────────────────────────
+  var modalState = {
+    container: null,   // current .lcard-img-placeholder being edited
+    origSrc: null,
+    cardName: null,
+    fileBlob: null     // resized JPEG Blob ready to upload
+  };
+
+  function openUploadModal(container){
+    var origSrc  = currentSrc(container);
+    var cardName = parseCardName(container) || 'this item';
+    if(!origSrc){ alert('No image found on this card.'); return; }
+
+    modalState.container = container;
+    modalState.origSrc   = origSrc;
+    modalState.cardName  = cardName;
+    modalState.fileBlob  = null;
+
+    document.getElementById('bvmm-img-panel-sub').textContent = 'for: ' + cardName;
+    document.getElementById('bvmm-img-current').src = origSrc;
+    var preview = document.getElementById('bvmm-img-preview');
+    preview.classList.remove('show'); preview.removeAttribute('src');
+    document.getElementById('bvmm-img-upload').disabled = true;
+    setStatus('', '');
+    document.getElementById('bvmm-img-upload-file').value = '';
+    document.getElementById('bvmm-img-upload-overlay').classList.add('show');
+  }
+
+  function closeUploadModal(){
+    document.getElementById('bvmm-img-upload-overlay').classList.remove('show');
+    modalState.container = null;
+    modalState.origSrc = null;
+    modalState.fileBlob = null;
+  }
+
+  function setStatus(kind, msg){
+    var el = document.getElementById('bvmm-img-status');
+    el.className = kind || '';
+    el.textContent = msg || '';
+  }
+
+  // ── Client-side resize ──────────────────────────────────────────
+  // Load file into <img>, draw scaled copy to canvas, export as JPEG Blob.
+  function resizeImage(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onerror = function(){ reject(new Error('Could not read file')); };
+      reader.onload = function(){
+        var img = new Image();
+        img.onerror = function(){ reject(new Error('Could not decode image')); };
+        img.onload = function(){
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var scale = Math.min(1, MAX_SIDE / Math.max(w, h));
+          var dw = Math.round(w * scale), dh = Math.round(h * scale);
+          var canvas = document.createElement('canvas');
+          canvas.width = dw; canvas.height = dh;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, dw, dh);
+          canvas.toBlob(function(blob){
+            if(!blob) reject(new Error('Canvas export failed'));
+            else resolve({ blob:blob, width:dw, height:dh });
+          }, 'image/jpeg', JPEG_QUALITY);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function blobToBase64(blob){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onerror = function(){ reject(new Error('Could not encode blob')); };
+      reader.onload  = function(){
+        // result is "data:image/jpeg;base64,XXXX" — keep only the tail
+        var s = reader.result;
+        var comma = s.indexOf(',');
+        resolve(comma === -1 ? s : s.substring(comma + 1));
+      };
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  // ── Upload to Worker ────────────────────────────────────────────
+  // Match the auth pattern used by admin-deploy (index.html getToken()):
+  // session is stored as JSON {token, exp} in localStorage, not sessionStorage.
+  function getToken(){
+    try {
+      var s = JSON.parse(localStorage.getItem('bvmm_session_v1') || 'null');
+      if(!s || !s.token || (s.exp && Date.now() > s.exp)) return null;
+      return s.token;
+    } catch(e){ return null; }
+  }
+  function uploadToWorker(blob){
+    var tok = getToken();
+    if(!tok) return Promise.reject(new Error('Not signed in'));
+    return blobToBase64(blob).then(function(b64){
+      return fetch(WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          action: 'img-upload-github',
+          imageB64: b64,
+          contentType: 'image/jpeg',
+          token: tok
+        })
+      });
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if(!res || !res.ok) throw new Error((res && res.error) || 'Upload failed');
+      if(!res.url) throw new Error('Worker returned no URL');
+      return res.url;
+    });
+  }
+
+  // ── Wire modal buttons ──────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function(){
+    document.getElementById('bvmm-img-pick').addEventListener('click', function(){
+      document.getElementById('bvmm-img-upload-file').click();
+    });
+
+    document.getElementById('bvmm-img-upload-file').addEventListener('change', function(ev){
+      var file = ev.target.files && ev.target.files[0];
+      if(!file) return;
+      setStatus('ok', 'Preparing…');
+      resizeImage(file).then(function(out){
+        modalState.fileBlob = out.blob;
+        var previewUrl = URL.createObjectURL(out.blob);
+        var preview = document.getElementById('bvmm-img-preview');
+        preview.src = previewUrl;
+        preview.classList.add('show');
+        document.getElementById('bvmm-img-upload').disabled = false;
+        setStatus('ok', 'Ready: ' + out.width + '×' + out.height +
+          ' (' + Math.round(out.blob.size/1024) + ' KB)');
+      }).catch(function(err){
+        setStatus('err', err.message);
+      });
+    });
+
+    document.getElementById('bvmm-img-upload').addEventListener('click', function(){
+      if(!modalState.fileBlob){ setStatus('err','Choose a photo first'); return; }
+      var btn = this;
+      btn.disabled = true;
+      setStatus('ok', 'Uploading…');
+      uploadToWorker(modalState.fileBlob).then(function(newSrc){
+        // Stash pending edit, not an immediate commit. User clicks ⬆ Commit All
+        // from the existing pending-badge to actually push to GitHub.
+        api.setPending(imgEditKey(modalState.origSrc), {
+          type: 'image',
+          origSrc: modalState.origSrc,
+          newSrc: newSrc,
+          cardName: modalState.cardName
+        });
+        // Update the on-page <img> immediately so the admin sees the new photo
+        var img = modalState.container.querySelector('img');
+        if(img) img.src = newSrc;
+        modalState.container.classList.add('bvmm-img-pending');
+        setStatus('ok', '✓ Uploaded. Commit to publish.');
+        setTimeout(closeUploadModal, 900);
+      }).catch(function(err){
+        btn.disabled = false;
+        setStatus('err', 'Failed: ' + err.message);
+      });
+    });
+
+    document.getElementById('bvmm-img-cancel').addEventListener('click', closeUploadModal);
+
+    // Dismiss on overlay backdrop click (not panel)
+    document.getElementById('bvmm-img-upload-overlay').addEventListener('click', function(ev){
+      if(ev.target === this) closeUploadModal();
+    });
+  });
+
+  // ── Source rewriter ─────────────────────────────────────────────
+  // Globally swap src="origSrc" → src="newSrc" inside any <img ...> tag.
+  // This correctly updates BOTH the counter copy and the full-catalog copy of
+  // the same card (duplicate occurrences share the same original URL).
+  function escReg(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function rewriteImageInSource(src, p){
+    var re = new RegExp('(<img[^>]*\\ssrc=")' + escReg(p.origSrc) + '("[^>]*>)', 'g');
+    var found = 0;
+    var out = src.replace(re, function(_, pre, post){ found++; return pre + p.newSrc + post; });
+    if(found === 0) throw new Error('Image not found in source: ' + p.origSrc);
+    return out;
+  }
+
+  api.registerRewriter('image', rewriteImageInSource);
+
+  // ── Init ────────────────────────────────────────────────────────
+  function init(){
+    attachImgPencils();
+    observe();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Expose for tests / debugging
+  window.__bvmmPhaseC2d = {
+    rewriteImageInSource: rewriteImageInSource,
+    attachImgPencils: attachImgPencils,
+    imgEditKey: imgEditKey
+  };
+})();
+</script>
+<!-- ═══ END PHASE C.2d ═══ -->
+
+
 
 
 
