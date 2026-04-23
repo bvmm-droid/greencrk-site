@@ -5955,6 +5955,28 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
               '<div><span class="bvmm-diff-was">'+esc(was||'—')+'</span> → <span class="bvmm-diff-now">'+esc(now||'—')+'</span></div></div>';
           }
         });
+      } else if(p.type==='businessInfo'){
+        title = 'Business Info';
+        ['phone','street','city','state','zip'].forEach(function(f){
+          var was = p.origData[f], now = p.newData[f];
+          if(was === now) return;
+          rows +=
+            '<div class="bvmm-diff-row"><div class="bvmm-diff-label">'+esc(f)+'</div>' +
+            '<div><span class="bvmm-diff-was">'+esc(was||'—')+'</span> → <span class="bvmm-diff-now">'+esc(now||'—')+'</span></div></div>';
+        });
+      } else if(p.type==='hours'){
+        title = 'Hours';
+        var DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        for(var d=0; d<7; d++){
+          var wasE = p.origData[d], nowE = p.newData[d];
+          var wasStr = wasE ? wasE.open+'–'+wasE.close : 'Closed';
+          var nowStr = nowE ? nowE.open+'–'+nowE.close : 'Closed';
+          if(wasStr !== nowStr){
+            rows +=
+              '<div class="bvmm-diff-row"><div class="bvmm-diff-label">'+DAY_NAMES[d]+'</div>' +
+              '<div><span class="bvmm-diff-was">'+esc(wasStr)+'</span> → <span class="bvmm-diff-now">'+esc(nowStr)+'</span></div></div>';
+          }
+        }
       }
       return '<div class="bvmm-diff-item">' +
         '<div class="bvmm-diff-head">' +
@@ -6195,7 +6217,8 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
     removePending: function(key){ delete pending[key]; savePending(); refreshBadge(); },
     registerRewriter: registerRewriter,
     openCustomForm: openCustomForm,
-    closeForm: function(){ document.getElementById('bvmm-edit-overlay').classList.remove('show'); editing = null; }
+    closeForm: function(){ document.getElementById('bvmm-edit-overlay').classList.remove('show'); editing = null; },
+    __setEditing: function(desc){ editing = desc; }
   };
 
 
@@ -6906,6 +6929,448 @@ body.admin-mode #bvmm-biz-btn { display: inline-block; }
 })();
 </script>
 <!-- ═══ END PHASE C.2b ═══ -->
+
+<!-- ═══ BVMM PHASE C.2c: HOURS EDITING ═══ -->
+<script>
+/* BVMM_HOURS — single source of truth for operating hours.
+   Keyed by getDay() value: 0=Sun, 1=Mon, ..., 6=Sat.
+   Entry is either null (closed) or {open:"HH:MM", close:"HH:MM"} 24h strings. */
+var BVMM_HOURS = {
+  0: {open:"10:00", close:"15:00"},
+  1: null,
+  2: {open:"10:00", close:"17:00"},
+  3: {open:"10:00", close:"17:00"},
+  4: {open:"10:00", close:"17:00"},
+  5: {open:"10:00", close:"17:00"},
+  6: {open:"10:00", close:"17:00"}
+};
+</script>
+<script>
+(function(){
+  'use strict';
+
+  // Format "17:00" → "5pm", "10:30" → "10:30am"
+  function fmt12(hm){
+    if(!hm) return '';
+    var parts = String(hm).split(':');
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1]||'0', 10);
+    var ampm = h >= 12 ? 'pm' : 'am';
+    var h12 = h % 12; if(h12 === 0) h12 = 12;
+    return h12 + (m ? ':' + String(m).padStart(2,'0') : '') + ampm;
+  }
+  function fmtRange(h){ return fmt12(h.open) + ' – ' + fmt12(h.close); }
+
+  var DAY_LONG  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  /* Group consecutive days with identical open/close into ranges.
+     Returns array of {label, timeText, isClosed} for display. */
+  function groupHours(hours){
+    // Walk days in calendar order starting Monday (common display),
+    // but since schema.org is Tue-Sat typical, we preserve current display order:
+    // First the "open" runs starting from Tue (2) around to Sun (0), then closed days at end.
+    // Simpler rule: walk 1..7 mapping to [Mon..Sun], collect groups.
+    var order = [1,2,3,4,5,6,0]; // Mon, Tue, Wed, Thu, Fri, Sat, Sun
+    var rows = [];
+    var i = 0;
+    while(i < order.length){
+      var d = order[i];
+      var entry = hours[d];
+      var j = i;
+      // Extend run while next day has identical entry
+      while(j+1 < order.length && sameEntry(hours[order[j+1]], entry)) j++;
+      var startDay = d;
+      var endDay   = order[j];
+      var label = (i === j) ? DAY_LONG[startDay] : (DAY_LONG[startDay] + ' – ' + DAY_LONG[endDay]);
+      if(entry){
+        rows.push({label:label, timeText: fmtRange(entry), isClosed:false});
+      } else {
+        rows.push({label:label, timeText:'Closed', isClosed:true});
+      }
+      i = j + 1;
+    }
+    // Put open rows first, closed last (matches current customer-facing order)
+    var open  = rows.filter(function(r){ return !r.isClosed; });
+    var close = rows.filter(function(r){ return  r.isClosed; });
+    return open.concat(close);
+  }
+  function sameEntry(a, b){
+    if(a === null && b === null) return true;
+    if(!a || !b) return false;
+    return a.open === b.open && a.close === b.close;
+  }
+
+  /* Render the 3-row (or more, if split) hours block in the contact section. */
+  function renderHoursDisplay(){
+    var hoursTitle = document.querySelector('.cblock-title[data-bvmm-edit^="auto_cblock_title_"]');
+    // Find the specific "Hours" title; fall back to text match
+    var titles = document.querySelectorAll('.cblock-title');
+    var hoursBlock = null;
+    for(var i=0;i<titles.length;i++){
+      if((titles[i].textContent || '').trim().toLowerCase() === 'hours'){
+        hoursBlock = titles[i].parentElement;
+        break;
+      }
+    }
+    if(!hoursBlock) return;
+    // Remove existing .hours-row children
+    hoursBlock.querySelectorAll('.hours-row').forEach(function(el){ el.remove(); });
+    // Append new rows
+    groupHours(BVMM_HOURS).forEach(function(r){
+      var row = document.createElement('div');
+      row.className = 'hours-row';
+      var day = document.createElement('span');
+      day.className = 'hours-day';
+      day.textContent = r.label;
+      var time = document.createElement('span');
+      time.className = r.isClosed ? 'hours-closed' : 'hours-time';
+      time.textContent = r.timeText;
+      row.appendChild(day);
+      row.appendChild(time);
+      hoursBlock.appendChild(row);
+    });
+  }
+
+  /* Override initHoursBadge to read from BVMM_HOURS. */
+  window.initHoursBadge = function(){
+    var el = document.getElementById('hoursBadge');
+    if(!el) return;
+    var now = new Date();
+    var day = now.getDay();
+    var h   = BVMM_HOURS[day];
+    var isOpen = false, hoursText = '';
+    if(!h){
+      hoursText = 'Closed today';
+    } else {
+      var cur = now.getHours() + now.getMinutes()/60;
+      var openN  = toDecimal(h.open);
+      var closeN = toDecimal(h.close);
+      isOpen = cur >= openN && cur < closeN;
+      hoursText = (day === 0 ? 'Sun ' : 'Today ') + fmt12(h.open) + '–' + fmt12(h.close);
+    }
+    el.innerHTML = '<span class="hours-badge '+(isOpen?'open':'closed')+
+      '"><span class="hb-dot"></span>'+(isOpen?'Open · ':'Closed · ')+hoursText+'</span>';
+  };
+  function toDecimal(hm){
+    var p = String(hm||'').split(':');
+    return parseInt(p[0]||'0',10) + parseInt(p[1]||'0',10)/60;
+  }
+
+  // Run on load
+  function initHoursUI(){
+    renderHoursDisplay();
+    if(typeof window.initHoursBadge === 'function') window.initHoursBadge();
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initHoursUI);
+  } else {
+    initHoursUI();
+  }
+
+  // ── Edit form integration ─────────────────────────────────────
+  if(!window.__bvmmPhaseC){ console.error('Phase C.2c requires Phase C base'); return; }
+  var api = window.__bvmmPhaseC;
+
+  window.bvmmOpenHoursEdit = function(){
+    var pending = api.getPending();
+    var orig = pending.hours ? pending.hours.origData : JSON.parse(JSON.stringify(BVMM_HOURS));
+    var curr = pending.hours ? pending.hours.newData  : JSON.parse(JSON.stringify(BVMM_HOURS));
+
+    var fields = [];
+    [1,2,3,4,5,6,0].forEach(function(d){
+      var cur = curr[d];
+      fields.push({ key:'day'+d+'_closed', label:DAY_LONG[d], type:'toggle',
+        value: cur ? 'open' : 'closed' });
+      fields.push({ key:'day'+d+'_open',  label:DAY_LONG[d]+' opens',  type:'time',
+        value: cur ? cur.open : '10:00', hint: d===0?'e.g. 10:00 for 10am':null });
+      fields.push({ key:'day'+d+'_close', label:DAY_LONG[d]+' closes', type:'time',
+        value: cur ? cur.close : '17:00' });
+    });
+
+    api.openHoursForm({
+      title:'Edit — Hours',
+      days: [1,2,3,4,5,6,0],
+      dayLabels: DAY_LONG,
+      current: curr,
+      onSave: function(values){
+        var newData = {};
+        [1,2,3,4,5,6,0].forEach(function(d){
+          if(values['day'+d+'_closed'] === 'closed'){ newData[d] = null; }
+          else {
+            newData[d] = {
+              open:  normalizeTime(values['day'+d+'_open']),
+              close: normalizeTime(values['day'+d+'_close'])
+            };
+          }
+        });
+        if(JSON.stringify(newData) === JSON.stringify(orig)){
+          api.removePending('hours');
+        } else {
+          api.setPending('hours', { type:'hours', origData:orig, newData:newData });
+          // Live-apply
+          for(var k in newData) BVMM_HOURS[k] = newData[k];
+          renderHoursDisplay();
+          if(typeof window.initHoursBadge === 'function') window.initHoursBadge();
+        }
+      }
+    });
+  };
+
+  function normalizeTime(t){
+    // Accept "10", "10:00", "10am", "5pm", "17:00" — normalize to 24h "HH:MM"
+    if(!t) return '10:00';
+    var s = String(t).trim().toLowerCase();
+    var ampm = null;
+    if(/am$/.test(s)){ ampm = 'am'; s = s.replace(/am$/,'').trim(); }
+    else if(/pm$/.test(s)){ ampm = 'pm'; s = s.replace(/pm$/,'').trim(); }
+    var parts = s.split(':');
+    var h = parseInt(parts[0],10);
+    var m = parseInt(parts[1]||'0',10);
+    if(isNaN(h)) h = 10;
+    if(isNaN(m)) m = 0;
+    if(ampm === 'pm' && h < 12) h += 12;
+    if(ampm === 'am' && h === 12) h = 0;
+    if(h < 0) h = 0; if(h > 23) h = 23;
+    if(m < 0) m = 0; if(m > 59) m = 59;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+  }
+
+  // ── Add a custom hours-form renderer to Phase C host ─────────
+  // Phase C's openCustomForm doesn't support per-day toggle rows natively.
+  // We extend the host with openHoursForm for this use case.
+  api.openHoursForm = function(opts){
+    document.getElementById('bvmm-edit-title').textContent = opts.title || 'Edit — Hours';
+    var fieldsEl = document.getElementById('bvmm-edit-fields');
+    var html = '<div style="font-size:11px;color:rgba(245,240,232,.45);margin-bottom:14px;line-height:1.45">Times accept 12h (10am, 5pm) or 24h (10:00, 17:00). Toggle a day to Closed if not open.</div>';
+    opts.days.forEach(function(d){
+      var cur = opts.current[d];
+      var isOpen = !!cur;
+      html += '<div style="display:flex;gap:8px;align-items:center;margin:10px 0;padding:10px;background:rgba(245,240,232,.04);border-radius:8px;">' +
+        '<div style="flex:0 0 74px;font-size:13px;font-weight:600">'+opts.dayLabels[d]+'</div>' +
+        '<label style="display:flex;gap:4px;align-items:center;font-size:11px;color:rgba(245,240,232,.7)">' +
+          '<input type="checkbox" id="bvmm-hrs-closed-'+d+'" '+(!isOpen?'checked':'')+' style="margin:0"> Closed' +
+        '</label>' +
+        '<div id="bvmm-hrs-times-'+d+'" style="display:'+(isOpen?'flex':'none')+';gap:6px;flex:1">' +
+          '<input type="text" id="bvmm-hrs-open-'+d+'" value="'+(cur?cur.open:'10:00')+'" style="width:70px;font-size:13px">' +
+          '<span style="color:rgba(245,240,232,.5);font-size:12px;align-self:center">to</span>' +
+          '<input type="text" id="bvmm-hrs-close-'+d+'" value="'+(cur?cur.close:'17:00')+'" style="width:70px;font-size:13px">' +
+        '</div>' +
+      '</div>';
+    });
+    fieldsEl.innerHTML = html;
+    // Wire closed-toggle to show/hide time inputs
+    opts.days.forEach(function(d){
+      var cb = document.getElementById('bvmm-hrs-closed-'+d);
+      cb.addEventListener('change', function(){
+        document.getElementById('bvmm-hrs-times-'+d).style.display = cb.checked ? 'none' : 'flex';
+      });
+    });
+    // Stash save callback
+    api.__setEditing({ type:'__custom__', onSave: function(){
+      var values = {};
+      opts.days.forEach(function(d){
+        values['day'+d+'_closed'] = document.getElementById('bvmm-hrs-closed-'+d).checked ? 'closed' : 'open';
+        values['day'+d+'_open']   = document.getElementById('bvmm-hrs-open-'+d).value;
+        values['day'+d+'_close']  = document.getElementById('bvmm-hrs-close-'+d).value;
+      });
+      opts.onSave(values);
+    }});
+    document.getElementById('bvmm-edit-overlay').classList.add('show');
+  };
+
+  // ── Rewriter: rewrite BVMM_HOURS literal + meta + AI prompt + schema + display rows ─
+  function rewriteHoursInSource(src, p){
+    var next = p.newData;
+    var changed = 0;
+    var out = src;
+
+    // 1) Rewrite the BVMM_HOURS initializer
+    var newLiteral = buildHoursLiteral(next);
+    var hoursRe = /var\s+BVMM_HOURS\s*=\s*\{[\s\S]*?\};/;
+    var before = out;
+    out = out.replace(hoursRe, newLiteral);
+    if(out !== before) changed++;
+    else throw new Error('BVMM_HOURS literal not found in source');
+
+    // 2) Rewrite schema.org openingHoursSpecification with proper bracket balancing.
+    //    The dayOfWeek field contains an inner array, so a dumb non-greedy regex
+    //    would stop at the first ']'. Walk depth instead.
+    var schemaKey = '"openingHoursSpecification":';
+    var schemaKeyIdx = out.indexOf(schemaKey);
+    if(schemaKeyIdx !== -1){
+      var arrStart = out.indexOf('[', schemaKeyIdx);
+      if(arrStart !== -1){
+        var depth = 0, arrEnd = -1;
+        for(var i = arrStart; i < out.length; i++){
+          var ch = out[i];
+          if(ch === '[') depth++;
+          else if(ch === ']'){ depth--; if(depth === 0){ arrEnd = i; break; } }
+        }
+        if(arrEnd !== -1){
+          var newSchema = buildSchemaHours(next);
+          out = out.substring(0, arrStart) + newSchema + out.substring(arrEnd + 1);
+          changed++;
+        }
+      }
+    }
+
+    // 3) Rewrite the display rows block (three consecutive <div class="hours-row">)
+    var displayBlockRe = /(<div class="hours-row">[\s\S]*?<\/div>\s*)+/;
+    var newDisplay = buildDisplayRows(next);
+    before = out;
+    out = out.replace(displayBlockRe, newDisplay);
+    if(out !== before) changed++;
+
+    // 4) Rewrite meta description hours phrase (e.g. "Open Tue–Sat 10am–5pm.")
+    out = out.replace(/Open\s+[A-Z][a-z]{2,8}(?:\s*[–\-]\s*[A-Z][a-z]{2,8})?\s+\d{1,2}(?::\d\d)?(?:am|pm)\s*[–\-]\s*\d{1,2}(?::\d\d)?(?:am|pm)\.?/g,
+      buildMetaHoursPhrase(next));
+
+    // 5) Rewrite AI system prompt hours phrase.
+    //    Match from "Hours:" up to and including the trailing period so we don't
+    //    leave a leftover "." when the replacement ends with "."
+    out = out.replace(/Hours:\s*[^"'\\]{1,160}?\./g, buildAIHoursPhrase(next));
+
+    return out;
+  }
+
+  function buildHoursLiteral(h){
+    var lines = ['var BVMM_HOURS = {'];
+    [0,1,2,3,4,5,6].forEach(function(d){
+      var e = h[d];
+      var val = e ? '{open:"'+e.open+'", close:"'+e.close+'"}' : 'null';
+      lines.push('  '+d+': '+val+(d<6?',':''));
+    });
+    lines.push('};');
+    return lines.join('\n');
+  }
+
+  function buildSchemaHours(h){
+    // Group consecutive same-hours days into ranges (Schema.org accepts day arrays)
+    var DAYS_ISO = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    // Collect by unique (open,close) signature
+    var groups = {};
+    [0,1,2,3,4,5,6].forEach(function(d){
+      var e = h[d]; if(!e) return;
+      var sig = e.open + '|' + e.close;
+      if(!groups[sig]) groups[sig] = { open: e.open, close: e.close, days: [] };
+      groups[sig].days.push(DAYS_ISO[d]);
+    });
+    var specs = [];
+    Object.keys(groups).forEach(function(sig){
+      var g = groups[sig];
+      var dayOfWeek = g.days.length === 1 ? '"'+g.days[0]+'"' : '['+g.days.map(function(d){return '"'+d+'"';}).join(',')+']';
+      specs.push('{"@type":"OpeningHoursSpecification","dayOfWeek":'+dayOfWeek+',"opens":"'+g.open+'","closes":"'+g.close+'"}');
+    });
+    return '[\n    ' + specs.join(',\n    ') + '\n  ]';
+  }
+
+  function buildDisplayRows(h){
+    // Re-use the client-side grouping to produce canonical HTML identical to what the page renders.
+    var rows = groupHoursForSource(h);
+    return rows.map(function(r){
+      if(r.isClosed){
+        return '<div class="hours-row"><span class="hours-day">'+r.label+'</span><span class="hours-closed">Closed</span></div>\n      ';
+      }
+      return '<div class="hours-row"><span class="hours-day">'+r.label+'</span><span class="hours-time">'+r.timeText+'</span></div>\n      ';
+    }).join('');
+  }
+  function groupHoursForSource(h){
+    // Same as groupHours but pure (no closure dependency)
+    var DL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var order = [1,2,3,4,5,6,0];
+    var rows = [];
+    var i = 0;
+    while(i < order.length){
+      var d = order[i];
+      var e = h[d];
+      var j = i;
+      while(j+1 < order.length && sameEntry(h[order[j+1]], e)) j++;
+      var label = (i === j) ? DL[d] : (DL[d] + ' – ' + DL[order[j]]);
+      if(e) rows.push({label:label, timeText: fmt12(e.open)+' – '+fmt12(e.close), isClosed:false});
+      else rows.push({label:label, timeText:'Closed', isClosed:true});
+      i = j + 1;
+    }
+    var open  = rows.filter(function(r){return !r.isClosed;});
+    var close = rows.filter(function(r){return  r.isClosed;});
+    return open.concat(close);
+  }
+
+  function buildMetaHoursPhrase(h){
+    // Short format for meta: primary run + "." (e.g. "Open Tue–Sat 10am–5pm.")
+    var rows = groupHoursForSource(h).filter(function(r){return !r.isClosed;});
+    if(!rows.length) return 'Closed';
+    var primary = rows[0];
+    // Convert "Tuesday – Saturday" → "Tue–Sat" (tight en-dash), "10am – 5pm" → "10am–5pm"
+    var shortLabel = primary.label
+      .replace(/Sunday/g,'Sun').replace(/Monday/g,'Mon').replace(/Tuesday/g,'Tue')
+      .replace(/Wednesday/g,'Wed').replace(/Thursday/g,'Thu').replace(/Friday/g,'Fri')
+      .replace(/Saturday/g,'Sat')
+      .replace(/\s+[–-]\s+/g, '–');
+    var shortTime = primary.timeText.replace(/\s+[–-]\s+/g, '–');
+    return 'Open ' + shortLabel + ' ' + shortTime + '.';
+  }
+
+  function buildAIHoursPhrase(h){
+    // AI prompt format: "Hours: Tue-Sat 10am-5pm, Sun 10am-3pm, Mon closed."
+    var rows = groupHoursForSource(h);
+    var parts = rows.map(function(r){
+      var shortLabel = r.label
+        .replace(/Sunday/g,'Sun').replace(/Monday/g,'Mon').replace(/Tuesday/g,'Tue')
+        .replace(/Wednesday/g,'Wed').replace(/Thursday/g,'Thu').replace(/Friday/g,'Fri')
+        .replace(/Saturday/g,'Sat')
+        .replace(/\s+[–-]\s+/g, '-');
+      if(r.isClosed) return shortLabel + ' closed';
+      return shortLabel + ' ' + r.timeText.replace(/\s+[–-]\s+/g, '-');
+    });
+    return 'Hours: ' + parts.join(', ') + '.';
+  }
+
+  api.registerRewriter('hours', rewriteHoursInSource);
+
+  // Expose the editing-descriptor setter we need. Phase C kept 'editing' private;
+  // we add a tiny proxy via the host API.
+  if(!api.__setEditing){
+    console.error('Phase C host missing __setEditing; hours form wont save properly.');
+  }
+
+  // Expose for tests/debug
+  window.__bvmmPhaseC2c = {
+    rewriteHoursInSource: rewriteHoursInSource,
+    buildHoursLiteral: buildHoursLiteral,
+    buildSchemaHours: buildSchemaHours,
+    buildDisplayRows: buildDisplayRows,
+    buildMetaHoursPhrase: buildMetaHoursPhrase,
+    buildAIHoursPhrase: buildAIHoursPhrase,
+    groupHoursForSource: groupHoursForSource,
+    normalizeTime: normalizeTime
+  };
+
+  // ── Add Hours button to admin badge next to Business ────────
+  function mountHoursButton(){
+    if(document.getElementById('bvmm-hours-btn')) return;
+    var bar = document.getElementById('bvmm-admin-badge')
+           || document.querySelector('.admin-bar, #adminBar');
+    if(!bar) return;
+    var btn = document.createElement('button');
+    btn.id = 'bvmm-hours-btn';
+    btn.type = 'button';
+    btn.textContent = 'Hours';
+    btn.onclick = window.bvmmOpenHoursEdit;
+    // Match the Business button's style
+    btn.style.cssText = 'background:rgba(143,191,95,.12);color:#8fbf5f;border:1px solid rgba(143,191,95,.35);padding:5px 12px;border-radius:100px;font:600 11px Inter,sans-serif;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;margin-left:6px';
+    bar.appendChild(btn);
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', mountHoursButton);
+  } else {
+    mountHoursButton();
+  }
+  document.addEventListener('bvmmAdminEntered', mountHoursButton);
+})();
+</script>
+<!-- ═══ END PHASE C.2c ═══ -->
+
 
 
 
