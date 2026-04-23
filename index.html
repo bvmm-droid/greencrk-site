@@ -5352,7 +5352,7 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
     }
     el.innerHTML='<div class="bdp-backups-empty">Checking Worker…</div>';
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, 8000) : null;
+    var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, 30000) : null;
     fetch(WORKER, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -5383,7 +5383,7 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
     })
     .catch(function(err){
       clearTimeout(timer);
-      el.innerHTML='<div class="bdp-backups-empty">❌ ' + (err.name==='AbortError' ? 'Worker timed out (8s)' : 'Error: ' + err.message) + '</div>';
+      el.innerHTML='<div class="bdp-backups-empty">❌ ' + (err.name==='AbortError' ? 'Worker timed out (30s) — GitHub may be slow, try again' : 'Error: ' + err.message) + '</div>';
     });
   }
 
