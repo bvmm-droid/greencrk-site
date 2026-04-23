@@ -7482,6 +7482,17 @@ body.admin-mode .bvmm-img-pencil {
 }
 body.admin-mode .bvmm-img-pencil:active { transform: scale(.94); }
 
+/* D3b: drop-target hover states */
+body.admin-mode .bvmm-img-drop-hover {
+  outline: 3px dashed #8fbf5f;
+  outline-offset: -3px;
+  background: rgba(143,191,95,.12);
+}
+#bvmm-img-upload-overlay.bvmm-modal-drop-hover #bvmm-img-upload-panel {
+  outline: 3px dashed #8fbf5f;
+  outline-offset: -2px;
+}
+
 /* Pending image highlight — yellow ring around the img itself */
 body.admin-mode .bvmm-img-pending img {
   outline: 2px solid #f5c542 !important;
@@ -8115,9 +8126,16 @@ body.admin-mode .bvmm-img-pending img {
       document.getElementById('bvmm-img-upload-file').click();
     });
 
-    document.getElementById('bvmm-img-upload-file').addEventListener('change', function(ev){
-      var file = ev.target.files && ev.target.files[0];
+    // Shared: load a File into the modal's preview + enable Upload button.
+    // Used by (a) the native file input, (b) drag-drop onto a card,
+    // (c) drag-drop into the open modal.
+    function processPickedFile(file){
       if(!file) return;
+      if(!/^image\//.test(file.type)){
+        setStatus('err', 'Not an image file');
+        return;
+      }
+      showTab('upload');
       setStatus('ok', 'Preparing…');
       resizeImage(file).then(function(out){
         modalState.fileBlob = out.blob;
@@ -8131,6 +8149,62 @@ body.admin-mode .bvmm-img-pending img {
       }).catch(function(err){
         setStatus('err', err.message);
       });
+    }
+
+    document.getElementById('bvmm-img-upload-file').addEventListener('change', function(ev){
+      var file = ev.target.files && ev.target.files[0];
+      processPickedFile(file);
+    });
+
+    // ── D3b: drag-and-drop onto a card image ─────────────────────
+    // In admin mode, dropping a file onto a card's image area opens
+    // the upload modal with the file pre-loaded.
+    function onCardDragOver(ev){
+      if(!document.body.classList.contains('admin-mode')) return;
+      if(!ev.dataTransfer || !ev.dataTransfer.types.includes('Files')) return;
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = 'copy';
+      this.classList.add('bvmm-img-drop-hover');
+    }
+    function onCardDragLeave(){ this.classList.remove('bvmm-img-drop-hover'); }
+    function onCardDrop(ev){
+      if(!document.body.classList.contains('admin-mode')) return;
+      if(!ev.dataTransfer || !ev.dataTransfer.files || !ev.dataTransfer.files[0]) return;
+      ev.preventDefault();
+      this.classList.remove('bvmm-img-drop-hover');
+      var file = ev.dataTransfer.files[0];
+      openUploadModal(this);
+      // openUploadModal resets state + shows modal. Feed the file in next tick.
+      setTimeout(function(){ processPickedFile(file); }, 0);
+    }
+    function attachCardDnd(){
+      document.querySelectorAll(IMG_CONTAINERS).forEach(function(container){
+        if(container.__bvmmDnd) return;
+        container.__bvmmDnd = true;
+        container.addEventListener('dragover',  onCardDragOver);
+        container.addEventListener('dragleave', onCardDragLeave);
+        container.addEventListener('drop',      onCardDrop);
+      });
+    }
+    attachCardDnd();
+    new MutationObserver(attachCardDnd).observe(document.body, { childList:true, subtree:true });
+
+    // ── D3b: drag-and-drop into the open modal ───────────────────
+    var overlay = document.getElementById('bvmm-img-upload-overlay');
+    overlay.addEventListener('dragover', function(ev){
+      if(!ev.dataTransfer || !ev.dataTransfer.types.includes('Files')) return;
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = 'copy';
+      overlay.classList.add('bvmm-modal-drop-hover');
+    });
+    overlay.addEventListener('dragleave', function(ev){
+      if(ev.target === overlay) overlay.classList.remove('bvmm-modal-drop-hover');
+    });
+    overlay.addEventListener('drop', function(ev){
+      if(!ev.dataTransfer || !ev.dataTransfer.files || !ev.dataTransfer.files[0]) return;
+      ev.preventDefault();
+      overlay.classList.remove('bvmm-modal-drop-hover');
+      processPickedFile(ev.dataTransfer.files[0]);
     });
 
     document.getElementById('bvmm-img-upload').addEventListener('click', function(){
