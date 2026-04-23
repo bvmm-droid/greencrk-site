@@ -1303,7 +1303,7 @@ nav.scrolled {
     <div class="deli-section-head" data-bvmm-edit="auto_deli_section_head_7cc7ab">Sandwiches & Wraps</div>
     <div class="lunch-grid">
       <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',16,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$16</div></div></div>
-      <div class="lcard" onclick="openOrderSheet('Rustic London',16,'Prime steak on rustic bread with sautéed mushrooms and onions','Sandwich')"><div class="lcard-img-placeholder"><img src="images/uploaded/20260423-85f4a845.jpg" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Rustic London</div><div class="lcard-desc">Prime steak on rustic bread with sautéed mushrooms and onions</div><div class="lcard-price">$16</div></div></div>
+      <div class="lcard" onclick="openOrderSheet('Rustic London',16,'Prime steak on rustic bread with sautéed mushrooms and onions','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Rustic London</div><div class="lcard-desc">Prime steak on rustic bread with sautéed mushrooms and onions</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Reubenville',18,'Corned beef, swiss cheese, sauerkraut, mustard on rye bread','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Reubenville</div><div class="lcard-desc">Corned beef, swiss cheese, sauerkraut, mustard on rye bread</div><div class="lcard-price">$18</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Dave's Philly Cheesesteak',18,'Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Dave's Philly Cheesesteak</div><div class="lcard-desc">Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero</div><div class="lcard-price">$18</div></div></div>
       <div class="lcard" onclick="openOrderSheet('The Marigold Wrap',15,'Grilled chicken, lettuce, red roasted peppers, balsamic dressing & mozzarella','Wrap')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Wrap</div><div class="lcard-name">The Marigold Wrap</div><div class="lcard-desc">Grilled chicken, lettuce, red roasted peppers, balsamic dressing & mozzarella</div><div class="lcard-price">$15</div></div></div>
@@ -7522,19 +7522,169 @@ body.admin-mode .bvmm-img-pending img {
 }
 #bvmm-img-status.ok  { color: #4a7c2f; }
 #bvmm-img-status.err { color: #b33; }
+
+/* ── D3b: tab bar + search UI ─────────────────────────────────── */
+.bvmm-tabs {
+  display: flex;
+  gap: 4px;
+  background: #f2efe9;
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 12px;
+}
+.bvmm-tab {
+  flex: 1;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6a5a50;
+  cursor: pointer;
+  font-family: inherit;
+}
+.bvmm-tab.active {
+  background: #fff;
+  color: #2a1810;
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+#bvmm-img-search-tab { display: none; }
+#bvmm-img-search-tab.show { display: block; }
+#bvmm-img-upload-tab.hide { display: none; }
+
+.bvmm-search-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.bvmm-search-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #d8d2c8;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  min-width: 0;
+}
+.bvmm-search-row button {
+  padding: 10px 14px;
+  background: #8fbf5f;
+  color: #2a1810;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.bvmm-sources {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.bvmm-source {
+  flex: 1;
+  padding: 7px 8px;
+  background: #f2efe9;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6a5a50;
+  cursor: pointer;
+  font-family: inherit;
+}
+.bvmm-source.active {
+  background: #fff;
+  color: #2a1810;
+  border-color: #8fbf5f;
+}
+#bvmm-img-search-results {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  min-height: 80px;
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+.bvmm-result {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #f2efe9;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.bvmm-result img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.bvmm-result.selected {
+  border-color: #8fbf5f;
+  box-shadow: 0 0 0 2px rgba(143,191,95,.3);
+}
+.bvmm-search-hint {
+  font-size: 12px;
+  color: #8a7a70;
+  text-align: center;
+  padding: 20px 0;
+}
+#bvmm-img-attribution {
+  font-size: 11px;
+  color: #6a5a50;
+  min-height: 16px;
+  margin-bottom: 6px;
+}
+#bvmm-img-attribution a {
+  color: #4a7c2f;
+  text-decoration: none;
+}
 </style>
 
 <div id="bvmm-img-upload-overlay" aria-hidden="true">
   <div id="bvmm-img-upload-panel">
     <h3>Replace image</h3>
     <div class="bvmm-sub" id="bvmm-img-panel-sub">…</div>
-    <img id="bvmm-img-current" alt="current">
-    <img id="bvmm-img-preview" alt="preview">
-    <input id="bvmm-img-upload-file" type="file" accept="image/*">
-    <div class="bvmm-img-row">
-      <button type="button" class="bvmm-img-btn-pick"   id="bvmm-img-pick">Choose photo</button>
-      <button type="button" class="bvmm-img-btn-upload" id="bvmm-img-upload" disabled>Upload</button>
+
+    <div class="bvmm-tabs" role="tablist">
+      <button type="button" class="bvmm-tab active" id="bvmm-tab-upload" role="tab">Upload</button>
+      <button type="button" class="bvmm-tab"        id="bvmm-tab-search" role="tab">Search</button>
     </div>
+
+    <div id="bvmm-img-upload-tab">
+      <img id="bvmm-img-current" alt="current">
+      <img id="bvmm-img-preview" alt="preview">
+      <input id="bvmm-img-upload-file" type="file" accept="image/*">
+      <div class="bvmm-img-row">
+        <button type="button" class="bvmm-img-btn-pick"   id="bvmm-img-pick">Choose photo</button>
+        <button type="button" class="bvmm-img-btn-upload" id="bvmm-img-upload" disabled>Upload</button>
+      </div>
+    </div>
+
+    <div id="bvmm-img-search-tab">
+      <div class="bvmm-sources" role="tablist">
+        <button type="button" class="bvmm-source active" data-source="pexels">Pexels</button>
+        <button type="button" class="bvmm-source"        data-source="unsplash">Unsplash</button>
+        <button type="button" class="bvmm-source"        data-source="google-images">Google</button>
+      </div>
+      <div class="bvmm-search-row">
+        <input type="search" id="bvmm-img-search-input" placeholder="Search photos…" autocomplete="off">
+        <button type="button" id="bvmm-img-search-go">Go</button>
+      </div>
+      <div id="bvmm-img-search-results">
+        <div class="bvmm-search-hint" style="grid-column:1/-1;">Type a query and tap Go</div>
+      </div>
+      <div id="bvmm-img-attribution"></div>
+      <div class="bvmm-img-row">
+        <button type="button" class="bvmm-img-btn-upload" id="bvmm-img-use-stock" disabled>Use this photo</button>
+      </div>
+    </div>
+
     <div class="bvmm-img-row">
       <button type="button" class="bvmm-img-btn-cancel" id="bvmm-img-cancel">Cancel</button>
     </div>
@@ -7590,6 +7740,18 @@ body.admin-mode .bvmm-img-pending img {
     return m ? m[1].replace(/\\'/g, "'") : null;
   }
 
+  // D3b: extract the 4th arg of openOrderSheet — the category string.
+  // openOrderSheet('name', price, 'desc', 'category') → 'category'
+  // Used to prefill the stock-search query with something sensible.
+  function parseCategory(imgContainer){
+    var card = imgContainer.closest('.lcard, .lcard-mrow');
+    if(!card) return null;
+    var oc = card.getAttribute('onclick') || '';
+    // Grab the 4th single-quoted argument
+    var m = /openOrderSheet\('(?:\\'|[^'])*?',\s*[^,]+,\s*'(?:\\'|[^'])*?',\s*'((?:\\'|[^'])*?)'/.exec(oc);
+    return m ? m[1].replace(/\\'/g, "'") : null;
+  }
+
   function currentSrc(imgContainer){
     var img = imgContainer.querySelector('img');
     return img ? img.getAttribute('src') : null;
@@ -7635,7 +7797,10 @@ body.admin-mode .bvmm-img-pending img {
     origSrc: null,
     cardAnchor: null,
     cardName: null,
-    fileBlob: null
+    fileBlob: null,
+    // D3b stock-search fields
+    stockSelected: null,   // { source, fullUrl, credit:{name,profileUrl,sourceUrl} }
+    activeSource: 'pexels'
   };
 
   function openUploadModal(container){
@@ -7655,6 +7820,7 @@ body.admin-mode .bvmm-img-pending img {
     modalState.cardAnchor = cardAnchor;
     modalState.cardName   = cardName;
     modalState.fileBlob   = null;
+    modalState.stockSelected = null;
 
     document.getElementById('bvmm-img-panel-sub').textContent = 'for: ' + cardName;
     document.getElementById('bvmm-img-current').src = domSrc;
@@ -7663,6 +7829,20 @@ body.admin-mode .bvmm-img-pending img {
     document.getElementById('bvmm-img-upload').disabled = true;
     setStatus('', '');
     document.getElementById('bvmm-img-upload-file').value = '';
+
+    // D3b: reset search tab, prefill input from card category, show Upload tab first
+    var cat = parseCategory(container);
+    var defaultQuery = cat || cardName || '';
+    var searchInput = document.getElementById('bvmm-img-search-input');
+    if(searchInput) searchInput.value = defaultQuery;
+    var results = document.getElementById('bvmm-img-search-results');
+    if(results) results.innerHTML = '<div class="bvmm-search-hint" style="grid-column:1/-1;">Type a query and tap Go</div>';
+    var attr = document.getElementById('bvmm-img-attribution');
+    if(attr) attr.innerHTML = '';
+    var useBtn = document.getElementById('bvmm-img-use-stock');
+    if(useBtn) useBtn.disabled = true;
+    showTab('upload');
+
     document.getElementById('bvmm-img-upload-overlay').classList.add('show');
   }
 
@@ -7717,6 +7897,147 @@ body.admin-mode .bvmm-img-pending img {
         resolve(comma === -1 ? s : s.substring(comma + 1));
       };
       reader.readAsDataURL(blob);
+    });
+  }
+
+  // ══ D3b STOCK SEARCH ═════════════════════════════════════════════
+  function showTab(which){
+    var uploadTab = document.getElementById('bvmm-img-upload-tab');
+    var searchTab = document.getElementById('bvmm-img-search-tab');
+    var uploadBtn = document.getElementById('bvmm-tab-upload');
+    var searchBtn = document.getElementById('bvmm-tab-search');
+    if(which === 'search'){
+      uploadTab.classList.add('hide');
+      searchTab.classList.add('show');
+      uploadBtn.classList.remove('active');
+      searchBtn.classList.add('active');
+    } else {
+      uploadTab.classList.remove('hide');
+      searchTab.classList.remove('show');
+      uploadBtn.classList.add('active');
+      searchBtn.classList.remove('active');
+    }
+  }
+
+  // Normalize each provider's response into a common shape:
+  // { thumbUrl, fullUrl, credit:{ name, profileUrl, sourceUrl } }
+  function normalizeStockResults(source, data){
+    if(source === 'pexels'){
+      return (data.photos || []).map(function(p){
+        return {
+          thumbUrl: p.src && (p.src.tiny || p.src.small || p.src.medium),
+          fullUrl:  p.src && (p.src.large2x || p.src.large || p.src.original),
+          credit: {
+            name: p.photographer || 'Pexels',
+            profileUrl: p.photographer_url || '',
+            sourceUrl: p.url || ''
+          }
+        };
+      }).filter(function(r){ return r.thumbUrl && r.fullUrl; });
+    }
+    if(source === 'unsplash'){
+      return (data.results || []).map(function(p){
+        var u = p.urls || {};
+        return {
+          thumbUrl: u.thumb || u.small,
+          fullUrl:  u.regular || u.full,
+          credit: {
+            name: (p.user && p.user.name) || 'Unsplash',
+            profileUrl: p.user && p.user.links && p.user.links.html
+              ? p.user.links.html + '?utm_source=bvmm&utm_medium=referral'
+              : '',
+            sourceUrl: p.links && p.links.html
+              ? p.links.html + '?utm_source=bvmm&utm_medium=referral'
+              : ''
+          }
+        };
+      }).filter(function(r){ return r.thumbUrl && r.fullUrl; });
+    }
+    // google-images (Custom Search)
+    return (data.items || []).map(function(p){
+      return {
+        thumbUrl: (p.image && p.image.thumbnailLink) || p.link,
+        fullUrl:  p.link,
+        credit: {
+          name: (p.image && p.image.contextLink && new URL(p.image.contextLink).hostname) || 'Google',
+          profileUrl: '',
+          sourceUrl: (p.image && p.image.contextLink) || ''
+        }
+      };
+    }).filter(function(r){ return r.thumbUrl && r.fullUrl; });
+  }
+
+  function searchStock(query, source){
+    var tok = getToken();
+    if(!tok) return Promise.reject(new Error('Not signed in'));
+    return fetch(WORKER, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        action: source,
+        query: query,
+        per_page: 18,
+        token: tok
+      })
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if(!res || !res.ok) throw new Error((res && res.error) || (source + ' failed'));
+      return normalizeStockResults(source, res);
+    });
+  }
+
+  function renderResults(results){
+    var container = document.getElementById('bvmm-img-search-results');
+    container.innerHTML = '';
+    if(!results.length){
+      container.innerHTML = '<div class="bvmm-search-hint" style="grid-column:1/-1;">No results. Try different words.</div>';
+      return;
+    }
+    results.forEach(function(r, i){
+      var div = document.createElement('div');
+      div.className = 'bvmm-result';
+      div.setAttribute('data-idx', String(i));
+      var img = document.createElement('img');
+      img.loading = 'lazy';
+      img.src = r.thumbUrl;
+      img.alt = r.credit.name || '';
+      div.appendChild(img);
+      div.addEventListener('click', function(){
+        container.querySelectorAll('.bvmm-result').forEach(function(el){ el.classList.remove('selected'); });
+        div.classList.add('selected');
+        modalState.stockSelected = r;
+        modalState.stockSelected.source = modalState.activeSource;
+        document.getElementById('bvmm-img-use-stock').disabled = false;
+        var attrEl = document.getElementById('bvmm-img-attribution');
+        var name = r.credit.name || '';
+        var sourceLabel = modalState.activeSource === 'unsplash' ? 'Unsplash'
+                        : modalState.activeSource === 'pexels'   ? 'Pexels'
+                        : 'Google';
+        var html = 'Photo: ';
+        html += r.credit.profileUrl
+          ? '<a href="' + r.credit.profileUrl + '" target="_blank" rel="noopener">' + name + '</a>'
+          : name;
+        html += ' / ' + sourceLabel;
+        attrEl.innerHTML = html;
+      });
+      container.appendChild(div);
+    });
+  }
+
+  function importStockToWorker(fullUrl){
+    var tok = getToken();
+    if(!tok) return Promise.reject(new Error('Not signed in'));
+    return fetch(WORKER, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        action: 'img-import-stock',
+        sourceUrl: fullUrl,
+        token: tok
+      })
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if(!res || !res.ok) throw new Error((res && res.error) || 'Import failed');
+      if(!res.url) throw new Error('Worker returned no URL');
+      return res.url;
     });
   }
 
@@ -7786,7 +8107,8 @@ body.admin-mode .bvmm-img-pending img {
           origSrc: modalState.origSrc,
           newSrc: newSrc,
           cardAnchor: modalState.cardAnchor,
-          cardName: modalState.cardName
+          cardName: modalState.cardName,
+          attribution: null
         });
         var img = modalState.container.querySelector('img');
         if(img) img.src = newSrc;
@@ -7803,6 +8125,90 @@ body.admin-mode .bvmm-img-pending img {
 
     document.getElementById('bvmm-img-upload-overlay').addEventListener('click', function(ev){
       if(ev.target === this) closeUploadModal();
+    });
+
+    // ── D3b: tab buttons ─────────────────────────────────────────
+    document.getElementById('bvmm-tab-upload').addEventListener('click', function(){
+      showTab('upload');
+      setStatus('', '');
+    });
+    document.getElementById('bvmm-tab-search').addEventListener('click', function(){
+      showTab('search');
+      setStatus('', '');
+    });
+
+    // ── D3b: source pill buttons ─────────────────────────────────
+    document.querySelectorAll('.bvmm-source').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        document.querySelectorAll('.bvmm-source').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        modalState.activeSource = btn.getAttribute('data-source');
+        // Clear previous selection — source changed
+        modalState.stockSelected = null;
+        document.getElementById('bvmm-img-use-stock').disabled = true;
+        document.getElementById('bvmm-img-attribution').innerHTML = '';
+        var results = document.getElementById('bvmm-img-search-results');
+        results.innerHTML = '<div class="bvmm-search-hint" style="grid-column:1/-1;">Tap Go to search ' + btn.textContent + '</div>';
+      });
+    });
+
+    // ── D3b: search Go button ────────────────────────────────────
+    function runSearch(){
+      var q = document.getElementById('bvmm-img-search-input').value.trim();
+      if(!q){ setStatus('err', 'Enter a search query'); return; }
+      setStatus('ok', 'Searching ' + modalState.activeSource + '…');
+      document.getElementById('bvmm-img-use-stock').disabled = true;
+      document.getElementById('bvmm-img-attribution').innerHTML = '';
+      modalState.stockSelected = null;
+      var results = document.getElementById('bvmm-img-search-results');
+      results.innerHTML = '<div class="bvmm-search-hint" style="grid-column:1/-1;">Loading…</div>';
+      searchStock(q, modalState.activeSource).then(function(list){
+        renderResults(list);
+        setStatus('ok', list.length + ' result' + (list.length === 1 ? '' : 's'));
+      }).catch(function(err){
+        results.innerHTML = '';
+        setStatus('err', 'Search failed: ' + err.message);
+      });
+    }
+    document.getElementById('bvmm-img-search-go').addEventListener('click', runSearch);
+    document.getElementById('bvmm-img-search-input').addEventListener('keydown', function(ev){
+      if(ev.key === 'Enter'){ ev.preventDefault(); runSearch(); }
+    });
+
+    // ── D3b: "Use this photo" — import + stash pending ───────────
+    document.getElementById('bvmm-img-use-stock').addEventListener('click', function(){
+      if(!modalState.stockSelected){ setStatus('err','Pick a photo first'); return; }
+      var btn = this;
+      btn.disabled = true;
+      setStatus('ok', 'Importing photo…');
+      var sel = modalState.stockSelected;
+      importStockToWorker(sel.fullUrl).then(function(newSrc){
+        var sourceLabel = sel.source === 'unsplash' ? 'Unsplash'
+                        : sel.source === 'pexels'   ? 'Pexels'
+                        : 'Google';
+        var altText = sel.credit && sel.credit.name
+          ? 'Photo by ' + sel.credit.name + ' on ' + sourceLabel
+          : null;
+        api.setPending(imgEditKey(modalState.cardAnchor), {
+          type: 'image',
+          origSrc: modalState.origSrc,
+          newSrc: newSrc,
+          cardAnchor: modalState.cardAnchor,
+          cardName: modalState.cardName,
+          attribution: altText
+        });
+        var img = modalState.container.querySelector('img');
+        if(img){
+          img.src = newSrc;
+          if(altText) img.alt = altText;
+        }
+        modalState.container.classList.add('bvmm-img-pending');
+        setStatus('ok', '✓ Photo imported. Commit to publish.');
+        setTimeout(closeUploadModal, 900);
+      }).catch(function(err){
+        btn.disabled = false;
+        setStatus('err', 'Import failed: ' + err.message);
+      });
     });
   });
 
@@ -7825,9 +8231,21 @@ body.admin-mode .bvmm-img-pending img {
     var replacements = 0;
     var result = api.scope.withinCardCounted(src, p.cardAnchor, function(cardHtml){
       var re = new RegExp('(<img[^>]*\\ssrc=")' + escReg(p.origSrc) + '("[^>]*>)', 'g');
-      return cardHtml.replace(re, function(_, pre, post){
+      return cardHtml.replace(re, function(whole, pre, post){
         replacements++;
-        return pre + p.newSrc + post;
+        var imgTag = pre + p.newSrc + post;
+        // D3b: if this edit carries stock-photo attribution, also rewrite
+        // the alt attribute (or inject one if missing). Required by
+        // Unsplash API terms; harmless for Pexels/Google.
+        if(p.attribution){
+          var safeAlt = String(p.attribution).replace(/"/g, '&quot;');
+          if(/\salt="[^"]*"/.test(imgTag)){
+            imgTag = imgTag.replace(/\salt="[^"]*"/, ' alt="' + safeAlt + '"');
+          } else {
+            imgTag = imgTag.replace(/^<img\b/, '<img alt="' + safeAlt + '"');
+          }
+        }
+        return imgTag;
       });
     });
     if(result.cardsTouched === 0){
