@@ -4913,8 +4913,26 @@ if('serviceWorker' in navigator){
   font-size: 14px;
   z-index: 99990;
   overflow: hidden;
+  transition: width .2s, border-radius .2s;
 }
 body.admin-mode #bvmm-deploy-panel { display: block; }
+
+/* Collapsed pill state */
+#bvmm-deploy-panel.bdp-collapsed {
+  width: auto;
+  border-radius: 100px;
+}
+#bvmm-deploy-panel.bdp-collapsed .bdp-header {
+  padding: 10px 16px;
+  border-bottom: none;
+}
+#bvmm-deploy-panel.bdp-collapsed .bdp-toggle { display: none; }
+
+/* While dragging: no transitions, grabbing cursor */
+#bvmm-deploy-panel.bdp-dragging {
+  transition: none !important;
+  opacity: .92;
+}
 
 .bdp-header {
   display: flex;
@@ -4922,9 +4940,11 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
   justify-content: space-between;
   padding: 12px 14px 10px;
   border-bottom: 1px solid rgba(245,240,232,.08);
-  cursor: pointer;
+  cursor: grab;
   user-select: none;
+  touch-action: none;
 }
+.bdp-header:active { cursor: grabbing; }
 .bdp-header-title {
   font-weight: 700;
   font-size: 13px;
@@ -5043,7 +5063,7 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
 
 <!-- Admin deploy panel -->
 <div id="bvmm-deploy-panel">
-  <div class="bdp-header" onclick="bvmmDeployToggle()">
+  <div class="bdp-header" id="bdp-header-el">
     <div class="bdp-header-title">
       <span class="bdp-dot"></span>
       Deploy
@@ -5081,9 +5101,101 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
   // Panel open/close toggle
   window.bvmmDeployToggle = function(){
     panelOpen = !panelOpen;
+    var panel = document.getElementById('bvmm-deploy-panel');
     document.getElementById('bdp-body').classList.toggle('hidden', !panelOpen);
     document.getElementById('bdp-toggle-icon').classList.toggle('open', panelOpen);
+    panel.classList.toggle('bdp-collapsed', !panelOpen);
   };
+
+  // ── Drag + tap-to-toggle on the header ──────────────────────
+  // Pointer-based so iPhone touch and Mac mouse both work. A drag
+  // only begins after 5px of movement; a plain tap still toggles.
+  (function initDragAndToggle(){
+    var POS_KEY = 'bvmm_deploy_panel_pos_v1';
+    var panel = document.getElementById('bvmm-deploy-panel');
+    var header = document.getElementById('bdp-header-el');
+    if(!panel || !header) return;
+
+    // Restore saved position (if any)
+    try{
+      var saved = JSON.parse(localStorage.getItem(POS_KEY)||'null');
+      if(saved && typeof saved.left === 'number' && typeof saved.top === 'number'){
+        applyPosition(saved.left, saved.top);
+      }
+    }catch(e){}
+
+    function applyPosition(left, top){
+      // Clamp to viewport so it never drifts off-screen
+      var rect = panel.getBoundingClientRect();
+      var maxLeft = Math.max(0, window.innerWidth  - rect.width  - 4);
+      var maxTop  = Math.max(0, window.innerHeight - rect.height - 4);
+      left = Math.min(Math.max(4, left), maxLeft);
+      top  = Math.min(Math.max(4, top),  maxTop);
+      panel.style.left   = left + 'px';
+      panel.style.top    = top  + 'px';
+      panel.style.right  = 'auto';
+      panel.style.bottom = 'auto';
+    }
+
+    var dragging = false, armed = false;
+    var startX = 0, startY = 0, origLeft = 0, origTop = 0;
+    var THRESHOLD = 5; // px before a tap becomes a drag
+
+    function onDown(e){
+      // Ignore if user tapped the chevron itself — still counts as a tap
+      armed = true;
+      dragging = false;
+      var rect = panel.getBoundingClientRect();
+      origLeft = rect.left;
+      origTop  = rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
+      header.setPointerCapture && header.setPointerCapture(e.pointerId);
+    }
+    function onMove(e){
+      if(!armed) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if(!dragging && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)){
+        dragging = true;
+        panel.classList.add('bdp-dragging');
+      }
+      if(dragging){
+        e.preventDefault();
+        applyPosition(origLeft + dx, origTop + dy);
+      }
+    }
+    function onUp(e){
+      if(!armed) return;
+      armed = false;
+      header.releasePointerCapture && header.releasePointerCapture(e.pointerId);
+      if(dragging){
+        panel.classList.remove('bdp-dragging');
+        // Persist final position
+        var rect = panel.getBoundingClientRect();
+        try{ localStorage.setItem(POS_KEY, JSON.stringify({left:rect.left, top:rect.top})); }catch(_e){}
+        dragging = false;
+      } else {
+        // No drag happened → treat as tap → toggle
+        window.bvmmDeployToggle();
+      }
+    }
+
+    header.addEventListener('pointerdown', onDown);
+    header.addEventListener('pointermove', onMove);
+    header.addEventListener('pointerup', onUp);
+    header.addEventListener('pointercancel', function(){
+      armed = false; dragging = false;
+      panel.classList.remove('bdp-dragging');
+    });
+
+    // On window resize, re-clamp in case panel is now off-screen
+    window.addEventListener('resize', function(){
+      if(panel.style.left){
+        applyPosition(parseFloat(panel.style.left), parseFloat(panel.style.top));
+      }
+    });
+  })();
 
   // File picker
   var fileInput = document.getElementById('bdp-file-input');
