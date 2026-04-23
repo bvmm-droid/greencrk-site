@@ -7515,7 +7515,7 @@ body.admin-mode .bvmm-img-pending img {
 #bvmm-img-upload-panel {
   background: #fff;
   border-radius: 12px;
-  max-width: 420px;
+  max-width: 640px;
   width: 100%;
   padding: 20px;
   font-family: 'Inter', sans-serif;
@@ -7653,15 +7653,15 @@ body.admin-mode .bvmm-img-pending img {
 #bvmm-img-search-results {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  min-height: 80px;
-  max-height: 340px;
+  gap: 8px;
+  min-height: 100px;
+  max-height: 500px;
   overflow-y: auto;
   margin-bottom: 10px;
 }
 .bvmm-result {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   background: #1a1a1a;
   border-radius: 6px;
   overflow: hidden;
@@ -7671,9 +7671,19 @@ body.admin-mode .bvmm-img-pending img {
 .bvmm-result img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
+#bvmm-stock-preview {
+  display: none;
+  width: 100%;
+  height: 220px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+#bvmm-stock-preview.show { display: block; }
 .bvmm-result.selected {
   border-color: #8fbf5f;
   box-shadow: 0 0 0 2px rgba(143,191,95,.3);
@@ -7729,6 +7739,7 @@ body.admin-mode .bvmm-img-pending img {
       <div id="bvmm-img-search-results">
         <div class="bvmm-search-hint" style="grid-column:1/-1;">Type a query and tap Go</div>
       </div>
+      <img id="bvmm-stock-preview" alt="selected photo preview">
       <div id="bvmm-img-attribution"></div>
       <div class="bvmm-img-row">
         <button type="button" class="bvmm-img-btn-upload" id="bvmm-img-use-stock" disabled>Use this photo</button>
@@ -7889,6 +7900,8 @@ body.admin-mode .bvmm-img-pending img {
     if(results) results.innerHTML = '<div class="bvmm-search-hint" style="grid-column:1/-1;">Type a query and tap Go</div>';
     var attr = document.getElementById('bvmm-img-attribution');
     if(attr) attr.innerHTML = '';
+    var bigPrev = document.getElementById('bvmm-stock-preview');
+    if(bigPrev) bigPrev.classList.remove('show');
     var useBtn = document.getElementById('bvmm-img-use-stock');
     if(useBtn) useBtn.disabled = true;
     showTab('upload');
@@ -8057,6 +8070,10 @@ body.admin-mode .bvmm-img-pending img {
         modalState.stockSelected = r;
         modalState.stockSelected.source = modalState.activeSource;
         document.getElementById('bvmm-img-use-stock').disabled = false;
+        // Show large preview of the full-res photo
+        var bigPreview = document.getElementById('bvmm-stock-preview');
+        bigPreview.src = r.fullUrl;
+        bigPreview.classList.add('show');
         var attrEl = document.getElementById('bvmm-img-attribution');
         var name = r.credit.name || '';
         var sourceLabel = modalState.activeSource === 'unsplash' ? 'Unsplash'
@@ -8266,6 +8283,7 @@ body.admin-mode .bvmm-img-pending img {
         modalState.stockSelected = null;
         document.getElementById('bvmm-img-use-stock').disabled = true;
         document.getElementById('bvmm-img-attribution').innerHTML = '';
+        document.getElementById('bvmm-stock-preview').classList.remove('show');
         var results = document.getElementById('bvmm-img-search-results');
         results.innerHTML = '<div class="bvmm-search-hint" style="grid-column:1/-1;">Tap Go to search ' + btn.textContent + '</div>';
       });
@@ -8278,6 +8296,7 @@ body.admin-mode .bvmm-img-pending img {
       setStatus('ok', 'Searching ' + modalState.activeSource + '…');
       document.getElementById('bvmm-img-use-stock').disabled = true;
       document.getElementById('bvmm-img-attribution').innerHTML = '';
+      document.getElementById('bvmm-stock-preview').classList.remove('show');
       modalState.stockSelected = null;
       var results = document.getElementById('bvmm-img-search-results');
       results.innerHTML = '<div class="bvmm-search-hint" style="grid-column:1/-1;">Loading…</div>';
