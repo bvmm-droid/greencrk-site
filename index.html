@@ -5623,6 +5623,33 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
 .bvmm-diff-was { color: #ff9999; text-decoration: line-through; opacity: .75; }
 .bvmm-diff-now { color: #8fbf5f; }
 .bvmm-diff-empty { text-align: center; padding: 24px 0; opacity: .5; font-size: 13px; }
+
+/* Image preview in review panel (D3b) */
+.bvmm-diff-img-pair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.bvmm-diff-img-pair img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: rgba(255,255,255,.08);
+  flex-shrink: 0;
+}
+.bvmm-diff-img-arrow {
+  font-size: 16px;
+  opacity: .5;
+  flex-shrink: 0;
+}
+.bvmm-diff-img-attr {
+  font-size: 11px;
+  opacity: .65;
+  margin-top: 6px;
+  font-style: italic;
+}
 </style>
 
 <!-- Floating pending-edits badge -->
@@ -5976,6 +6003,17 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
               '<div class="bvmm-diff-row"><div class="bvmm-diff-label">'+DAY_NAMES[d]+'</div>' +
               '<div><span class="bvmm-diff-was">'+esc(wasStr)+'</span> → <span class="bvmm-diff-now">'+esc(nowStr)+'</span></div></div>';
           }
+        }
+      } else if(p.type==='image'){
+        title = 'Image — ' + (p.cardName || 'item');
+        rows =
+          '<div class="bvmm-diff-img-pair">' +
+            '<img src="'+esc(p.origSrc)+'" alt="before" onerror="this.style.opacity=0.25">' +
+            '<span class="bvmm-diff-img-arrow">→</span>' +
+            '<img src="'+esc(p.newSrc)+'" alt="after" onerror="this.style.opacity=0.25">' +
+          '</div>';
+        if(p.attribution){
+          rows += '<div class="bvmm-diff-img-attr">'+esc(p.attribution)+'</div>';
         }
       }
       return '<div class="bvmm-diff-item">' +
