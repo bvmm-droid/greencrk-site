@@ -1302,7 +1302,7 @@ nav.scrolled {
   <div id="deli-sandwiches" class="deli-section">
     <div class="deli-section-head" data-bvmm-edit="auto_deli_section_head_7cc7ab">Sandwiches & Wraps</div>
     <div class="lunch-grid">
-      <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',1600,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img alt="Photo by Willians Huerta on Pexels" src="images/uploaded/20260423-c26eb22b.jpg" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$1600</div></div></div>
+      <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',16,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Rustic London',16,'Prime steak on rustic bread with sautéed mushrooms and onions','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Rustic London</div><div class="lcard-desc">Prime steak on rustic bread with sautéed mushrooms and onions</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Reubenville',18,'Corned beef, swiss cheese, sauerkraut, mustard on rye bread','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Reubenville</div><div class="lcard-desc">Corned beef, swiss cheese, sauerkraut, mustard on rye bread</div><div class="lcard-price">$18</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Dave's Philly Cheesesteak',18,'Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Dave's Philly Cheesesteak</div><div class="lcard-desc">Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero</div><div class="lcard-price">$18</div></div></div>
@@ -6080,11 +6080,19 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
     btn.disabled = true; btn.textContent = 'Building…';
     setDiffStatus('ok','Fetching current live file…');
 
-    // We need the canonical source HTML, not this potentially-mutated DOM.
-    // Fetch the live index.html from the site, apply pending edits to it, commit.
+    // Source-of-truth for the next commit MUST be the last committed bytes on
+    // main, not whatever Cloudflare Pages' CDN happens to be serving. Pages can
+    // lag the repo by 30-120s after a rebuild; if we fetched /index.html and
+    // got a stale copy, applying pending edits to it would silently revert any
+    // prior commit whose changes hadn't yet propagated — matching the
+    // "commits land but edits revert" symptom Daniel observed on 2026-04-23.
+    // raw.githubusercontent.com is served off GitHub's own CDN (Fastly), is
+    // updated within seconds of a commit to main, and sends
+    // `access-control-allow-origin: *` so browser fetch works from Pages.
     var cacheBust = Date.now();
-    fetch('/index.html?cb='+cacheBust, { cache:'no-store' })
-      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    var SRC_URL = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?cb='+cacheBust;
+    fetch(SRC_URL, { cache:'no-store' })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status+' fetching source from GitHub raw'); return r.text(); })
       .then(function(src){
         btn.textContent = 'Applying…';
         setDiffStatus('ok','Applying '+pendingCount()+' edit(s)…');
