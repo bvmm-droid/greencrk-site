@@ -6678,6 +6678,236 @@ body.admin-mode .bvmm-pending-card {
 </script>
 <!-- ═══ END PHASE C.2a ═══ -->
 
+<!-- ═══ BVMM PHASE C.2b: BUSINESS INFO EDITING ═══ -->
+<style>
+/* Business Info button in admin bar */
+#bvmm-biz-btn {
+  background: rgba(143,191,95,.12);
+  color: #8fbf5f;
+  border: 1px solid rgba(143,191,95,.35);
+  padding: 5px 12px;
+  border-radius: 100px;
+  font: 600 11px 'Inter', sans-serif;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-left: 6px;
+  display: none;
+}
+body.admin-mode #bvmm-biz-btn { display: inline-block; }
+#bvmm-biz-btn:active { transform: scale(.96); }
+</style>
+<script>
+(function(){
+  'use strict';
+  if(!window.__bvmmPhaseC){ console.error('Phase C.2b requires Phase C base'); return; }
+  var api = window.__bvmmPhaseC;
+
+  // Parse current business info from the live DOM / known locations.
+  // We use the footer tagline as the canonical source for display-format phone
+  // and the schema.org JSON-LD for the structured/E.164 versions.
+  function readCurrentBusinessInfo(){
+    var info = { phone:'', phoneE164:'', phoneBare:'', street:'', city:'', state:'', zip:'' };
+    // Phone: prefer schema.org telephone
+    var ld = document.querySelector('script[type="application/ld+json"]');
+    if(ld){
+      try{
+        var parsed = JSON.parse(ld.textContent);
+        if(parsed.telephone){
+          info.phoneE164 = parsed.telephone; // e.g. "+16316690612"
+          info.phoneBare = parsed.telephone.replace(/\D/g,'').replace(/^1/,'');
+          // Convert to display format
+          info.phone = formatPhoneDisplay(info.phoneBare);
+        }
+        if(parsed.address){
+          info.street = parsed.address.streetAddress || '';
+          info.city   = parsed.address.addressLocality || '';
+          info.state  = parsed.address.addressRegion || '';
+          info.zip    = parsed.address.postalCode || '';
+        }
+      }catch(e){ /* silent */ }
+    }
+    return info;
+  }
+
+  // Format 10-digit bare string as "(XXX) XXX-XXXX"
+  function formatPhoneDisplay(bare){
+    bare = String(bare||'').replace(/\D/g,'');
+    if(bare.length === 11 && bare.charAt(0) === '1') bare = bare.slice(1);
+    if(bare.length !== 10) return bare; // not a US number; leave as-is
+    return '(' + bare.slice(0,3) + ') ' + bare.slice(3,6) + '-' + bare.slice(6);
+  }
+
+  // Normalize user phone input to bare 10-digit + derived variants.
+  // Returns null if input doesn't look like a US number.
+  function normalizePhone(input){
+    var bare = String(input||'').replace(/\D/g,'');
+    if(bare.length === 11 && bare.charAt(0) === '1') bare = bare.slice(1);
+    if(bare.length !== 10) return null;
+    return {
+      bare: bare,
+      e164: '+1' + bare,
+      display: formatPhoneDisplay(bare),
+      telHref: '+1' + bare,
+      telHrefBare: bare
+    };
+  }
+
+  // Open the Business Info editor
+  window.bvmmOpenBizEdit = function(){
+    var pending = api.getPending();
+    var current = pending.businessInfo ? pending.businessInfo.newData : readCurrentBusinessInfo();
+    var orig    = pending.businessInfo ? pending.businessInfo.origData : readCurrentBusinessInfo();
+
+    api.openCustomForm({
+      title: 'Edit — Business Info',
+      fields: [
+        { key:'phone',  label:'Phone',   type:'text', value: current.phone, hint:'Shows everywhere — display, schema.org, tel: links, AI assistant' },
+        { key:'street', label:'Street',  type:'text', value: current.street },
+        { key:'city',   label:'City',    type:'text', value: current.city },
+        { key:'state',  label:'State',   type:'text', value: current.state,  hint:'2-letter, e.g. NY' },
+        { key:'zip',    label:'ZIP',     type:'text', value: current.zip }
+      ],
+      onSave: function(values){
+        var p = normalizePhone(values.phone);
+        if(!p){ alert('Phone number must be 10 US digits.'); return; }
+        var newData = {
+          phone:   p.display,
+          phoneE164: p.e164,
+          phoneBare: p.bare,
+          street:  values.street.trim(),
+          city:    values.city.trim(),
+          state:   values.state.trim(),
+          zip:     values.zip.trim()
+        };
+        // Same as orig? discard
+        if(JSON.stringify(stripDerived(newData)) === JSON.stringify(stripDerived(orig))){
+          api.removePending('businessInfo');
+        } else {
+          api.setPending('businessInfo', {
+            type: 'businessInfo',
+            origData: orig,
+            newData: newData
+          });
+        }
+      }
+    });
+  };
+  function stripDerived(d){
+    // Compare without the derived fields
+    var copy = {};
+    ['phone','street','city','state','zip'].forEach(function(k){ copy[k] = d[k]; });
+    return copy;
+  }
+
+  // ── Rewriter ────────────────────────────────────────────────────
+  function rewriteBizInSource(src, p){
+    var orig = p.origData, next = p.newData;
+    var out = src;
+    var changes = 0;
+    function go(re, to, lbl){
+      var before = out;
+      out = out.replace(re, to);
+      if(before !== out) changes++;
+    }
+
+    // ── Phone ──
+    if(orig.phoneE164 && next.phoneE164 && orig.phoneE164 !== next.phoneE164){
+      // 1. schema.org "telephone": "+1XXX..."
+      go(new RegExp('"telephone":\\s*"' + reg(orig.phoneE164) + '"', 'g'),
+         '"telephone": "' + next.phoneE164 + '"');
+      // 2. href="tel:+1..." (with +1)
+      go(new RegExp('href="tel:' + reg(orig.phoneE164) + '"', 'g'),
+         'href="tel:' + next.phoneE164 + '"');
+      // 3. href="tel:XXXXXXXXXX" (10-digit bare, no +)
+      go(new RegExp('href="tel:' + reg(orig.phoneBare) + '"', 'g'),
+         'href="tel:' + next.phoneBare + '"');
+      // 4. Display text "(XXX) XXX-XXXX"
+      go(new RegExp(reg(orig.phone), 'g'), next.phone);
+      // 5. AI system prompt fragment "Phone: (XXX) XXX-XXXX"
+      //    already handled by (4) above since same display text. Left here as doc.
+    }
+
+    // ── Address ──
+    if(orig.street !== next.street){
+      go(new RegExp('"streetAddress":\\s*"' + reg(orig.street) + '"', 'g'),
+         '"streetAddress": "' + esc(next.street) + '"');
+      // Display-HTML: "85 Deer Park Ave<br>..." and bare "85 Deer Park Ave, Babylon..."
+      go(new RegExp(reg(orig.street), 'g'), next.street);
+    }
+    if(orig.city !== next.city){
+      go(new RegExp('"addressLocality":\\s*"' + reg(orig.city) + '"', 'g'),
+         '"addressLocality": "' + esc(next.city) + '"');
+      // Display text — match exact orig.city with word boundaries
+      go(new RegExp('\\b' + reg(orig.city) + '\\b', 'g'), next.city);
+    }
+    if(orig.state !== next.state){
+      go(new RegExp('"addressRegion":\\s*"' + reg(orig.state) + '"', 'g'),
+         '"addressRegion": "' + esc(next.state) + '"');
+      // Tricky: don't blindly replace 2-letter state like "NY" — limit to specific contexts.
+      // Pattern 1: <br>CITY, STATE ZIP (contact block)
+      // Pattern 2: CITY, STATE · (footer)
+      // Pattern 3: CITY, STATE ZIP in AI prompt
+      // Use orig.city anchor to scope.
+      if(orig.city && next.city){
+        // After city, expect ", STATE <space> ZIP" or ", STATE ·"
+        var cityForMatch = next.city; // orig.city may already be replaced
+        go(new RegExp(reg(cityForMatch) + ', ' + reg(orig.state) + '(?=[\\s,.·<])', 'g'),
+           cityForMatch + ', ' + next.state);
+        // also the bare "Babylon Village NY" form (no comma)
+        go(new RegExp(reg(cityForMatch) + ' ' + reg(orig.state) + '\\b', 'g'),
+           cityForMatch + ' ' + next.state);
+      }
+    }
+    if(orig.zip !== next.zip){
+      go(new RegExp('"postalCode":\\s*"' + reg(orig.zip) + '"', 'g'),
+         '"postalCode": "' + esc(next.zip) + '"');
+      go(new RegExp('\\b' + reg(orig.zip) + '\\b', 'g'), next.zip);
+    }
+
+    if(changes === 0){
+      throw new Error('Business Info: no occurrences found to update');
+    }
+    return out;
+  }
+  function reg(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function esc(s){ return String(s==null?'':s).replace(/"/g,'\\"'); }
+
+  api.registerRewriter('businessInfo', rewriteBizInSource);
+
+  // ── Admin bar button ───────────────────────────────────────────
+  function mountButton(){
+    if(document.getElementById('bvmm-biz-btn')) return;
+    var bar = document.querySelector('.admin-bar, #adminBar, .bvmm-admin-bar, [class*="admin-bar"]');
+    if(!bar){
+      // fallback: attach to body as fixed button bottom-left
+      var btn = document.createElement('button');
+      btn.id = 'bvmm-biz-btn';
+      btn.textContent = '🏪 Business';
+      btn.onclick = window.bvmmOpenBizEdit;
+      btn.style.cssText += 'position:fixed;bottom:16px;left:16px;z-index:99990';
+      document.body.appendChild(btn);
+      return;
+    }
+    var btn2 = document.createElement('button');
+    btn2.id = 'bvmm-biz-btn';
+    btn2.textContent = 'Business';
+    btn2.onclick = window.bvmmOpenBizEdit;
+    bar.appendChild(btn2);
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', mountButton);
+  } else {
+    mountButton();
+  }
+  document.addEventListener('bvmmAdminEntered', mountButton);
+
+  window.__bvmmPhaseC2b = { rewriteBizInSource: rewriteBizInSource, normalizePhone: normalizePhone };
+})();
+</script>
+<!-- ═══ END PHASE C.2b ═══ -->
+
+
 
 
 <!-- ═══ END PHASE B ═══ -->
