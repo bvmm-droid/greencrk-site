@@ -1302,7 +1302,7 @@ nav.scrolled {
   <div id="deli-sandwiches" class="deli-section">
     <div class="deli-section-head" data-bvmm-edit="auto_deli_section_head_7cc7ab">Sandwiches & Wraps</div>
     <div class="lunch-grid">
-      <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',16.56,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$16.56</div></div></div>
+      <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',16,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Rustic London',16,'Prime steak on rustic bread with sautéed mushrooms and onions','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Rustic London</div><div class="lcard-desc">Prime steak on rustic bread with sautéed mushrooms and onions</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Reubenville',18,'Corned beef, swiss cheese, sauerkraut, mustard on rye bread','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Reubenville</div><div class="lcard-desc">Corned beef, swiss cheese, sauerkraut, mustard on rye bread</div><div class="lcard-price">$18</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Dave's Philly Cheesesteak',18,'Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Dave's Philly Cheesesteak</div><div class="lcard-desc">Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero</div><div class="lcard-price">$18</div></div></div>
@@ -2818,6 +2818,10 @@ nav.scrolled {
         <label class="cof-label" for="cofNotes">Notes (optional)</label>
         <input class="cof-input" id="cofNotes" type="text" placeholder="Allergies, special requests, delivery info...">
       </div>
+      <div class="cof-field">
+        <label class="cof-label" for="cofEmail">Email (optional — for order confirmation copy)</label>
+        <input class="cof-input" id="cofEmail" type="email" placeholder="your@email.com" autocomplete="email">
+      </div>
 
       <!-- Square deposit toggle -->
       <div class="cof-deposit">
@@ -4225,6 +4229,7 @@ function ogSubmitOrder(){
   if(!pickup){showToast('Please choose a pickup time.');return;}
 
   var notes      = document.getElementById('cofNotes').value.trim()||'None';
+  var custEmail  = document.getElementById('cofEmail') ? document.getElementById('cofEmail').value.trim() : '';
   var eventDate  = document.getElementById('cofEventDate') ? document.getElementById('cofEventDate').value : '';
   var eventType  = document.getElementById('cofEventType') ? document.getElementById('cofEventType').value : '';
   var wantsDep   = document.querySelector('input[name="cofPayment"]:checked');
@@ -4286,9 +4291,9 @@ function ogSubmitOrder(){
   // ── EmailJS fallback ────────────────────────────────────────────────────────
   function sendViaEmailJS(){
     var emailReady =
-      EMAILJS_PUBLIC_KEY !== 'sF8_feXTs21Nsc3Bg' &&
-      EMAILJS_SERVICE_ID !== 'service_1jc6nrt' &&
-      EMAILJS_TEMPLATE_ID !== 'template_fben9zs';
+      EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY' &&
+      EMAILJS_SERVICE_ID !== 'YOUR_SERVICE_ID' &&
+      EMAILJS_TEMPLATE_ID !== 'YOUR_TEMPLATE_ID';
 
     if(!emailReady){ doConfirm(); return; }
 
@@ -4305,7 +4310,23 @@ function ogSubmitOrder(){
       estimated_total: total,
       reply_to:        phone
     })
-    .then(doConfirm)
+    .then(function(){
+      doConfirm();
+      // Send customer copy if they provided an email
+      if(custEmail){
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          customer_name:   name,
+          customer_phone:  phone,
+          pickup_time:     pickup,
+          event_date:      eventDate || 'Not specified',
+          event_type:      eventType || 'Not specified',
+          notes:           notes,
+          order_items:     lines,
+          estimated_total: total,
+          reply_to:        custEmail
+        }).catch(function(){ /* silent fail on customer copy */ });
+      }
+    })
     .catch(function(err){
       console.error('EmailJS error:', err);
       doConfirm(); // still confirm on screen
@@ -4387,14 +4408,25 @@ function updateOsTotal() {
 }
 
 function osAddToCart() {
-  var name = osCurrentItem.name;
+  var name  = osCurrentItem.name;
   var price = osCurrentItem.price;
+  var cat   = osCurrentItem.cat || 'deli';
+
+  // Generate a stable ID from the item name
+  var id = 'os-' + name.replace(/[^a-z0-9]/gi,'').toLowerCase();
+
+  // Register in ogData so ogRenderCart can look it up
+  if(!ogData[id]){
+    ogData[id] = { id:id, name:name, price:price, unit:'', cat:cat };
+  }
+
+  // Add quantity to unified cart
+  ogCart[id] = (ogCart[id] || 0) + osQty;
+
+  // Keep osCartItems in sync (legacy)
   osCartItems[name] = (osCartItems[name] || 0) + osQty;
-  // Add to existing cart system
-  var count = 0;
-  Object.values(osCartItems).forEach(function(q){ count += q; });
-  var countEl = document.getElementById('navCartCount');
-  if(countEl){ countEl.textContent = count; countEl.style.display = count > 0 ? 'flex' : 'none'; }
+
+  ogRenderCart();
   showToast(osQty + ' × ' + name + ' added!');
   closeOrderSheet();
 }
@@ -6084,7 +6116,11 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
     // main, not whatever Cloudflare Pages' CDN happens to be serving. Pages can
     // lag the repo by 30-120s after a rebuild; if we fetched /index.html and
     // got a stale copy, applying pending edits to it would silently revert any
-    // prior commit whose changes hadn't yet propagated.
+    // prior commit whose changes hadn't yet propagated — matching the
+    // "commits land but edits revert" symptom Daniel observed on 2026-04-23.
+    // raw.githubusercontent.com is served off GitHub's own CDN (Fastly), is
+    // updated within seconds of a commit to main, and sends
+    // `access-control-allow-origin: *` so browser fetch works from Pages.
     var cacheBust = Date.now();
     var SRC_URL = 'https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html?cb='+cacheBust;
     fetch(SRC_URL, { cache:'no-store' })
@@ -8512,6 +8548,272 @@ body.admin-mode .bvmm-img-pending img {
 </script>
 
 <!-- ═══ END PHASE C.2d ═══ -->
+
+
+<!-- ═══ PHASE E — Add new menu items (MVP: lcard into deli sections) ═══ -->
+<style>
+.bvmm-addcard-btn {
+  display: none;
+  margin: 24px auto 8px;
+  padding: 12px 22px;
+  background: transparent;
+  color: #a9b7a0;
+  border: 1.5px dashed rgba(169,183,160,.55);
+  border-radius: 100px;
+  font: 700 12px 'Inter', sans-serif;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .15s;
+}
+.bvmm-addcard-btn:hover {
+  background: rgba(169,183,160,.08);
+  border-color: #a9b7a0;
+  transform: translateY(-1px);
+}
+.bvmm-addcard-btn:active { transform: translateY(0); }
+body.admin-mode .bvmm-addcard-btn { display: block; }
+.bvmm-diff-added-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 0;
+}
+.bvmm-diff-added-card .bvmm-diff-badge {
+  background: #3d6b3e; color: #fff;
+  font: 700 10px 'Inter', sans-serif;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 100px;
+}
+</style>
+<script>
+(function(){
+  var api = window.__bvmmPhaseC;
+  if(!api){ try { console.warn('[Phase E] Phase C host api not ready — skipping.'); } catch(_){} return; }
+
+  // Plain-looking sandwich placeholder — user replaces via D3b after creation.
+  var PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=400&q=80';
+
+  // Sections that accept lcard inserts. All of these use the `.lunch-grid`
+  // wrapper pattern internally.
+  var TARGET_SECTIONS = [
+    'deli-sandwiches','deli-coldcuts','deli-cheese',
+    'deli-paninis','deli-salads','deli-soups'
+  ];
+
+  function extractPrice(s){
+    var m = /(-?\d+(?:\.\d+)?)/.exec(String(s||''));
+    return m ? parseFloat(m[1]) : 0;
+  }
+  function jsStr(s){
+    return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  }
+  function htmlEnc(s){
+    return String(s==null?'':s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Build the lcard HTML that matches the existing site's card markup exactly.
+  // Keeping this identical to the rest of the cards means the scoped rewriters
+  // (card edits, image edits) will work on a freshly-added card too.
+  function buildCardHtml(data){
+    var priceNum = extractPrice(data.price);
+    var priceDisplay = String(data.price).match(/^\$/) ? data.price : '$' + data.price;
+    return '<div class="lcard" onclick="openOrderSheet(\''
+      + jsStr(data.name) + '\',' + priceNum + ',\''
+      + jsStr(data.desc) + '\',\'' + jsStr(data.cat) + '\')">'
+      + '<div class="lcard-img-placeholder"><img src="' + PLACEHOLDER_IMG
+      + '" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div>'
+      + '<div class="lcard-body">'
+      + '<div class="lcard-tag">' + htmlEnc(data.cat) + '</div>'
+      + '<div class="lcard-name">' + htmlEnc(data.name) + '</div>'
+      + '<div class="lcard-desc">' + htmlEnc(data.desc) + '</div>'
+      + '<div class="lcard-price">' + htmlEnc(priceDisplay) + '</div>'
+      + '</div></div>';
+  }
+
+  function newKey(){
+    return 'addcard:' + Date.now() + ':' + Math.random().toString(36).slice(2,8);
+  }
+
+  function openAddForm(sectionId, sectionLabel){
+    api.openCustomForm({
+      title: 'Add to ' + sectionLabel,
+      fields: [
+        { key:'name',  label:'Name', type:'text', value:'' },
+        { key:'cat',   label:'Category / Tag', type:'text', value:'Sandwich',
+          hint:'e.g. Sandwich, Wrap, Hero — shown as the tag above the name' },
+        { key:'price', label:'Price (as shown)', type:'text', value:'',
+          hint:'e.g. $18 — "$" kept as-is for display' },
+        { key:'desc',  label:'Description', type:'textarea', value:'' }
+      ],
+      onSave: function(values){
+        if(!values.name || !String(values.name).trim()){
+          alert('Name is required.'); return;
+        }
+        if(!values.price || !String(values.price).trim()){
+          alert('Price is required.'); return;
+        }
+        var key = newKey();
+        api.setPending(key, {
+          type: 'add-card',
+          sectionId: sectionId,
+          sectionLabel: sectionLabel,
+          cardHtml: buildCardHtml(values),
+          newData: values
+        });
+      }
+    });
+  }
+
+  function attachAddButtons(){
+    TARGET_SECTIONS.forEach(function(sid){
+      var section = document.getElementById(sid);
+      if(!section) return;
+      if(section.querySelector(':scope > .bvmm-addcard-btn')) return;
+      var head = section.querySelector('.deli-section-head');
+      var label = head ? head.textContent.replace(/\s+/g,' ').trim() : sid;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bvmm-addcard-btn';
+      btn.textContent = '+ Add to ' + label;
+      btn.addEventListener('click', function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        openAddForm(sid, label);
+      });
+      btn.addEventListener('mousedown',  function(ev){ ev.stopPropagation(); });
+      btn.addEventListener('touchstart', function(ev){ ev.stopPropagation(); }, {passive:true});
+      section.appendChild(btn);
+    });
+  }
+
+  // Source rewriter — inserts a freshly-rendered <div class="lcard">...</div>
+  // immediately before the closing </div> of the target section's .lunch-grid.
+  function rewriteAddCardInSource(src, p){
+    if(!p.sectionId) throw new Error('add-card edit missing sectionId');
+    if(!p.cardHtml)  throw new Error('add-card edit missing cardHtml');
+
+    // Find the section's opening tag. Primary: exact match.
+    var openNeedle = '<div id="' + p.sectionId + '" class="deli-section">';
+    var sectionStart = src.indexOf(openNeedle);
+    if(sectionStart === -1){
+      // Fallback: attribute-order-tolerant regex (handles quirks like the stray
+      // `<div <div id=` bug that exists on the deli-paninis section).
+      var alt = new RegExp('<div[^>]*id="' + p.sectionId.replace(/-/g,'\\-') +
+                           '"[^>]*class="[^"]*\\bdeli-section\\b[^"]*"[^>]*>');
+      var m = alt.exec(src);
+      if(!m){
+        alt = new RegExp('<div[^>]*class="[^"]*\\bdeli-section\\b[^"]*"[^>]*id="' +
+                         p.sectionId.replace(/-/g,'\\-') + '"[^>]*>');
+        m = alt.exec(src);
+      }
+      if(!m) throw new Error('Section not found in source: ' + p.sectionId);
+      sectionStart = m.index;
+    }
+
+    // Find the first <div class="lunch-grid"> within this section.
+    var gridOpen = '<div class="lunch-grid">';
+    var gridStart = src.indexOf(gridOpen, sectionStart);
+    if(gridStart === -1){
+      throw new Error('lunch-grid not found in section: ' + p.sectionId);
+    }
+
+    // Walk forward from just after the grid's opening tag, balancing <div>/</div>
+    // until depth returns to 0. Insert cardHtml before that closing tag.
+    var i = gridStart + gridOpen.length;
+    var depth = 1;
+    while(i < src.length){
+      if(src.charAt(i) === '<'){
+        if(src.substr(i,4) === '<div' && (src.charAt(i+4) === ' ' || src.charAt(i+4) === '>')){
+          depth++; i += 4; continue;
+        }
+        if(src.substr(i,6) === '</div>'){
+          depth--;
+          if(depth === 0){
+            return src.substring(0, i) + p.cardHtml + src.substring(i);
+          }
+          i += 6; continue;
+        }
+      }
+      i++;
+    }
+    throw new Error('Could not find closing </div> of lunch-grid for section: ' + p.sectionId);
+  }
+
+  api.registerRewriter('add-card', rewriteAddCardInSource);
+
+  // Extend the review panel to render add-card entries nicely. The core
+  // renderDiff has a cascade of type checks and falls through for unknown
+  // types — we monkey-patch by observing the diff list after it renders.
+  // Safer than editing renderDiff directly.
+  function decorateAddCardDiffs(){
+    var listEl = document.getElementById('bvmm-diff-list');
+    if(!listEl) return;
+    var pending = api.getPending();
+    var items = listEl.querySelectorAll('.bvmm-diff-item');
+    var keys = Object.keys(pending);
+    // If renderDiff rendered fewer items than pending (unknown type skipped
+    // the title/rows) we still need to inject our own. Easier: detect our
+    // keys and if their rendered item has empty title, replace it.
+    keys.forEach(function(key){
+      var p = pending[key];
+      if(!p || p.type !== 'add-card') return;
+      // Find the item that matches this key by its Discard button
+      for(var i=0;i<items.length;i++){
+        var btn = items[i].querySelector('.bvmm-diff-discard');
+        if(!btn) continue;
+        var onclk = btn.getAttribute('onclick') || '';
+        if(onclk.indexOf(key) !== -1){
+          var title = items[i].querySelector('.bvmm-diff-title');
+          if(title && !title.textContent.trim()){
+            title.textContent = 'Add — ' + (p.newData.name || 'New item');
+          }
+          // Replace body rows with a preview block
+          var existing = items[i].querySelectorAll('.bvmm-diff-row');
+          existing.forEach(function(r){ r.remove(); });
+          var preview = document.createElement('div');
+          preview.className = 'bvmm-diff-added-card';
+          preview.innerHTML =
+            '<span class="bvmm-diff-badge">NEW</span> ' +
+            '<span>' + htmlEnc(p.newData.cat || '') + ' — ' +
+            htmlEnc(p.newData.name || '') + ' — ' +
+            htmlEnc(p.newData.price || '') +
+            '</span>';
+          items[i].appendChild(preview);
+          break;
+        }
+      }
+    });
+  }
+
+  // Hook into bvmmOpenDiff so we decorate AFTER renderDiff runs.
+  if(typeof window.bvmmOpenDiff === 'function' && !window.__bvmmPhaseEWrapped){
+    var orig = window.bvmmOpenDiff;
+    window.bvmmOpenDiff = function(){
+      orig.apply(this, arguments);
+      setTimeout(decorateAddCardDiffs, 0);
+    };
+    window.__bvmmPhaseEWrapped = true;
+  }
+
+  function init(){
+    attachAddButtons();
+    var mo = new MutationObserver(function(){ attachAddButtons(); });
+    mo.observe(document.body, { childList:true, subtree:true });
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Exposed for tests / debugging
+  window.__bvmmPhaseE = {
+    rewriteAddCardInSource: rewriteAddCardInSource,
+    buildCardHtml: buildCardHtml,
+    TARGET_SECTIONS: TARGET_SECTIONS.slice()
+  };
+})();
+</script>
+<!-- ═══ END PHASE E ═══ -->
 
 
 
