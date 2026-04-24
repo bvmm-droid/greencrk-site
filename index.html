@@ -4276,9 +4276,8 @@ function ogSubmitOrder(){
 
   // ── Try Square API ──────────────────────────────────────────────────────────
   var sqReady = SQ_ACCESS_TOKEN && SQ_ACCESS_TOKEN!=='YOUR_SQ_ACCESS_TOKEN';
-  var catItems = MENU.filter(function(item){ return cState.selected[item.id]; });
 
-  if(sqReady && catItems.length){
+  if(sqReady && ids.length){
     btn.textContent = 'Sending to Square…';
     createSquareOrder(catItems, cState.guests, cMult, eventDate, name, phone, '', notes, eventType)
       .then(function(order){
@@ -4296,9 +4295,9 @@ function ogSubmitOrder(){
   // ── EmailJS fallback ────────────────────────────────────────────────────────
   function sendViaEmailJS(){
     var emailReady =
-      EMAILJS_PUBLIC_KEY !== 'sF8_feXTs21Nsc3Bg' &&
-      EMAILJS_SERVICE_ID !== 'service_1jc6nrt' &&
-      EMAILJS_TEMPLATE_ID !== 'template_fben9zs';
+      EMAILJS_PUBLIC_KEY === 'sF8_feXTs21Nsc3Bg' &&
+      EMAILJS_SERVICE_ID === 'service_1jc6nrt' &&
+      EMAILJS_TEMPLATE_ID === 'template_fben9zs';
 
     if(!emailReady){ doConfirm(); return; }
 
