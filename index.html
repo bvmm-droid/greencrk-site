@@ -4316,7 +4316,6 @@ function ogSubmitOrder(){
       reply_to:        phone
     })
     .then(function(){
-      doConfirm();
       // Send customer copy if they provided an email
       if(custEmail){
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -4331,6 +4330,7 @@ function ogSubmitOrder(){
           reply_to:        custEmail
         }).catch(function(){ /* silent fail on customer copy */ });
       }
+      doConfirm();
     })
     .catch(function(err){
       console.error('EmailJS error:', err);
@@ -4750,6 +4750,7 @@ if('serviceWorker' in navigator){
 <div id="bvmm-admin-badge">
   <span>🔓 Admin Mode</span>
   <button onclick="bvmmToggleSections()">Sections</button>
+  <button onclick="bvmmSaveAdminShortcut()">📲 Add Shortcut</button>
   <button onclick="bvmmLogout()">Logout</button>
 </div>
 
@@ -4791,7 +4792,9 @@ if('serviceWorker' in navigator){
     }catch(e){return null;}
   }
   function saveSession(token,exp){
-    localStorage.setItem(SESSION_KEY,JSON.stringify({token:token,exp:exp}));
+    // Override server exp: extend to 30 days from now for better persistence
+    var thirtyDaysFromNow = Date.now() + (30 * 24 * 60 * 60 * 1000);
+    localStorage.setItem(SESSION_KEY,JSON.stringify({token:token,exp:thirtyDaysFromNow}));
   }
   function clearSession(){
     localStorage.removeItem(SESSION_KEY);
@@ -4866,7 +4869,53 @@ if('serviceWorker' in navigator){
     exitAdmin();
   };
 
-  // ── Section toggles ─────────────────────────────────────────────
+  // ── Save Admin Shortcut ──────────────────────────────────────────
+  window.bvmmSaveAdminShortcut=function(){
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    var isAndroid = /Android/.test(navigator.userAgent);
+    
+    if(isIOS){
+      // iOS: Use Share Sheet → Add to Home Screen
+      if(navigator.share){
+        navigator.share({
+          title: 'BVMM Admin',
+          text: 'Admin panel for Babylon Village Meat Market',
+          url: window.location.href
+        }).catch(function(err){
+          if(err.name!=='AbortError'){
+            alert('iOS: Tap Share → Add to Home Screen');
+          }
+        });
+      } else {
+        alert('iOS: Tap Share (top-right) → Add to Home Screen');
+      }
+    } else if(isAndroid && navigator.share){
+      // Android: Use native share
+      navigator.share({
+        title: 'BVMM Admin',
+        url: window.location.href
+      }).catch(function(err){
+        if(err.name!=='AbortError'){
+          alert('Android: Tap Share → Add to Home Screen');
+        }
+      });
+    } else if(navigator.share){
+      // Desktop with share support
+      navigator.share({
+        title: 'BVMM Admin',
+        url: window.location.href
+      }).catch(function(){});
+    } else {
+      // Fallback: manual instructions
+      var msg = isIOS 
+        ? 'iOS: Tap Share (⬆️) → Add to Home Screen'
+        : isAndroid
+        ? 'Android: Tap ⋮ (menu) → Add to Home Screen'
+        : 'Copy this link to your bookmarks:\n\n' + window.location.href;
+      alert(msg);
+    }
+  };
+
   var sectionState={};
   try{sectionState=JSON.parse(localStorage.getItem(SECTIONS_KEY)||'{}');}catch(e){}
 
