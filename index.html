@@ -2843,6 +2843,15 @@ nav.scrolled {
 
       <div class="cof-disclaimer">Estimates only. Rack/sterno/water pan $15 each. Paper setup $1.50/person. Prices subject to change — call <a href="tel:6316690612">(631) 669-0612</a> to confirm.</div>
 
+      <!-- Order summary preview -->
+      <div id="cofSummaryPreview" style="background:#EAE5DC;padding:16px;border-radius:8px;margin:16px 0;font-size:.9rem;line-height:1.6;">
+        <strong style="display:block;margin-bottom:8px;">Your Order:</strong>
+        <div id="cofSummaryItems" style="margin-bottom:8px;"></div>
+        <div style="border-top:1px solid #C6A897;padding-top:8px;font-weight:700;">
+          <span id="cofSummaryTotal">Total: $0.00</span>
+        </div>
+      </div>
+
       <button class="cof-submit" id="cofSubmitBtn" onclick="ogSubmitOrder()">Send Order Request →</button>
       <button class="cof-back" onclick="ogHideOrderForm()">← Back to cart</button>
     </div>
@@ -4094,6 +4103,24 @@ function initLunchDay(){
 }
 
 // ── ORDER FORM ──
+function ogUpdateSummaryPreview(){
+  var ids=Object.keys(ogCart);
+  var summaryItems = document.getElementById('cofSummaryItems');
+  var summaryTotal = document.getElementById('cofSummaryTotal');
+  
+  summaryItems.innerHTML = '';
+  var total = 0;
+  ids.forEach(function(id){
+    var item = ogData[id];
+    if(!item) return;
+    var qty = ogCart[id];
+    var sub = item.price * qty;
+    total += sub;
+    summaryItems.innerHTML += '<div>' + item.name + ' (' + qty + ') — $' + sub.toFixed(2) + '</div>';
+  });
+  summaryTotal.textContent = 'Total: $' + total.toFixed(2);
+}
+
 function ogShowOrderForm(){
   var ids=Object.keys(ogCart);
   if(!ids.length){showToast('Add items to your cart first!');return;}
@@ -4101,6 +4128,7 @@ function ogShowOrderForm(){
   document.getElementById('cartOrderForm').classList.add('show');
   document.getElementById('cofConfirm').classList.remove('show');
   document.getElementById('cofForm').style.display='';
+  ogUpdateSummaryPreview();
 }
 function ogHideOrderForm(){
   document.getElementById('cartSummary').style.display='';
@@ -4333,8 +4361,10 @@ function ogSubmitOrder(){
     })
     .catch(function(err){
       console.error('EmailJS error:', err);
-      doConfirm(); // still confirm on screen
-      showToast('Note: email failed. Please call (631) 669-0612 to confirm.');
+      btn.disabled = false;
+      btn.textContent = '⬆ Commit All';
+      showToast('Order failed: ' + (err.message || 'Unknown error. Please call (631) 669-0612.'));
+      setDiffStatus('err','EmailJS: '+err.message);
     });
   }
 }
@@ -4416,16 +4446,20 @@ function osAddToCart() {
   var price = osCurrentItem.price;
   var cat   = osCurrentItem.cat || 'deli';
 
+  console.log('osAddToCart called:', {name, price, qty: osQty});
+
   // Generate a stable ID from the item name
   var id = 'os-' + name.replace(/[^a-z0-9]/gi,'').toLowerCase();
 
   // Register in ogData so ogRenderCart can look it up
   if(!ogData[id]){
     ogData[id] = { id:id, name:name, price:price, unit:'', cat:cat };
+    console.log('Created ogData entry:', ogData[id]);
   }
 
   // Add quantity to unified cart
   ogCart[id] = (ogCart[id] || 0) + osQty;
+  console.log('Updated ogCart:', ogCart);
 
   // Keep osCartItems in sync (legacy)
   osCartItems[name] = (osCartItems[name] || 0) + osQty;
@@ -6150,21 +6184,18 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
           pending = {};
           savePending();
           refreshBadge();
-          // Start a visible 30-second countdown, then hard-reload the page
-          // with a cache-buster so the user SEES the new version.
-          var secs = 30;
-          setDiffStatus('ok', '✅ Committed to GitHub. Site updates in ' + secs + 's, then auto-reload.');
+          // Quick countdown (5s instead of 30) + manual refresh button
+          var secs = 5;
+          setDiffStatus('ok', '✅ COMMITTED TO GITHUB • <button style="padding:8px 16px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin-left:12px;" onclick="location.reload()">🔄 Refresh Now</button> • Auto-reload in ' + secs + 's');
           btn.disabled = true;
-          btn.textContent = 'Waiting…';
+          btn.textContent = 'Live ✓';
           var tick = setInterval(function(){
             secs--;
             if(secs > 0){
-              setDiffStatus('ok', '✅ Committed. Reloading in ' + secs + 's…');
+              setDiffStatus('ok', '✅ COMMITTED TO GITHUB • <button style="padding:8px 16px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin-left:12px;" onclick="location.reload()">🔄 Refresh Now</button> • Auto-reload in ' + secs + 's');
             } else {
               clearInterval(tick);
               setDiffStatus('ok', '🔄 Reloading…');
-              // Hard reload with cache buster — bypasses Safari's disk cache
-              // and forces a fresh fetch from Cloudflare Pages.
               var cb = Date.now();
               var sep = location.search ? '&' : '?';
               location.href = location.pathname + location.search + sep + 'cb=' + cb + location.hash;
