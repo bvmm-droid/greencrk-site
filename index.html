@@ -6123,7 +6123,7 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
   function setDiffStatus(type, msg){
     var el = document.getElementById('bvmm-diff-status');
     el.className = 'bdp-status' + (type?' '+type:'');
-    el.textContent = msg;
+    el.innerHTML = msg;
   }
 
   // ── Commit all ───────────────────────────────────────────────
@@ -6171,16 +6171,16 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
           refreshBadge();
           // Quick countdown (5s instead of 30) + manual refresh button
           var secs = 5;
-          setDiffStatus('ok', '✅ COMMITTED TO GITHUB • <button style="padding:8px 16px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin-left:12px;" onclick="location.reload()">🔄 Refresh Now</button> • Auto-reload in ' + secs + 's');
+          setDiffStatus('ok', '✅ LIVE NOW • <button style="padding:8px 16px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin:0 8px;" onclick="window.open(\'https://greencrk.com\',\'_blank\')">🌐 Visit Site</button><button style="padding:8px 16px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;" onclick="location.reload()">🔄 Refresh</button> (auto-reload in ' + secs + 's)');
           btn.disabled = true;
           btn.textContent = 'Live ✓';
           var tick = setInterval(function(){
             secs--;
             if(secs > 0){
-              setDiffStatus('ok', '✅ COMMITTED TO GITHUB • <button style="padding:8px 16px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin-left:12px;" onclick="location.reload()">🔄 Refresh Now</button> • Auto-reload in ' + secs + 's');
+              setDiffStatus('ok', '✅ LIVE NOW • <button style="padding:8px 16px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin:0 8px;" onclick="window.open(\'https://greencrk.com\',\'_blank\')">🌐 Visit Site</button><button style="padding:8px 16px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;" onclick="location.reload()">🔄 Refresh</button> (auto-reload in ' + secs + 's)');
             } else {
               clearInterval(tick);
-              setDiffStatus('ok', '🔄 Reloading…');
+              setDiffStatus('ok', '🔄 Refreshing…');
               var cb = Date.now();
               var sep = location.search ? '&' : '?';
               location.href = location.pathname + location.search + sep + 'cb=' + cb + location.hash;
