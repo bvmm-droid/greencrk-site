@@ -1302,7 +1302,7 @@ nav.scrolled {
   <div id="deli-sandwiches" class="deli-section">
     <div class="deli-section-head" data-bvmm-edit="auto_deli_section_head_7cc7ab">Sandwiches & Wraps</div>
     <div class="lunch-grid">
-      <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',168888,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$168888</div></div></div>
+      <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',16,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Rustic London',16,'Prime steak on rustic bread with sautéed mushrooms and onions','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Rustic London</div><div class="lcard-desc">Prime steak on rustic bread with sautéed mushrooms and onions</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Reubenville',18,'Corned beef, swiss cheese, sauerkraut, mustard on rye bread','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Reubenville</div><div class="lcard-desc">Corned beef, swiss cheese, sauerkraut, mustard on rye bread</div><div class="lcard-price">$18</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Dave's Philly Cheesesteak',18,'Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Dave's Philly Cheesesteak</div><div class="lcard-desc">Prime rib, cooper sharp cheese, onions, peppers, pickled jalapeños, toasted semolina hero</div><div class="lcard-price">$18</div></div></div>
@@ -4264,6 +4264,11 @@ function ogSubmitOrder(){
     document.getElementById('cofConfirm').classList.add('show');
     btn.disabled = false;
     btn.textContent = 'Send Order Request →';
+    // Clear cart after successful order
+    ogCart = {};
+    osCartItems = {};
+    ogRenderCart();
+    ogHideOrderForm();
     if(payDeposit && SQUARE_DEPOSIT_URL && SQUARE_DEPOSIT_URL!=='YOUR_SQUARE_PAYMENT_LINK'){
       setTimeout(function(){window.open(SQUARE_DEPOSIT_URL,'_blank');},600);
     }
