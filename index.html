@@ -689,7 +689,7 @@ body.admin-mode .admin-bar{display:flex}
 }
 
 /* ── ORDER FORM ── */
-.cart-order-form{display:none;padding:14px 20px 16px;border-top:1px solid var(--border);flex-shrink:0;z-index:100}
+.cart-order-form{display:none;padding:14px 20px 16px;border-top:1px solid var(--border);flex-shrink:0;z-index:100;overflow-y:auto;max-height:90vh}
 .cart-order-form.show{display:block}
 .cof-title{font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mint);margin-bottom:12px}
 .cof-field{margin-bottom:10px}
@@ -2769,91 +2769,105 @@ nav.scrolled {
 
     <!-- The form itself -->
     <div id="cofForm">
-      <div class="cof-title">Your Info</div>
+      <div class="cof-title" style="font-size:.85rem;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--gold);">Complete Your Order</div>
 
-      <div class="cof-row">
-        <div class="cof-field">
-          <label class="cof-label" for="cofName">Name</label>
-          <input class="cof-input" id="cofName" type="text" placeholder="Your name" autocomplete="name">
-        </div>
-        <div class="cof-field">
-          <label class="cof-label" for="cofPhone">Phone</label>
-          <input class="cof-input" id="cofPhone" type="tel" placeholder="(631) 669-0612" autocomplete="tel">
+      <!-- CONTACT INFO -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:.65rem;font-weight:700;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;">Contact</div>
+        <div class="cof-row">
+          <div class="cof-field">
+            <label class="cof-label" for="cofName">Name *</label>
+            <input class="cof-input" id="cofName" type="text" placeholder="Your name" autocomplete="name">
+          </div>
+          <div class="cof-field">
+            <label class="cof-label" for="cofPhone">Phone *</label>
+            <input class="cof-input" id="cofPhone" type="tel" placeholder="(631) 669-0612" autocomplete="tel">
+          </div>
         </div>
       </div>
 
-      <div class="cof-row">
+      <!-- PICKUP TIMING -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:.65rem;font-weight:700;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;">When & What</div>
         <div class="cof-field">
-          <label class="cof-label" for="cofEventDate">Event Date</label>
-          <input class="cof-input" id="cofEventDate" type="date">
-        </div>
-        <div class="cof-field">
-          <label class="cof-label" for="cofEventType">Event Type</label>
-          <select class="cof-input" id="cofEventType">
-            <option>Birthday Party</option>
-            <option>Corporate Event</option>
-            <option>Wedding</option>
-            <option>Holiday Party</option>
-            <option>Cocktail Hour</option>
-            <option>BBQ</option>
-            <option>Other</option>
+          <label class="cof-label" for="cofPickup">Pickup Time *</label>
+          <select class="cof-input" id="cofPickup" style="font-size:.82rem;">
+            <option value="">Choose a time...</option>
+            <option>Today — as soon as possible</option>
+            <option>Tomorrow morning (10am–12pm)</option>
+            <option>Tomorrow afternoon (12pm–3pm)</option>
+            <option>Tomorrow late (3pm–5pm)</option>
+            <option>In 2 days</option>
+            <option>In 3+ days — I'll call to confirm</option>
           </select>
         </div>
-      </div>
-
-      <div class="cof-field">
-        <label class="cof-label" for="cofPickup">Pickup Time</label>
-        <select class="cof-input" id="cofPickup">
-          <option value="">Choose a time...</option>
-          <option>Today — as soon as possible</option>
-          <option>Tomorrow morning (10am–12pm)</option>
-          <option>Tomorrow afternoon (12pm–3pm)</option>
-          <option>Tomorrow late (3pm–5pm)</option>
-          <option>In 2 days</option>
-          <option>In 3+ days — I'll call to confirm</option>
-        </select>
-      </div>
-
-      <div class="cof-field">
-        <label class="cof-label" for="cofNotes">Notes (optional)</label>
-        <input class="cof-input" id="cofNotes" type="text" placeholder="Allergies, special requests, delivery info...">
-      </div>
-      <div class="cof-field">
-        <label class="cof-label" for="cofEmail">Email (optional — for order confirmation copy)</label>
-        <input class="cof-input" id="cofEmail" type="email" placeholder="your@email.com" autocomplete="email">
-      </div>
-
-      <!-- Square deposit toggle -->
-      <div class="cof-deposit">
-        <label class="cof-deposit-opt selected" id="cofDepositOptRequest">
-          <input type="radio" name="cofPayment" value="request" checked onchange="cofSelectDeposit('request')">
-          <div>
-            <div class="cof-deposit-opt-label">Send Request — No payment now</div>
-            <div class="cof-deposit-opt-sub">We'll call to confirm and collect payment at pickup.</div>
+        <div class="cof-row" style="margin-top:12px;">
+          <div class="cof-field">
+            <label class="cof-label" for="cofEventDate">Event Date (optional)</label>
+            <input class="cof-input" id="cofEventDate" type="date">
           </div>
-        </label>
-        <label class="cof-deposit-opt" id="cofDepositOptPay">
-          <input type="radio" name="cofPayment" value="deposit" onchange="cofSelectDeposit('deposit')">
-          <div>
-            <div class="cof-deposit-opt-label">Pay $10 Deposit Now</div>
-            <div class="cof-deposit-opt-sub">Locks in your order. Balance due at pickup.</div>
+          <div class="cof-field">
+            <label class="cof-label" for="cofEventType">Event Type (optional)</label>
+            <select class="cof-input" id="cofEventType" style="font-size:.82rem;">
+              <option>Birthday Party</option>
+              <option>Corporate Event</option>
+              <option>Wedding</option>
+              <option>Holiday Party</option>
+              <option>Cocktail Hour</option>
+              <option>BBQ</option>
+              <option>Other</option>
+            </select>
           </div>
-        </label>
+        </div>
       </div>
 
-      <div class="cof-disclaimer">Estimates only. Rack/sterno/water pan $15 each. Paper setup $1.50/person. Prices subject to change — call <a href="tel:6316690612">(631) 669-0612</a> to confirm.</div>
+      <!-- NOTES & EMAIL -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:.65rem;font-weight:700;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;">Additional Info</div>
+        <div class="cof-field">
+          <label class="cof-label" for="cofNotes">Notes (optional)</label>
+          <input class="cof-input" id="cofNotes" type="text" placeholder="Allergies, special requests, delivery info...">
+        </div>
+        <div class="cof-field" style="margin-top:12px;">
+          <label class="cof-label" for="cofEmail">Email (optional)</label>
+          <input class="cof-input" id="cofEmail" type="email" placeholder="your@email.com" autocomplete="email">
+        </div>
+      </div>
+
+      <!-- PAYMENT OPTION -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:.65rem;font-weight:700;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;">Payment</div>
+        <div class="cof-deposit">
+          <label class="cof-deposit-opt selected" id="cofDepositOptRequest" style="padding:14px;border-radius:8px;cursor:pointer;transition:all .2s;border:2px solid transparent;">
+            <input type="radio" name="cofPayment" value="request" checked onchange="cofSelectDeposit('request')">
+            <div>
+              <div class="cof-deposit-opt-label" style="font-size:.8rem;font-weight:700;">Send Request — No payment now</div>
+              <div class="cof-deposit-opt-sub" style="font-size:.72rem;">We'll call to confirm and collect payment at pickup.</div>
+            </div>
+          </label>
+          <label class="cof-deposit-opt" id="cofDepositOptPay" style="padding:14px;border-radius:8px;cursor:pointer;transition:all .2s;border:2px solid transparent;margin-top:10px;">
+            <input type="radio" name="cofPayment" value="deposit" onchange="cofSelectDeposit('deposit')">
+            <div>
+              <div class="cof-deposit-opt-label" style="font-size:.8rem;font-weight:700;">Pay $10 Deposit Now</div>
+              <div class="cof-deposit-opt-sub" style="font-size:.72rem;">Locks in your order. Balance due at pickup.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="cof-disclaimer" style="background:rgba(169,183,160,.1);padding:12px;margin:20px 0;">Estimates only. Rack/sterno/water pan $15 each. Paper setup $1.50/person. Prices subject to change — call <a href="tel:6316690612" style="font-weight:700;color:var(--gold);">(631) 669-0612</a> to confirm.</div>
 
       <!-- Order summary preview -->
-      <div id="cofSummaryPreview" style="background:#EAE5DC;padding:16px;border-radius:8px;margin:16px 0;font-size:.9rem;line-height:1.6;">
-        <strong style="display:block;margin-bottom:8px;">Your Order:</strong>
-        <div id="cofSummaryItems" style="margin-bottom:8px;"></div>
-        <div style="border-top:1px solid #C6A897;padding-top:8px;font-weight:700;">
+      <div id="cofSummaryPreview" style="background:linear-gradient(135deg,var(--bg2),var(--bg3));padding:18px;border-radius:10px;margin:20px 0;font-size:.85rem;line-height:1.8;border-left:4px solid var(--gold);">
+        <strong style="display:block;margin-bottom:12px;font-size:.9rem;">Your Order</strong>
+        <div id="cofSummaryItems" style="margin-bottom:12px;"></div>
+        <div style="border-top:2px solid rgba(0,0,0,.1);padding-top:12px;font-weight:700;font-size:.95rem;">
           <span id="cofSummaryTotal">Total: $0.00</span>
         </div>
       </div>
 
-      <button class="cof-submit" id="cofSubmitBtn" onclick="ogSubmitOrder()">Send Order Request →</button>
-      <button class="cof-back" onclick="ogHideOrderForm()">← Back to cart</button>
+      <button class="cof-submit" id="cofSubmitBtn" onclick="ogSubmitOrder()" style="font-size:.85rem;padding:14px;margin-bottom:10px;background:var(--mint);font-weight:700;letter-spacing:.06em;box-shadow:0 2px 8px rgba(92,58,45,.2);transition:all .2s;border:none;cursor:pointer;">Send Order Request →</button>
+      <button class="cof-back" onclick="ogHideOrderForm()" style="width:100%;padding:12px;background:transparent;border:2px solid var(--border);color:var(--mint);border-radius:100px;font-weight:700;cursor:pointer;font-size:.8rem;transition:all .2s;">← Back to Cart</button>
     </div>
 
     <!-- Confirmation screen (shown after submit) -->
