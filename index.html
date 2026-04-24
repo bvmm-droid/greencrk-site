@@ -4302,23 +4302,8 @@ function ogSubmitOrder(){
     }
   }
 
-  // ── Try Square API ──────────────────────────────────────────────────────────
-  var sqReady = SQ_ACCESS_TOKEN && SQ_ACCESS_TOKEN!=='YOUR_SQ_ACCESS_TOKEN';
-
-  if(sqReady && ids.length){
-    btn.textContent = 'Sending to Square…';
-    createSquareOrder(catItems, cState.guests, cMult, eventDate, name, phone, '', notes, eventType)
-      .then(function(order){
-        console.log('Square order created:', order.id);
-        doConfirm();
-      })
-      .catch(function(err){
-        console.warn('Square order failed, falling back to EmailJS:', err);
-        sendViaEmailJS();
-      });
-  } else {
-    sendViaEmailJS();
-  }
+  // ── EmailJS only (Square sandbox creds TBD) ──
+  sendViaEmailJS();
 
   // ── EmailJS fallback ────────────────────────────────────────────────────────
   function sendViaEmailJS(){
