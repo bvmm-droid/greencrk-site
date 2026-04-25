@@ -4724,8 +4724,23 @@ if('serviceWorker' in navigator){
 <div id="bvmm-admin-badge">
   <span>🔓 Admin Mode</span>
   <button onclick="bvmmToggleSections()">Sections</button>
+  <button onclick="bvmmToggleAdminLinks()">🔗 Links</button>
   <button onclick="window.bvmmShowLoginModal()">Login</button>
   <button onclick="bvmmLogout()">Logout</button>
+</div>
+
+<!-- Admin Links Dropdown -->
+<div id="bvmm-admin-links" style="display:none;position:fixed;top:36px;left:50%;transform:translateX(-50%);z-index:100002;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px;min-width:260px;box-shadow:0 8px 32px rgba(0,0,0,.6);">
+  <div style="font-size:.65rem;color:#a9b7a0;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;padding:0 4px;">Quick Links</div>
+  <div style="display:flex;flex-direction:column;gap:4px;">
+    <a href="https://greencrk.com" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">🌐 Live Site</a>
+    <a href="https://github.com/bvmm-droid/greencrk-site" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">🐙 GitHub Repo</a>
+    <a href="https://dash.cloudflare.com" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">☁️ Cloudflare</a>
+    <a href="https://dashboard.emailjs.com" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">📧 EmailJS</a>
+    <a href="https://developer.squareup.com/console/en/apps" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">🟦 Square Dev</a>
+    <a href="https://app.squareupsandbox.com/dashboard" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">🧪 Square Sandbox</a>
+    <a href="https://bvmm-proxy.babylonvillagemeatmarket.workers.dev" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">⚡ CF Worker</a>
+  </div>
 </div>
 
 <!-- Standalone login button — always visible, hidden once in admin mode -->
@@ -5162,7 +5177,7 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
     </label>
     <button class="bdp-push" id="bdp-push-btn" onclick="bvmmDeploy()" disabled>⬆ Push Live</button>
     <div class="bdp-status" id="bdp-status"></div>
-    <div class="bdp-backups-title">Recent Backups</div>
+    <div class="bdp-backups-title" onclick="bvmmToggleBackups()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">Recent Backups <span id="bdp-backups-arrow">▼</span></div>
     <div id="bdp-backups-list"><div class="bdp-backups-empty">Loading…</div></div>
 
     <div class="bdp-backups-title" style="margin-top:14px;">🔗 Quick Links</div>
@@ -5237,6 +5252,28 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
 </div>
 
 <script>
+var bvmmBackupsOpen = true;
+window.bvmmToggleAdminLinks = function(e){
+  var el = document.getElementById('bvmm-admin-links');
+  if(!el) return;
+  var isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+};
+// Close links dropdown when clicking outside
+document.addEventListener('click', function(e){
+  var el = document.getElementById('bvmm-admin-links');
+  if(!el || el.style.display==='none') return;
+  if(!el.contains(e.target) && !e.target.closest || (e.target.closest && !e.target.closest('#bvmm-admin-badge'))){
+    el.style.display='none';
+  }
+});
+window.bvmmToggleBackups = function(){
+  bvmmBackupsOpen = !bvmmBackupsOpen;
+  var el = document.getElementById('bdp-backups-list');
+  var arrow = document.getElementById('bdp-backups-arrow');
+  if(el) el.style.display = bvmmBackupsOpen ? 'block' : 'none';
+  if(arrow) arrow.textContent = bvmmBackupsOpen ? '▼' : '▶';
+};
 window.bvmmToolTab=function(tab){
   ['health','email','orders','visitors','menu'].forEach(function(t){
     document.getElementById('btool-'+t).style.display=t===tab?'block':'none';
