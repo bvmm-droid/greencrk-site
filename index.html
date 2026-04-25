@@ -5288,7 +5288,7 @@ window.bvmmBarToggle = function(name){
     document.getElementById(BAB_DROPDOWNS[name]).classList.add('show');
     var btn = document.getElementById('bab-btn-'+name);
     if(btn) btn.classList.add('bab-active');
-    if(name==='backups') bvmmLoadBarBackups();
+    if(name==='backups'){ bvmmLoadBarBackups(); if(typeof loadBackups==='function') loadBackups(); }
     if(name==='tools') { bvmmRenderOrders(); bvmmRenderVisitors(); bvmmRenderMenuItems(); }
   }
 };
@@ -5343,7 +5343,7 @@ window.bvmmToggleSections = function(){
 };
 window.bvmmToggleBackups = function(){
   bvmmBackupsOpen = !bvmmBackupsOpen;
-  var el = document.getElementById('bdp-backups-list');
+  var el = document.getElementById('bab-backups-list') || document.getElementById('bdp-backups-list');
   var arrow = document.getElementById('bdp-backups-arrow');
   if(el) el.style.display = bvmmBackupsOpen ? 'block' : 'none';
   if(arrow) arrow.textContent = bvmmBackupsOpen ? '▼' : '▶';
@@ -5747,7 +5747,7 @@ window.bvmmDeleteMenuItem=function(id){
 
   // Load backup list
   function loadBackups(){
-    var el = document.getElementById('bdp-backups-list');
+    var el = document.getElementById('bab-backups-list') || document.getElementById('bdp-backups-list');
     if(!el) return;
     var tok = getToken();
     if(!tok){
