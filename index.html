@@ -4162,7 +4162,7 @@ var ANTHROPIC_PROXY_URL = 'https://bvmm-proxy.babylonvillagemeatmarket.workers.d
 // SQUARE — $10 deposit payment link
 // Generate from Square Dashboard → Online Checkout → Create Payment Link
 // Set amount to $10, label "Catering Deposit"
-var SQUARE_DEPOSIT_URL = 'YOUR_SQUARE_PAYMENT_LINK';  // <- paste Square link here
+var SQUARE_DEPOSIT_URL = 'https://sandbox.square.link/u/o7u1SU4c';  // Sandbox deposit link
 
 // ─── SQUARE API ─────────────────────────────────────────────────────────────
 // Production Square credentials — set these once Square account is live
@@ -4760,7 +4760,13 @@ if('serviceWorker' in navigator){
 <div id="bvmm-admin-badge">
   <span>🔓 Admin Mode</span>
   <button onclick="bvmmToggleSections()">Sections</button>
+  <button onclick="window.bvmmShowLoginModal()">Login</button>
   <button onclick="bvmmLogout()">Logout</button>
+</div>
+
+<!-- Standalone login button — always visible, hidden once in admin mode -->
+<div id="bvmm-login-btn" style="position:fixed;bottom:20px;left:20px;z-index:9997;display:block;">
+  <button onclick="window.bvmmShowLoginModal()" style="background:rgba(30,20,15,.85);color:#a9b7a0;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;cursor:pointer;backdrop-filter:blur(8px);">🔐 Admin</button>
 </div>
 
 <!-- Section toggle panel -->
@@ -4813,9 +4819,9 @@ if('serviceWorker' in navigator){
     document.body.classList.add('admin-mode');
     document.getElementById('bvmm-admin-badge').classList.add('show');
     document.getElementById('bvmm-cache-buster').style.display='block';
+    var lb=document.getElementById('bvmm-login-btn'); if(lb) lb.style.display='none';
     buildSectionPanel();
     if(typeof cBuildMenu==='function') cBuildMenu();
-    // Notify other admin modules
     document.dispatchEvent(new Event('bvmmAdminEntered'));
   }
   function exitAdmin(){
@@ -4823,6 +4829,7 @@ if('serviceWorker' in navigator){
     document.body.classList.remove('admin-mode');
     document.getElementById('bvmm-admin-badge').classList.remove('show');
     document.getElementById('bvmm-cache-buster').style.display='none';
+    var lb=document.getElementById('bvmm-login-btn'); if(lb) lb.style.display='block';
     document.getElementById('bvmm-sec-panel').classList.remove('show');
     if(typeof cBuildMenu==='function') cBuildMenu();
   }
