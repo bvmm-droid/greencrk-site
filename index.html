@@ -4667,25 +4667,42 @@ if('serviceWorker' in navigator){
 }
 /* Admin indicator badge */
 #bvmm-admin-badge{
-  display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);
-  background:rgba(42,24,16,.95);color:#8fbf5f;
-  padding:6px 14px 6px 10px;border-radius:20px;
-  font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-  z-index:99998;border:1px solid rgba(143,191,95,.35);
+  display:none;position:fixed;top:0;left:0;right:0;
+  background:rgba(22,12,6,.97);color:#8fbf5f;
+  padding:0 12px;height:34px;
+  font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  z-index:99998;border-bottom:1px solid rgba(143,191,95,.25);
   font-family:-apple-system,sans-serif;
-  display:none;align-items:center;gap:8px;white-space:nowrap;
+  backdrop-filter:blur(10px);
 }
-#bvmm-admin-badge.show{display:flex;}
+#bvmm-admin-badge.show{display:flex;align-items:center;gap:2px;}
+#bvmm-admin-badge .bab-label{
+  margin-right:6px;color:#8fbf5f;font-size:11px;letter-spacing:.8px;white-space:nowrap;
+}
 #bvmm-admin-badge button{
-  background:rgba(245,240,232,.12);color:#f5f0e8;border:none;
-  border-radius:10px;padding:3px 9px;font:inherit;font-size:11px;
-  font-weight:600;cursor:pointer;letter-spacing:.5px;
+  background:transparent;color:#a9b7a0;border:none;
+  border-radius:6px;padding:4px 9px;font:inherit;font-size:11px;
+  font-weight:600;cursor:pointer;letter-spacing:.4px;white-space:nowrap;
+  transition:background .15s,color .15s;
 }
+#bvmm-admin-badge button:hover{background:rgba(255,255,255,.1);color:#f5f0e8;}
+#bvmm-admin-badge button.bab-active{background:rgba(143,191,95,.2);color:#8fbf5f;}
+#bvmm-admin-badge .bab-spacer{flex:1;}
+/* Dropdowns */
+.bab-dropdown{
+  display:none;position:fixed;top:34px;
+  background:#1a1008;border:1px solid rgba(255,255,255,.12);
+  border-radius:0 0 10px 10px;padding:10px;
+  z-index:99997;box-shadow:0 8px 32px rgba(0,0,0,.6);
+  font-family:-apple-system,sans-serif;
+  max-height:80vh;overflow-y:auto;
+}
+.bab-dropdown.show{display:block;}
 /* Section toggle panel */
 #bvmm-sec-panel{
-  display:none;position:fixed;top:56px;left:50%;transform:translateX(-50%);
-  background:#2a1810;color:#f5f0e8;border-radius:14px;
-  padding:16px;width:260px;z-index:99997;
+  display:none;position:fixed;top:34px;left:50%;transform:translateX(-50%);
+  background:#1a1008;color:#f5f0e8;border-radius:0 0 12px 12px;
+  padding:14px;width:240px;z-index:99997;
   box-shadow:0 12px 40px rgba(0,0,0,.6);
   border:1px solid rgba(245,240,232,.1);
   font-family:-apple-system,sans-serif;
@@ -4722,16 +4739,19 @@ if('serviceWorker' in navigator){
 
 <!-- Admin mode indicator -->
 <div id="bvmm-admin-badge">
-  <span>🔓 Admin Mode</span>
-  <button onclick="bvmmToggleSections()">Sections</button>
-  <button onclick="bvmmToggleAdminLinks()">🔗 Links</button>
+  <span class="bab-label">🔓 ADMIN</span>
+  <button onclick="bvmmBarToggle('sections')" id="bab-btn-sections">Sections</button>
+  <button onclick="bvmmBarToggle('links')" id="bab-btn-links">🔗 Links</button>
+  <button onclick="bvmmBarToggle('backups')" id="bab-btn-backups">💾 Backups</button>
+  <button onclick="bvmmBarToggle('tools')" id="bab-btn-tools">🛠 Tools</button>
+  <div class="bab-spacer"></div>
   <button onclick="window.bvmmShowLoginModal()">Login</button>
   <button onclick="bvmmLogout()">Logout</button>
 </div>
 
-<!-- Admin Links Dropdown -->
-<div id="bvmm-admin-links" style="display:none;position:fixed;top:36px;left:50%;transform:translateX(-50%);z-index:100002;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px;min-width:260px;box-shadow:0 8px 32px rgba(0,0,0,.6);">
-  <div style="font-size:.65rem;color:#a9b7a0;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;padding:0 4px;">Quick Links</div>
+<!-- Links dropdown -->
+<div id="bab-drop-links" class="bab-dropdown" style="right:0;border-radius:0 0 0 10px;min-width:220px;">
+  <div style="font-size:.65rem;color:#a9b7a0;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Quick Links</div>
   <div style="display:flex;flex-direction:column;gap:4px;">
     <a href="https://greencrk.com" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">🌐 Live Site</a>
     <a href="https://github.com/bvmm-droid/greencrk-site" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">🐙 GitHub Repo</a>
@@ -4740,6 +4760,70 @@ if('serviceWorker' in navigator){
     <a href="https://developer.squareup.com/console/en/apps" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">🟦 Square Dev</a>
     <a href="https://app.squareupsandbox.com/dashboard" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">🧪 Square Sandbox</a>
     <a href="https://bvmm-proxy.babylonvillagemeatmarket.workers.dev" target="_blank" style="color:#f5f0e8;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;display:block;">⚡ CF Worker</a>
+  </div>
+</div>
+
+<!-- Backups dropdown -->
+<div id="bab-drop-backups" class="bab-dropdown" style="left:50%;transform:translateX(-50%);min-width:260px;">
+  <div style="font-size:.65rem;color:#a9b7a0;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Recent Backups</div>
+  <div id="bab-backups-list" style="display:flex;flex-direction:column;gap:4px;max-height:300px;overflow-y:auto;">
+    <div style="color:#a9b7a0;font-size:.7rem;">Loading...</div>
+  </div>
+</div>
+
+<!-- Tools dropdown -->
+<div id="bab-drop-tools" class="bab-dropdown" style="left:50%;transform:translateX(-50%);min-width:300px;">
+  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">
+    <button onclick="bvmmToolTab('health')" id="btt-health" style="font-size:.65rem;padding:3px 7px;border-radius:4px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#f5f0e8;cursor:pointer;">❤️ Health</button>
+    <button onclick="bvmmToolTab('email')" id="btt-email" style="font-size:.65rem;padding:3px 7px;border-radius:4px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">📧 Email</button>
+    <button onclick="bvmmToolTab('orders')" id="btt-orders" style="font-size:.65rem;padding:3px 7px;border-radius:4px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">📋 Orders</button>
+    <button onclick="bvmmToolTab('visitors')" id="btt-visitors" style="font-size:.65rem;padding:3px 7px;border-radius:4px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">👁 Visitors</button>
+    <button onclick="bvmmToolTab('menu')" id="btt-menu" style="font-size:.65rem;padding:3px 7px;border-radius:4px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">🍖 Menu</button>
+  </div>
+  <div id="btool-health" style="margin-top:4px;">
+    <button onclick="bvmmRunHealth()" style="width:100%;padding:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:#f5f0e8;font-size:.72rem;cursor:pointer;">▶ Run Health Check</button>
+    <div id="bvmm-health-results" style="margin-top:6px;font-size:.7rem;display:flex;flex-direction:column;gap:4px;"></div>
+  </div>
+  <div id="btool-email" style="display:none;margin-top:4px;">
+    <div style="font-size:.7rem;color:#a9b7a0;margin-bottom:6px;">Sends a test email to babylonvillagemeatmarket@gmail.com</div>
+    <button onclick="bvmmTestEmail()" id="bvmm-email-test-btn" style="width:100%;padding:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:#f5f0e8;font-size:.72rem;cursor:pointer;">Send Test Email</button>
+    <div id="bvmm-email-test-result" style="margin-top:6px;font-size:.7rem;"></div>
+  </div>
+  <div id="btool-orders" style="display:none;margin-top:4px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:.7rem;color:#a9b7a0;" id="bvmm-order-count">No orders yet</span>
+      <button onclick="bvmmClearOrders()" style="font-size:.65rem;padding:3px 7px;background:rgba(192,57,43,.3);border:1px solid rgba(192,57,43,.5);border-radius:4px;color:#e74c3c;cursor:pointer;">Clear All</button>
+    </div>
+    <div id="bvmm-order-list" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;"></div>
+  </div>
+  <div id="btool-visitors" style="display:none;margin-top:4px;">
+    <div style="display:flex;gap:6px;">
+      <div style="flex:1;background:rgba(255,255,255,.05);border-radius:6px;padding:8px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-total">-</div>
+        <div style="font-size:.62rem;color:#a9b7a0;">Total</div>
+      </div>
+      <div style="flex:1;background:rgba(255,255,255,.05);border-radius:6px;padding:8px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-today">-</div>
+        <div style="font-size:.62rem;color:#a9b7a0;">Today</div>
+      </div>
+      <div style="flex:1;background:rgba(255,255,255,.05);border-radius:6px;padding:8px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-week">-</div>
+        <div style="font-size:.62rem;color:#a9b7a0;">Week</div>
+      </div>
+    </div>
+    <button onclick="bvmmResetVisitors()" style="margin-top:6px;width:100%;font-size:.65rem;padding:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;color:#a9b7a0;cursor:pointer;">Reset Counter</button>
+  </div>
+  <div id="btool-menu" style="display:none;margin-top:4px;">
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      <select id="bme-cat" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
+        <option>Sandwiches</option><option>Butcher</option><option>Prepared</option><option>Sides</option>
+      </select>
+      <input id="bme-name" placeholder="Item name" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
+      <input id="bme-price" placeholder="Price (e.g. 12.99)" type="number" step="0.01" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
+      <input id="bme-desc" placeholder="Short description" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
+      <button onclick="bvmmAddMenuItem()" style="padding:6px;background:rgba(169,183,160,.2);border:1px solid rgba(169,183,160,.3);border-radius:5px;color:#f5f0e8;font-size:.72rem;cursor:pointer;">+ Add to Menu</button>
+    </div>
+    <div id="bme-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px;max-height:140px;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -4953,7 +5037,7 @@ if('serviceWorker' in navigator){
     });
   }
   window.bvmmToggleSections=function(){
-    document.getElementById('bvmm-sec-panel').classList.toggle('show');
+    bvmmBarToggle('sections');
   };
   window.bvmmSectionsAll=function(show){
     SECTIONS.forEach(function(s){
@@ -5177,85 +5261,86 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
     </label>
     <button class="bdp-push" id="bdp-push-btn" onclick="bvmmDeploy()" disabled>⬆ Push Live</button>
     <div class="bdp-status" id="bdp-status"></div>
-    <div class="bdp-backups-title" onclick="bvmmToggleBackups()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">Recent Backups <span id="bdp-backups-arrow">▼</span></div>
-    <div id="bdp-backups-list"><div class="bdp-backups-empty">Loading…</div></div>
 
-    <!-- ADMIN TOOLS -->
-    <div class="bdp-backups-title" style="margin-top:18px;">🛠 Admin Tools</div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;">
-      <button onclick="bvmmToolTab('health')" id="btt-health" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#f5f0e8;cursor:pointer;">❤️ Health</button>
-      <button onclick="bvmmToolTab('email')" id="btt-email" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">📧 Email</button>
-      <button onclick="bvmmToolTab('orders')" id="btt-orders" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">📋 Orders</button>
-      <button onclick="bvmmToolTab('visitors')" id="btt-visitors" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">👁 Visitors</button>
-      <button onclick="bvmmToolTab('menu')" id="btt-menu" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">🍖 Menu</button>
-    </div>
-    <div id="btool-health" style="margin-top:8px;">
-      <button onclick="bvmmRunHealth()" style="width:100%;padding:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:#f5f0e8;font-size:.73rem;cursor:pointer;">▶ Run Health Check</button>
-      <div id="bvmm-health-results" style="margin-top:6px;font-size:.7rem;display:flex;flex-direction:column;gap:4px;"></div>
-    </div>
-    <div id="btool-email" style="margin-top:8px;display:none;">
-      <div style="font-size:.7rem;color:#a9b7a0;margin-bottom:6px;">Sends a test order email to babylonvillagemeatmarket@gmail.com</div>
-      <button onclick="bvmmTestEmail()" id="bvmm-email-test-btn" style="width:100%;padding:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:#f5f0e8;font-size:.73rem;cursor:pointer;">Send Test Email</button>
-      <div id="bvmm-email-test-result" style="margin-top:6px;font-size:.7rem;"></div>
-    </div>
-    <div id="btool-orders" style="margin-top:8px;display:none;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-size:.7rem;color:#a9b7a0;" id="bvmm-order-count">No orders yet</span>
-        <button onclick="bvmmClearOrders()" style="font-size:.65rem;padding:3px 7px;background:rgba(192,57,43,.3);border:1px solid rgba(192,57,43,.5);border-radius:4px;color:#e74c3c;cursor:pointer;">Clear All</button>
-      </div>
-      <div id="bvmm-order-list" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
-    </div>
-    <div id="btool-visitors" style="margin-top:8px;display:none;">
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        <div style="background:rgba(255,255,255,.05);border-radius:6px;padding:10px;text-align:center;">
-          <div style="font-size:1.6rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-total">-</div>
-          <div style="font-size:.65rem;color:#a9b7a0;">Total Visits</div>
-        </div>
-        <div style="display:flex;gap:6px;">
-          <div style="flex:1;background:rgba(255,255,255,.05);border-radius:6px;padding:8px;text-align:center;">
-            <div style="font-size:1.1rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-today">-</div>
-            <div style="font-size:.62rem;color:#a9b7a0;">Today</div>
-          </div>
-          <div style="flex:1;background:rgba(255,255,255,.05);border-radius:6px;padding:8px;text-align:center;">
-            <div style="font-size:1.1rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-week">-</div>
-            <div style="font-size:.62rem;color:#a9b7a0;">This Week</div>
-          </div>
-        </div>
-        <button onclick="bvmmResetVisitors()" style="font-size:.65rem;padding:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;color:#a9b7a0;cursor:pointer;">Reset Counter</button>
-      </div>
-    </div>
-    <div id="btool-menu" style="margin-top:8px;display:none;">
-      <div style="font-size:.7rem;color:#a9b7a0;margin-bottom:8px;">Add custom items. Saved in browser storage.</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <select id="bme-cat" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
-          <option>Sandwiches</option><option>Butcher</option><option>Prepared</option><option>Sides</option>
-        </select>
-        <input id="bme-name" placeholder="Item name" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
-        <input id="bme-price" placeholder="Price (e.g. 12.99)" type="number" step="0.01" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
-        <input id="bme-desc" placeholder="Short description" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
-        <button onclick="bvmmAddMenuItem()" style="padding:6px;background:rgba(169,183,160,.2);border:1px solid rgba(169,183,160,.3);border-radius:5px;color:#f5f0e8;font-size:.72rem;cursor:pointer;">+ Add to Menu</button>
-      </div>
-      <div id="bme-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;"></div>
-    </div>
+
   </div>
 </div>
 
 <script>
 var bvmmBackupsOpen = true;
-window.bvmmToggleAdminLinks = function(e){
-  var el = document.getElementById('bvmm-admin-links');
-  if(!el) return;
-  var isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
+// Unified top bar dropdown toggle
+var BAB_DROPDOWNS = {
+  sections: 'bvmm-sec-panel',
+  links:    'bab-drop-links',
+  backups:  'bab-drop-backups',
+  tools:    'bab-drop-tools'
 };
-// Close links dropdown when clicking outside
+window.bvmmBarToggle = function(name){
+  var isOpen = document.getElementById(BAB_DROPDOWNS[name]).classList.contains('show');
+  // Close all
+  Object.keys(BAB_DROPDOWNS).forEach(function(k){
+    document.getElementById(BAB_DROPDOWNS[k]).classList.remove('show');
+    var btn = document.getElementById('bab-btn-'+k);
+    if(btn) btn.classList.remove('bab-active');
+  });
+  // Open this one if it was closed
+  if(!isOpen){
+    document.getElementById(BAB_DROPDOWNS[name]).classList.add('show');
+    var btn = document.getElementById('bab-btn-'+name);
+    if(btn) btn.classList.add('bab-active');
+    if(name==='backups') bvmmLoadBarBackups();
+    if(name==='tools') { bvmmRenderOrders(); bvmmRenderVisitors(); bvmmRenderMenuItems(); }
+  }
+};
+// Close all dropdowns on outside click
 document.addEventListener('click', function(e){
-  var el = document.getElementById('bvmm-admin-links');
-  if(!el || el.style.display==='none') return;
-  if(!el.contains(e.target) && !e.target.closest || (e.target.closest && !e.target.closest('#bvmm-admin-badge'))){
-    el.style.display='none';
+  if(!e.target.closest('#bvmm-admin-badge') && !e.target.closest('.bab-dropdown') && !e.target.closest('#bvmm-sec-panel')){
+    Object.keys(BAB_DROPDOWNS).forEach(function(k){
+      document.getElementById(BAB_DROPDOWNS[k]) && document.getElementById(BAB_DROPDOWNS[k]).classList.remove('show');
+      var btn = document.getElementById('bab-btn-'+k);
+      if(btn) btn.classList.remove('bab-active');
+    });
   }
 });
+// Load backups into top bar dropdown
+window.bvmmLoadBarBackups = function(){
+  var el = document.getElementById('bab-backups-list');
+  if(!el) return;
+  el.innerHTML = '<div style="color:#a9b7a0;font-size:.7rem;">Loading...</div>';
+  var session = (function(){ try{ var s=JSON.parse(localStorage.getItem('bvmm_session_v1')||'null'); return s&&s.token?s:null; }catch(e){return null;} })();
+  if(!session){ el.innerHTML='<div style="color:#a9b7a0;font-size:.7rem;">Not logged in.</div>'; return; }
+  fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'list-backups',token:session.token})
+  }).then(function(r){return r.json();}).then(function(res){
+    if(!res.ok||!res.backups||!res.backups.length){
+      el.innerHTML='<div style="color:#a9b7a0;font-size:.7rem;">No backups yet.</div>'; return;
+    }
+    el.innerHTML = res.backups.map(function(b){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 6px;background:rgba(255,255,255,.04);border-radius:5px;gap:8px;">'
+        +'<span style="color:#f5f0e8;font-size:.7rem;flex:1;">'+b.label+'</span>'
+        +'<button onclick="bvmmRevertBackup(\''+b.filename+'\')" style="font-size:.65rem;padding:2px 7px;background:rgba(169,183,160,.2);border:1px solid rgba(169,183,160,.3);border-radius:4px;color:#f5f0e8;cursor:pointer;white-space:nowrap;">Revert</button>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){ el.innerHTML='<div style="color:#e74c3c;font-size:.7rem;">Failed to load.</div>'; });
+};
+window.bvmmRevertBackup = function(filename){
+  if(!confirm('Revert site to this backup?\n\n'+filename)) return;
+  var session = (function(){ try{ var s=JSON.parse(localStorage.getItem('bvmm_session_v1')||'null'); return s&&s.token?s:null; }catch(e){return null;} })();
+  if(!session){ alert('Not logged in.'); return; }
+  fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'revert',token:session.token,filename:filename})
+  }).then(function(r){return r.json();}).then(function(res){
+    if(res.ok){ alert('Reverted! Site will update in ~30 seconds.'); }
+    else{ alert('Error: '+res.error); }
+  }).catch(function(){ alert('Network error.'); });
+};
+window.bvmmToggleAdminLinks = function(){ bvmmBarToggle('links'); };
+window.bvmmToggleSections = function(){
+  // Keep sec-panel working via existing code path
+  bvmmBarToggle('sections');
+};
 window.bvmmToggleBackups = function(){
   bvmmBackupsOpen = !bvmmBackupsOpen;
   var el = document.getElementById('bdp-backups-list');
