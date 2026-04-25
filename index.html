@@ -3446,32 +3446,56 @@ function cCalcItem(item){
 
 /* ── ADMIN / PROFIT MARGIN ENGINE ── */
 var adminMode=false;
-// Long-press the logo (1 second) to open admin login
+
+// ── Admin entry method 1: URL param ?admin ───────────────────────
+if(window.location.search.indexOf('admin') !== -1){
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){ bvmmShowLoginModal(); }, 500);
+  });
+}
+
+// ── Admin entry method 2: Type "meat" anywhere ───────────────────
+(function(){
+  var seq = '';
+  document.addEventListener('keydown', function(e){
+    seq += e.key.toLowerCase();
+    seq = seq.slice(-4);
+    if(seq === 'meat'){ seq=''; bvmmShowLoginModal(); }
+  });
+})();
+
+// ── Admin entry method 3: Triple-tap logo fast ───────────────────
 (function(){
   var el = document.getElementById('bvmm-logo-link');
-  if (!el) return;
-  var timer = null;
-  var triggered = false;
-  function start(e){
-    triggered = false;
-    timer = setTimeout(function(){
-      triggered = true;
-      bvmmShowLoginModal();
-    }, 900);
-  }
-  function cancel(){
+  if(!el) return;
+  var taps = 0, timer = null;
+  function tap(){
+    taps++;
     clearTimeout(timer);
+    timer = setTimeout(function(){ taps = 0; }, 600);
+    if(taps >= 3){ taps = 0; clearTimeout(timer); bvmmShowLoginModal(); }
   }
+  el.addEventListener('touchend', tap);
+  el.addEventListener('click', function(e){
+    // only count as tap if not a long-press navigation
+    tap();
+  });
+})();
+
+// ── Admin entry method 4: Long-press logo (1 second) ────────────
+(function(){
+  var el = document.getElementById('bvmm-logo-link');
+  if(!el) return;
+  var timer = null, triggered = false;
+  function start(){ triggered = false; timer = setTimeout(function(){ triggered = true; bvmmShowLoginModal(); }, 900); }
+  function cancel(){ clearTimeout(timer); }
   el.addEventListener('touchstart', start, {passive:true});
   el.addEventListener('touchend', cancel);
   el.addEventListener('touchmove', cancel);
   el.addEventListener('mousedown', start);
   el.addEventListener('mouseup', cancel);
   el.addEventListener('mouseleave', cancel);
-  // Prevent navigation if long-press triggered
-  el.addEventListener('click', function(e){
-    if(triggered){ e.preventDefault(); triggered = false; }
-  });
+  el.addEventListener('click', function(e){ if(triggered){ e.preventDefault(); triggered=false; } });
 })();
 function adminSecretTap(){} // legacy stub
 
