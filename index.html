@@ -3447,23 +3447,8 @@ function cCalcItem(item){
 /* ── ADMIN / PROFIT MARGIN ENGINE ── */
 var adminMode=false;
 
-// ── Admin entry method 2: Type "meat" anywhere — defined after bvmmShowLoginModal below ──
+// ── Admin entry methods defined after bvmmShowLoginModal below ──
 
-// ── Admin entry method 4: Long-press logo (1 second) ────────────
-(function(){
-  var el = document.getElementById('bvmm-logo-link');
-  if(!el) return;
-  var timer = null, triggered = false;
-  function start(){ triggered = false; timer = setTimeout(function(){ triggered = true; bvmmShowLoginModal(); }, 5000); }
-  function cancel(){ clearTimeout(timer); }
-  el.addEventListener('touchstart', start, {passive:true});
-  el.addEventListener('touchend', cancel);
-  el.addEventListener('touchmove', cancel);
-  el.addEventListener('mousedown', start);
-  el.addEventListener('mouseup', cancel);
-  el.addEventListener('mouseleave', cancel);
-  el.addEventListener('click', function(e){ if(triggered){ e.preventDefault(); triggered=false; } });
-})();
 function adminSecretTap(){} // legacy stub
 
 function toggleAdmin(on){
@@ -4657,20 +4642,6 @@ document.addEventListener('DOMContentLoaded', function(){
 </footer>
 <!-- Hidden admin tap zone: tap 5x fast in bottom-right corner -->
 <div id="bvmm-secret-tap" style="position:fixed;bottom:0;right:0;width:44px;height:44px;z-index:9999;opacity:0;cursor:default;" aria-hidden="true"></div>
-<script>
-(function(){
-  var el = document.getElementById('bvmm-secret-tap');
-  var taps = 0, t;
-  el.addEventListener('touchend', function(e){ e.preventDefault(); hit(); });
-  el.addEventListener('click', function(){ hit(); });
-  function hit(){
-    taps++;
-    clearTimeout(t);
-    t = setTimeout(function(){ taps=0; }, 800);
-    if(taps >= 5){ taps=0; clearTimeout(t); bvmmShowLoginModal(); }
-  }
-})();
-</script>
 
 <script>
 if('serviceWorker' in navigator){
@@ -4888,6 +4859,24 @@ if('serviceWorker' in navigator){
       seq=(seq+e.key.toLowerCase()).slice(-4);
       if(seq==='meat'){seq='';window.bvmmShowLoginModal();}
     });
+  })();
+
+  // ── Extra admin entry: Hold logo 5 seconds ───────────────────────
+  (function(){
+    var el=document.getElementById('bvmm-logo-link');
+    if(!el) return;
+    var timer=null, triggered=false;
+    function start(){ triggered=false; timer=setTimeout(function(){ triggered=true; window.bvmmShowLoginModal(); },5000); }
+    function cancel(){ clearTimeout(timer); }
+    el.addEventListener('touchstart',function(e){ e.preventDefault(); start(); },{passive:false});
+    el.addEventListener('touchend',cancel);
+    el.addEventListener('touchmove',cancel);
+    el.addEventListener('touchcancel',cancel);
+    el.addEventListener('mousedown',start);
+    el.addEventListener('mouseup',cancel);
+    el.addEventListener('mouseleave',cancel);
+    el.addEventListener('contextmenu',function(e){ e.preventDefault(); }); // prevent iOS popup
+    el.addEventListener('click',function(e){ if(triggered){ e.preventDefault(); triggered=false; } });
   })();
 
   // ── Extra admin entry: Tap bottom-right corner 5x ────────────────
