@@ -5309,7 +5309,8 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
 
 <script>
 // Order mode: 'custom' = our form, 'square' = Square hosted checkout
-window.bvmmOrderMode = localStorage.getItem('bvmm_order_mode') || 'custom';
+// Default is Square -- only changes if manually switched in admin Tools
+window.bvmmOrderMode = localStorage.getItem('bvmm_order_mode') || 'square';
 window.bvmmSetOrderMode = function(mode){
   window.bvmmOrderMode = mode;
   localStorage.setItem('bvmm_order_mode', mode);
