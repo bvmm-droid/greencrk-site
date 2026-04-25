@@ -2849,8 +2849,8 @@ nav.scrolled {
           <label class="cof-deposit-opt" id="cofDepositOptPay" style="padding:14px;border-radius:8px;cursor:pointer;transition:all .2s;border:2px solid transparent;margin-top:10px;">
             <input type="radio" name="cofPayment" value="deposit" onchange="cofSelectDeposit('deposit')">
             <div>
-              <div class="cof-deposit-opt-label" style="font-size:.8rem;font-weight:700;">Pay $10 Deposit Now</div>
-              <div class="cof-deposit-opt-sub" style="font-size:.72rem;">Locks in your order. Balance due at pickup.</div>
+              <div class="cof-deposit-opt-label" style="font-size:.8rem;font-weight:700;">Pay Full Amount via Square</div>
+              <div class="cof-deposit-opt-sub" style="font-size:.72rem;">Secure checkout. Locks in your order immediately.</div>
             </div>
           </label>
         </div>
@@ -4159,70 +4159,7 @@ var ANTHROPIC_PROXY_URL = 'https://bvmm-proxy.babylonvillagemeatmarket.workers.d
 //
 //   Reply to: {{reply_to}}
 
-// SQUARE — $10 deposit payment link
-// Generate from Square Dashboard → Online Checkout → Create Payment Link
-// Set amount to $10, label "Catering Deposit"
-var SQUARE_DEPOSIT_URL = 'https://sandbox.square.link/u/o7u1SU4c';  // Sandbox deposit link
-
-// ─── SQUARE API ─────────────────────────────────────────────────────────────
-// Production Square credentials — set these once Square account is live
-// 1. Square Dashboard → Apps → New App → copy Application ID
-// 2. Square Dashboard → Locations → copy Location ID
-// 3. Square Dashboard → Apps → your app → Production → Access Token
-var SQ_ACCESS_TOKEN = 'sandbox-sq0idb-fzVPYwSbuGHOwXhodpzrXQ';   // <- production access token
-var SQ_LOCATION_ID  = 'LQPN20RWZKZEA';    // <- location ID
-var SQ_API_BASE     = 'https://connect.squareup.com/v2'; // production endpoint
-
-// Creates a real Square order in the POS with all line items
-// Falls back gracefully to EmailJS if Square isn't configured yet
-async function createSquareOrder(items, guests, mult, eventDate, name, phone, email, notes, eventType) {
-  if (!SQ_ACCESS_TOKEN || SQ_ACCESS_TOKEN === 'YOUR_SQ_ACCESS_TOKEN') {
-    throw new Error('Square not configured yet — set SQ_ACCESS_TOKEN and SQ_LOCATION_ID');
-  }
-  var lineItems = items.map(function(item) {
-    var calc = cCalcItem(item);
-    var sz = cState.platSize[item.id] || (item.type === 'platter' ? cState.size : 'full');
-    var label = '';
-    if (item.type === 'platter') label = sz + '" platter';
-    else if (item.type === 'halfFull') label = sz === 'half' ? 'Half Tray' : 'Full Tray';
-    else if (item.type === 'clams') label = (cState.platSize[item.id] || item.dozensPerOrder) + ' doz';
-    else label = 'tray';
-    return {
-      name: item.name + (label ? ' (' + label + ')' : ''),
-      quantity: String(Math.max(1, parseInt(calc.qty) || 1)),
-      base_price_money: { amount: Math.round(cCalcItem(item).price * 100 / (parseInt(calc.qty) || 1)), currency: 'USD' },
-      note: item.note
-    };
-  });
-  var res = await fetch(SQ_API_BASE + '/orders', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + SQ_ACCESS_TOKEN,
-      'Content-Type': 'application/json',
-      'Square-Version': '2024-01-18'
-    },
-    body: JSON.stringify({
-      idempotency_key: 'bvmm-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-      order: {
-        location_id: SQ_LOCATION_ID,
-        reference_id: 'BVMM-' + Date.now(),
-        line_items: lineItems,
-        metadata: {
-          guests: String(guests),
-          event_date: eventDate || 'TBD',
-          customer_name: name,
-          customer_phone: phone,
-          customer_email: email || '',
-          event_type: eventType || '',
-          notes: notes || ''
-        }
-      }
-    })
-  });
-  var data = await res.json();
-  if (!res.ok) throw new Error(data.errors && data.errors[0] ? data.errors[0].detail : 'Square API error');
-  return data.order;
-}
+// Square payment links generated dynamically via Cloudflare Worker
 
 function cofSelectDeposit(mode){
   var optRequest=document.getElementById('cofDepositOptRequest');
@@ -4231,7 +4168,7 @@ function cofSelectDeposit(mode){
   if(mode==='deposit'){
     optRequest.classList.remove('selected');
     optPay.classList.add('selected');
-    btn.textContent='Pay $10 Deposit + Send Request →';
+    btn.textContent='Pay via Square + Send Request →';
   } else {
     optPay.classList.remove('selected');
     optRequest.classList.add('selected');
@@ -4287,12 +4224,35 @@ function ogSubmitOrder(){
     ogCart = {};
     osCartItems = {};
     ogRenderCart();
-    if(payDeposit && SQUARE_DEPOSIT_URL && SQUARE_DEPOSIT_URL!=='YOUR_SQUARE_PAYMENT_LINK'){
-      setTimeout(function(){window.open(SQUARE_DEPOSIT_URL,'_blank');},600);
+    // If customer chose to pay via Square, generate a dynamic payment link
+    if(payDeposit){
+      fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          action: 'square-payment-link',
+          customerName: name,
+          orderTotal: total.replace(/[^0-9.]/g,''),
+          orderSummary: lines,
+          pickupDate: eventDate || '',
+          pickupTime: pickup || ''
+        })
+      })
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res.ok && res.url){
+          window.open(res.url,'_blank');
+        } else {
+          alert('Could not generate Square payment link: '+(res.error||'Unknown error')+'\nYou can still pay at pickup.');
+        }
+      })
+      .catch(function(){
+        alert('Could not reach payment server. You can pay at pickup.');
+      });
     }
   }
 
-  // ── EmailJS only (Square sandbox creds TBD) ──
+  // ── EmailJS only (Square handles payment separately) ──
   sendViaEmailJS();
 
   // ── EmailJS fallback ────────────────────────────────────────────────────────
@@ -4319,6 +4279,10 @@ function ogSubmitOrder(){
     })
     .then(function(){
       doConfirm();
+      // Log to admin order tracker
+      if(typeof bvmmLogOrder==='function'){
+        bvmmLogOrder({name:name, summary:lines, phone:phone, pickup:pickup});
+      }
       // Send customer copy if they provided an email
       if(custEmail){
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -5130,6 +5094,17 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
 }
 .bdp-status.ok { color: #8fbf5f; }
 .bdp-status.err { color: #ff6b6b; }
+@keyframes bdp-spin { to { transform: rotate(360deg); } }
+.bdp-spinner {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid rgba(169,183,160,.3);
+  border-top-color: #A9B7A0;
+  border-radius: 50%;
+  animation: bdp-spin .7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
 
 /* Backups list */
 .bdp-backups-title {
@@ -5201,8 +5176,198 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
       <a href="https://app.squareupsandbox.com/dashboard" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">🧪 Square Sandbox Dashboard</a>
       <a href="https://bvmm-proxy.babylonvillagemeatmarket.workers.dev" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">⚡ Cloudflare Worker (BVMM Proxy)</a>
     </div>
+    <!-- ADMIN TOOLS -->
+    <div class="bdp-backups-title" style="margin-top:18px;">🛠 Admin Tools</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;">
+      <button onclick="bvmmToolTab('health')" id="btt-health" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#f5f0e8;cursor:pointer;">❤️ Health</button>
+      <button onclick="bvmmToolTab('email')" id="btt-email" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">📧 Email</button>
+      <button onclick="bvmmToolTab('orders')" id="btt-orders" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">📋 Orders</button>
+      <button onclick="bvmmToolTab('visitors')" id="btt-visitors" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">👁 Visitors</button>
+      <button onclick="bvmmToolTab('menu')" id="btt-menu" style="font-size:.68rem;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#a9b7a0;cursor:pointer;">🍖 Menu</button>
+    </div>
+    <div id="btool-health" style="margin-top:8px;">
+      <button onclick="bvmmRunHealth()" style="width:100%;padding:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:#f5f0e8;font-size:.73rem;cursor:pointer;">▶ Run Health Check</button>
+      <div id="bvmm-health-results" style="margin-top:6px;font-size:.7rem;display:flex;flex-direction:column;gap:4px;"></div>
+    </div>
+    <div id="btool-email" style="margin-top:8px;display:none;">
+      <div style="font-size:.7rem;color:#a9b7a0;margin-bottom:6px;">Sends a test order email to babylonvillagemeatmarket@gmail.com</div>
+      <button onclick="bvmmTestEmail()" id="bvmm-email-test-btn" style="width:100%;padding:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:#f5f0e8;font-size:.73rem;cursor:pointer;">Send Test Email</button>
+      <div id="bvmm-email-test-result" style="margin-top:6px;font-size:.7rem;"></div>
+    </div>
+    <div id="btool-orders" style="margin-top:8px;display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:.7rem;color:#a9b7a0;" id="bvmm-order-count">No orders yet</span>
+        <button onclick="bvmmClearOrders()" style="font-size:.65rem;padding:3px 7px;background:rgba(192,57,43,.3);border:1px solid rgba(192,57,43,.5);border-radius:4px;color:#e74c3c;cursor:pointer;">Clear All</button>
+      </div>
+      <div id="bvmm-order-list" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
+    </div>
+    <div id="btool-visitors" style="margin-top:8px;display:none;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="background:rgba(255,255,255,.05);border-radius:6px;padding:10px;text-align:center;">
+          <div style="font-size:1.6rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-total">-</div>
+          <div style="font-size:.65rem;color:#a9b7a0;">Total Visits</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;background:rgba(255,255,255,.05);border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:1.1rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-today">-</div>
+            <div style="font-size:.62rem;color:#a9b7a0;">Today</div>
+          </div>
+          <div style="flex:1;background:rgba(255,255,255,.05);border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:1.1rem;font-weight:700;color:#f5f0e8;" id="bvmm-visit-week">-</div>
+            <div style="font-size:.62rem;color:#a9b7a0;">This Week</div>
+          </div>
+        </div>
+        <button onclick="bvmmResetVisitors()" style="font-size:.65rem;padding:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;color:#a9b7a0;cursor:pointer;">Reset Counter</button>
+      </div>
+    </div>
+    <div id="btool-menu" style="margin-top:8px;display:none;">
+      <div style="font-size:.7rem;color:#a9b7a0;margin-bottom:8px;">Add custom items. Saved in browser storage.</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <select id="bme-cat" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
+          <option>Sandwiches</option><option>Butcher</option><option>Prepared</option><option>Sides</option>
+        </select>
+        <input id="bme-name" placeholder="Item name" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
+        <input id="bme-price" placeholder="Price (e.g. 12.99)" type="number" step="0.01" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
+        <input id="bme-desc" placeholder="Short description" style="padding:5px;background:#1a1008;border:1px solid rgba(255,255,255,.15);border-radius:5px;color:#f5f0e8;font-size:.72rem;">
+        <button onclick="bvmmAddMenuItem()" style="padding:6px;background:rgba(169,183,160,.2);border:1px solid rgba(169,183,160,.3);border-radius:5px;color:#f5f0e8;font-size:.72rem;cursor:pointer;">+ Add to Menu</button>
+      </div>
+      <div id="bme-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;"></div>
+    </div>
   </div>
 </div>
+
+<script>
+window.bvmmToolTab=function(tab){
+  ['health','email','orders','visitors','menu'].forEach(function(t){
+    document.getElementById('btool-'+t).style.display=t===tab?'block':'none';
+    var b=document.getElementById('btt-'+t);
+    if(b){b.style.background=t===tab?'rgba(255,255,255,.12)':'rgba(255,255,255,.05)';b.style.borderColor=t===tab?'rgba(255,255,255,.2)':'rgba(255,255,255,.1)';b.style.color=t===tab?'#f5f0e8':'#a9b7a0';}
+  });
+  if(tab==='orders')bvmmRenderOrders();
+  if(tab==='visitors')bvmmRenderVisitors();
+  if(tab==='menu')bvmmRenderMenuItems();
+};
+window.bvmmRunHealth=function(){
+  var el=document.getElementById('bvmm-health-results');
+  el.innerHTML='<div style="color:#a9b7a0;">Checking...</div>';
+  var checks=[
+    {name:'EmailJS',url:'https://api.emailjs.com/api/v1.0/email/send'},
+    {name:'Square Sandbox',url:'https://connect.squareupsandbox.com/v2/locations'},
+    {name:'GitHub Repo',url:'https://api.github.com/repos/bvmm-droid/greencrk-site'},
+    {name:'CF Worker',url:'https://bvmm-proxy.babylonvillagemeatmarket.workers.dev'},
+  ];
+  var results=[],done=0;
+  checks.forEach(function(c,i){
+    var start=Date.now();
+    fetch(c.url,{method:'GET',mode:'cors'})
+      .then(function(r){results[i]={name:c.name,ok:true,ms:Date.now()-start};})
+      .catch(function(){results[i]={name:c.name,ok:false,ms:Date.now()-start};})
+      .finally(function(){
+        done++;
+        if(done===checks.length){
+          el.innerHTML=results.map(function(r){
+            return '<div style="display:flex;justify-content:space-between;padding:4px 6px;background:rgba(255,255,255,.04);border-radius:4px;"><span>'+(r.ok?'✅':'⚠️')+' '+r.name+'</span><span style="color:#a9b7a0;">'+r.ms+'ms</span></div>';
+          }).join('');
+        }
+      });
+  });
+};
+window.bvmmTestEmail=function(){
+  var btn=document.getElementById('bvmm-email-test-btn');
+  var res=document.getElementById('bvmm-email-test-result');
+  btn.disabled=true;btn.textContent='Sending...';res.innerHTML='';
+  if(typeof emailjs==='undefined'){res.innerHTML='<span style="color:#e74c3c;">EmailJS not loaded</span>';btn.disabled=false;btn.textContent='Send Test Email';return;}
+  emailjs.send('service_1jc6nrt','template_fben9zs',{
+    customer_name:'TEST ORDER',customer_phone:'(631) 555-0000',
+    pickup_date:'Today',pickup_time:'12:00 PM',
+    cart_summary:'1x Test Item - $10.00',order_total:'$10.00',
+    special_requests:'Automated test from admin panel.',payment_method:'Test'
+  }).then(function(){
+    res.innerHTML='<span style="color:#2ecc71;">✅ Sent! Check gmail.</span>';
+    btn.disabled=false;btn.textContent='Send Test Email';
+  }).catch(function(e){
+    res.innerHTML='<span style="color:#e74c3c;">Failed: '+JSON.stringify(e)+'</span>';
+    btn.disabled=false;btn.textContent='Send Test Email';
+  });
+};
+window.bvmmLogOrder=function(data){
+  try{var o=JSON.parse(localStorage.getItem('bvmm_orders')||'[]');data.ts=Date.now();o.unshift(data);if(o.length>50)o=o.slice(0,50);localStorage.setItem('bvmm_orders',JSON.stringify(o));}catch(e){}
+};
+window.bvmmRenderOrders=function(){
+  try{
+    var o=JSON.parse(localStorage.getItem('bvmm_orders')||'[]');
+    var el=document.getElementById('bvmm-order-list');
+    var ct=document.getElementById('bvmm-order-count');
+    if(!o.length){el.innerHTML='<div style="color:#a9b7a0;font-size:.7rem;padding:6px;">No orders logged yet.</div>';ct.textContent='No orders yet';return;}
+    ct.textContent=o.length+' order'+(o.length!==1?'s':'');
+    el.innerHTML=o.map(function(x){
+      var d=new Date(x.ts);
+      return '<div style="background:rgba(255,255,255,.04);border-radius:5px;padding:6px 8px;"><div style="display:flex;justify-content:space-between;"><span style="color:#f5f0e8;font-size:.72rem;font-weight:600;">'+(x.name||'Order')+'</span><span style="color:#a9b7a0;font-size:.65rem;">'+d.toLocaleDateString()+'</span></div><div style="color:#a9b7a0;font-size:.67rem;margin-top:2px;">'+(x.summary||'')+'</div></div>';
+    }).join('');
+  }catch(e){}
+};
+window.bvmmClearOrders=function(){if(!confirm('Clear all orders?'))return;localStorage.removeItem('bvmm_orders');bvmmRenderOrders();};
+(function(){
+  try{
+    var v=JSON.parse(localStorage.getItem('bvmm_visits')||'{"total":0,"days":{}}');
+    var today=new Date().toISOString().slice(0,10);
+    v.total=(v.total||0)+1;v.days[today]=(v.days[today]||0)+1;
+    var keys=Object.keys(v.days).sort();if(keys.length>30)keys.slice(0,keys.length-30).forEach(function(k){delete v.days[k];});
+    localStorage.setItem('bvmm_visits',JSON.stringify(v));
+  }catch(e){}
+})();
+window.bvmmRenderVisitors=function(){
+  try{
+    var v=JSON.parse(localStorage.getItem('bvmm_visits')||'{"total":0,"days":{}}');
+    var today=new Date().toISOString().slice(0,10);
+    var wk=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+    var week=Object.keys(v.days).filter(function(d){return d>=wk;}).reduce(function(s,d){return s+(v.days[d]||0);},0);
+    document.getElementById('bvmm-visit-total').textContent=v.total||0;
+    document.getElementById('bvmm-visit-today').textContent=v.days[today]||0;
+    document.getElementById('bvmm-visit-week').textContent=week;
+  }catch(e){}
+};
+window.bvmmResetVisitors=function(){if(!confirm('Reset visitor counter?'))return;localStorage.removeItem('bvmm_visits');bvmmRenderVisitors();};
+window.bvmmInjectMenuItem=function(item){
+  var catMap={Sandwiches:'pe-sandwiches',Butcher:'pe-butcher',Prepared:'pe-prepared',Sides:'pe-sides'};
+  var grid=document.querySelector('#'+catMap[item.cat]+' .phase-e-grid');if(!grid)return;
+  var card=document.createElement('div');card.className='phase-e-card';
+  card.onclick=function(){openOrderSheet(item.name,item.price,item.desc,item.cat);};
+  card.innerHTML='<div class="pe-card-body"><div class="pe-card-name">'+item.name+'</div><div class="pe-card-desc">'+item.desc+'</div><div class="pe-card-price">$'+item.price.toFixed(2)+'</div></div>';
+  grid.appendChild(card);
+};
+window.bvmmAddMenuItem=function(){
+  var name=document.getElementById('bme-name').value.trim();
+  var price=parseFloat(document.getElementById('bme-price').value);
+  var desc=document.getElementById('bme-desc').value.trim();
+  var cat=document.getElementById('bme-cat').value;
+  if(!name||!price){alert('Name and price required');return;}
+  try{
+    var items=JSON.parse(localStorage.getItem('bvmm_menu_items')||'[]');
+    items.push({name:name,price:price,desc:desc,cat:cat,id:Date.now()});
+    localStorage.setItem('bvmm_menu_items',JSON.stringify(items));
+    bvmmInjectMenuItem({name:name,price:price,desc:desc,cat:cat});
+    document.getElementById('bme-name').value='';document.getElementById('bme-price').value='';document.getElementById('bme-desc').value='';
+    bvmmRenderMenuItems();
+  }catch(e){alert('Error: '+e);}
+};
+window.bvmmRenderMenuItems=function(){
+  try{
+    var items=JSON.parse(localStorage.getItem('bvmm_menu_items')||'[]');
+    var el=document.getElementById('bme-list');
+    if(!items.length){el.innerHTML='<div style="color:#a9b7a0;font-size:.7rem;">No custom items yet.</div>';return;}
+    el.innerHTML=items.map(function(item){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.04);border-radius:5px;padding:5px 8px;"><div><div style="color:#f5f0e8;font-size:.72rem;">'+item.name+' <span style="color:#a9b7a0;">$'+item.price.toFixed(2)+'</span></div><div style="color:#a9b7a0;font-size:.65rem;">'+item.cat+'</div></div><button onclick="bvmmDeleteMenuItem('+item.id+')" style="font-size:.65rem;padding:2px 6px;background:rgba(192,57,43,.3);border:1px solid rgba(192,57,43,.5);border-radius:3px;color:#e74c3c;cursor:pointer;">x</button></div>';
+    }).join('');
+  }catch(e){}
+};
+window.bvmmDeleteMenuItem=function(id){
+  try{var items=JSON.parse(localStorage.getItem('bvmm_menu_items')||'[]');items=items.filter(function(i){return i.id!==id;});localStorage.setItem('bvmm_menu_items',JSON.stringify(items));bvmmRenderMenuItems();}catch(e){}
+};
+(function(){
+  try{var items=JSON.parse(localStorage.getItem('bvmm_menu_items')||'[]');items.forEach(function(item){bvmmInjectMenuItem(item);});}catch(e){}
+})();
+</script>
 
 <script>
 (function(){
@@ -5417,7 +5582,7 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
 
     var btn = document.getElementById('bdp-push-btn');
     btn.disabled = true; btn.textContent = 'Reading…';
-    setStatus('ok','Reading file…');
+    setStatus('ok','<span class="bdp-spinner"></span>Reading file…');
 
     var reader = new FileReader();
     reader.onload = function(e){
@@ -5426,7 +5591,7 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
       catch(err){ btn.disabled=false; btn.textContent='⬆ Push Live'; setStatus('err','Encode error: '+err.message); return; }
 
       btn.textContent = 'Pushing…';
-      setStatus('ok','Uploading to GitHub…');
+      setStatus('ok','<span class="bdp-spinner"></span>Uploading to GitHub…');
 
       var ctrl = new AbortController();
       var timer = setTimeout(function(){ ctrl.abort(); }, 45000);
@@ -5444,11 +5609,19 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
       })
       .then(function(r){ clearTimeout(timer); return r.json(); })
       .then(function(res){
-        btn.disabled = false; btn.textContent = '⬆ Push Live';
         if(res.ok){
-          setStatus('ok','✅ Live! Updating in ~30 seconds.');
           loadBackups();
+          btn.disabled = true; btn.textContent = 'Live ✓';
+          var secs = 10;
+          function tickPush(){
+            setStatus('ok','✅ Deployed! Auto-reloading in ' + secs + 's… <button onclick="location.reload()" style="padding:4px 12px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin-left:8px;">🔄 Now</button>');
+            secs--;
+            if(secs >= 0){ setTimeout(tickPush, 1000); }
+            else{ location.href = location.pathname + '?cb=' + Date.now(); }
+          }
+          tickPush();
         } else {
+          btn.disabled = false; btn.textContent = '⬆ Push Live';
           setStatus('err','Error: ' + (res.error||'Unknown'));
         }
       })
@@ -6198,6 +6371,7 @@ body.admin-mode #bvmm-edit-badge.has-pending { display: block; }
     if(!tok){ setDiffStatus('err','Session expired — log in again.'); return; }
     var btn = document.getElementById('bvmm-commit-btn');
     btn.disabled = true; btn.textContent = 'Building…';
+    setDiffStatus('ok', '<span class="bdp-spinner"></span>Building & uploading…');
     setDiffStatus('ok','Fetching current live file…');
 
     // Source-of-truth for the next commit MUST be the last committed bytes on
