@@ -3447,13 +3447,6 @@ function cCalcItem(item){
 /* ── ADMIN / PROFIT MARGIN ENGINE ── */
 var adminMode=false;
 
-// ── Admin entry method 1: URL param ?admin ───────────────────────
-if(window.location.search.indexOf('admin') !== -1){
-  document.addEventListener('DOMContentLoaded', function(){
-    setTimeout(function(){ bvmmShowLoginModal(); }, 500);
-  });
-}
-
 // ── Admin entry method 2: Type "meat" anywhere ───────────────────
 (function(){
   var seq = '';
@@ -4688,6 +4681,22 @@ document.addEventListener('DOMContentLoaded', function(){
     <span>© 2026 Babylon Village Meat Market · 85 Deer Park Ave, Babylon Village NY · (631) 669-0612</span>
   </div>
 </footer>
+<!-- Hidden admin tap zone: tap 5x fast in bottom-right corner -->
+<div id="bvmm-secret-tap" style="position:fixed;bottom:0;right:0;width:44px;height:44px;z-index:9999;opacity:0;cursor:default;" aria-hidden="true"></div>
+<script>
+(function(){
+  var el = document.getElementById('bvmm-secret-tap');
+  var taps = 0, t;
+  el.addEventListener('touchend', function(e){ e.preventDefault(); hit(); });
+  el.addEventListener('click', function(){ hit(); });
+  function hit(){
+    taps++;
+    clearTimeout(t);
+    t = setTimeout(function(){ taps=0; }, 800);
+    if(taps >= 5){ taps=0; clearTimeout(t); bvmmShowLoginModal(); }
+  }
+})();
+</script>
 
 <script>
 if('serviceWorker' in navigator){
