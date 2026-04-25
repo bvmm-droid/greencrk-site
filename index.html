@@ -3447,40 +3447,14 @@ function cCalcItem(item){
 /* ── ADMIN / PROFIT MARGIN ENGINE ── */
 var adminMode=false;
 
-// ── Admin entry method 2: Type "meat" anywhere ───────────────────
-(function(){
-  var seq = '';
-  document.addEventListener('keydown', function(e){
-    seq += e.key.toLowerCase();
-    seq = seq.slice(-4);
-    if(seq === 'meat'){ seq=''; bvmmShowLoginModal(); }
-  });
-})();
-
-// ── Admin entry method 3: Triple-tap logo fast ───────────────────
-(function(){
-  var el = document.getElementById('bvmm-logo-link');
-  if(!el) return;
-  var taps = 0, timer = null;
-  function tap(){
-    taps++;
-    clearTimeout(timer);
-    timer = setTimeout(function(){ taps = 0; }, 600);
-    if(taps >= 3){ taps = 0; clearTimeout(timer); bvmmShowLoginModal(); }
-  }
-  el.addEventListener('touchend', tap);
-  el.addEventListener('click', function(e){
-    // only count as tap if not a long-press navigation
-    tap();
-  });
-})();
+// ── Admin entry method 2: Type "meat" anywhere — defined after bvmmShowLoginModal below ──
 
 // ── Admin entry method 4: Long-press logo (1 second) ────────────
 (function(){
   var el = document.getElementById('bvmm-logo-link');
   if(!el) return;
   var timer = null, triggered = false;
-  function start(){ triggered = false; timer = setTimeout(function(){ triggered = true; bvmmShowLoginModal(); }, 900); }
+  function start(){ triggered = false; timer = setTimeout(function(){ triggered = true; bvmmShowLoginModal(); }, 5000); }
   function cancel(){ clearTimeout(timer); }
   el.addEventListener('touchstart', start, {passive:true});
   el.addEventListener('touchend', cancel);
@@ -4906,6 +4880,25 @@ if('serviceWorker' in navigator){
     document.getElementById('bvmm-login-overlay').classList.remove('show');
     document.getElementById('bvmm-pw-input').value='';
   };
+
+  // ── Extra admin entry: Type "meat" on keyboard ───────────────────
+  (function(){
+    var seq='';
+    document.addEventListener('keydown',function(e){
+      seq=(seq+e.key.toLowerCase()).slice(-4);
+      if(seq==='meat'){seq='';window.bvmmShowLoginModal();}
+    });
+  })();
+
+  // ── Extra admin entry: Tap bottom-right corner 5x ────────────────
+  (function(){
+    var el=document.getElementById('bvmm-secret-tap');
+    if(!el) return;
+    var taps=0,t;
+    function hit(){taps++;clearTimeout(t);t=setTimeout(function(){taps=0;},800);if(taps>=5){taps=0;window.bvmmShowLoginModal();}}
+    el.addEventListener('touchend',function(e){e.preventDefault();hit();});
+    el.addEventListener('click',hit);
+  })();
   window.bvmmDoLogin=function(){
     var pw=document.getElementById('bvmm-pw-input').value;
     if(!pw) return;
