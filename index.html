@@ -4353,11 +4353,10 @@ var osCartItems = {};
 function openOrderSheet(name, price, desc, cat) {
   // Check order mode — if Square mode, generate payment link directly
   if(window.bvmmOrderMode === 'square') {
-    var btn = document.createElement('div');
-    btn.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2a1810;color:#f5f0e8;padding:14px 20px;border-radius:12px;font-size:.85rem;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.5);text-align:center;';
-    btn.innerHTML = 'Opening Square checkout for <strong>' + name + '</strong>...';
-    document.body.appendChild(btn);
-    fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev', {
+  // iOS Safari blocks window.open() after async calls -- open immediately then redirect
+  var squareWin = window.open('', '_blank');
+  if(squareWin) squareWin.document.write('<html><body style="background:#1a1008;color:#f5f0e8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1rem;">Opening Square checkout...</body></html>');
+  fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         action:'square-payment-link',
@@ -4369,15 +4368,19 @@ function openOrderSheet(name, price, desc, cat) {
     })
     .then(function(r){return r.json();})
     .then(function(res){
-      document.body.removeChild(btn);
-      if(res.ok && res.url){ window.open(res.url,'_blank'); }
-      else{ alert('Could not open Square checkout: '+(res.error||'Unknown error')); }
+      if(res.ok && res.url){
+        if(squareWin) squareWin.location.href = res.url;
+        else window.open(res.url,'_blank');
+      } else {
+        if(squareWin) squareWin.close();
+        alert('Could not open Square checkout: '+(res.error||'Unknown error'));
+      }
     })
     .catch(function(){
-      document.body.removeChild(btn);
+      if(squareWin) squareWin.close();
       alert('Network error. Please try again.');
     });
-    return;
+  return;
   }
   osCurrentItem = {name:name, price:price, desc:desc, cat:cat};
   osQty = osCartItems[name] || 1;
