@@ -5324,6 +5324,19 @@ window.bvmmSetOrderMode = function(mode){
       customBtn.style.background='rgba(255,255,255,.05)'; customBtn.style.borderColor='rgba(255,255,255,.1)'; customBtn.style.color='#a9b7a0';
     }
   }
+  // Hide/show cart elements based on mode
+  var cartFab = document.getElementById('ogCartFab');
+  var cBar = document.getElementById('cBar');
+  var navCart = document.querySelector('.nav-cart');
+  if(mode === 'square'){
+    if(cartFab) cartFab.style.display='none';
+    if(cBar) cBar.style.display='none';
+    if(navCart) navCart.style.display='none';
+  } else {
+    if(cartFab) cartFab.style.removeProperty('display');
+    if(cBar) cBar.style.removeProperty('display');
+    if(navCart) navCart.style.removeProperty('display');
+  }
 };
 // Apply saved mode on load
 document.addEventListener('DOMContentLoaded', function(){
