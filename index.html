@@ -4310,7 +4310,6 @@ function ogSubmitOrder(){
     ogCart = {};
     osCartItems = {};
     ogRenderCart();
-    ogHideOrderForm();
     if(payDeposit && SQUARE_DEPOSIT_URL && SQUARE_DEPOSIT_URL!=='YOUR_SQUARE_PAYMENT_LINK'){
       setTimeout(function(){window.open(SQUARE_DEPOSIT_URL,'_blank');},600);
     }
@@ -4834,6 +4833,7 @@ if('serviceWorker' in navigator){
     adminMode=true;
     document.body.classList.add('admin-mode');
     document.getElementById('bvmm-admin-badge').classList.add('show');
+    document.getElementById('bvmm-cache-buster').style.display='block';
     buildSectionPanel();
     if(typeof cBuildMenu==='function') cBuildMenu();
     // Notify other admin modules
@@ -4843,9 +4843,20 @@ if('serviceWorker' in navigator){
     adminMode=false;
     document.body.classList.remove('admin-mode');
     document.getElementById('bvmm-admin-badge').classList.remove('show');
+    document.getElementById('bvmm-cache-buster').style.display='none';
     document.getElementById('bvmm-sec-panel').classList.remove('show');
     if(typeof cBuildMenu==='function') cBuildMenu();
   }
+
+  window.bvmmBustCache = function(){
+    if(!confirm('Force all visitors to reload the latest version?')) return;
+    var url = window.location.href.split('?')[0];
+    var bust = '?v=' + Date.now();
+    window.open(url + bust, '_blank');
+    if(confirm('Cache busted! Copy this URL to share the fresh version:\n\n' + url + bust + '\n\nAlso force-reload this page now?')){
+      window.location.href = url + bust;
+    }
+  };
 
   // ── Login modal ─────────────────────────────────────────────────
   window.bvmmShowLoginModal=function(){
@@ -5130,6 +5141,11 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
 .bdp-backups-empty { font-size: 12px; opacity: .4; text-align: center; padding: 8px 0; }
 </style>
 
+<!-- Cache Buster button (admin mode only) -->
+<div id="bvmm-cache-buster" style="display:none;position:fixed;bottom:20px;left:20px;z-index:9998;">
+  <button onclick="bvmmBustCache()" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:.8rem;font-weight:700;cursor:pointer;letter-spacing:.06em;box-shadow:0 2px 10px rgba(0,0,0,.4);">💥 CACHE BUST</button>
+</div>
+
 <!-- Admin deploy panel -->
 <div id="bvmm-deploy-panel">
   <div class="bdp-header" id="bdp-header-el">
@@ -5150,6 +5166,18 @@ body.admin-mode #bvmm-deploy-panel { display: block; }
     <div class="bdp-status" id="bdp-status"></div>
     <div class="bdp-backups-title">Recent Backups</div>
     <div id="bdp-backups-list"><div class="bdp-backups-empty">Loading…</div></div>
+
+    <div class="bdp-backups-title" style="margin-top:14px;">🔗 Quick Links</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+      <a href="https://greencrk.com" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">🌐 greencrk.com — Live Site</a>
+      <a href="https://greencrk.com?admin" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">🔐 greencrk.com?admin — Admin Panel</a>
+      <a href="https://github.com/bvmm-droid/greencrk-site" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">🐙 GitHub — greencrk-site Repo</a>
+      <a href="https://dash.cloudflare.com" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">☁️ Cloudflare Dashboard</a>
+      <a href="https://dashboard.emailjs.com" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">📧 EmailJS Dashboard</a>
+      <a href="https://developer.squareup.com/console/en/apps" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">🟦 Square Developer Console</a>
+      <a href="https://app.squareupsandbox.com/dashboard" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">🧪 Square Sandbox Dashboard</a>
+      <a href="https://bvmm-proxy.babylonvillagemeatmarket.workers.dev" target="_blank" style="color:#a9b7a0;font-size:.75rem;text-decoration:none;padding:6px 10px;background:rgba(255,255,255,.05);border-radius:6px;border:1px solid rgba(255,255,255,.08);">⚡ Cloudflare Worker (BVMM Proxy)</a>
+    </div>
   </div>
 </div>
 
