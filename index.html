@@ -6015,9 +6015,9 @@ window.bvmmDeleteMenuItem=function(id){
         if(res.ok){
           loadBackups();
           btn.disabled = true; btn.textContent = 'Live ✓';
-          var secs = 10;
+          var secs = 30;
           function tickPush(){
-            setStatus('ok','✅ Deployed! Auto-reloading in ' + secs + 's… <button onclick="location.reload()" style="padding:4px 12px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin-left:8px;">🔄 Now</button>');
+            setStatus('ok','✅ Deployed! Pages is building + edge cache purging. Auto-reloading in ' + secs + 's… <button onclick="location.href=location.pathname+\'?cb=\'+Date.now()" style="padding:4px 12px;background:#A9B7A0;color:#111;border:none;border-radius:6px;cursor:pointer;font-weight:700;margin-left:8px;">🔄 Now</button>');
             secs--;
             if(secs >= 0){ setTimeout(tickPush, 1000); }
             else{ location.href = location.pathname + '?cb=' + Date.now(); }
