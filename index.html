@@ -5364,17 +5364,18 @@ var SQ_CAT_TO_TAB = {
 
 function bvmmRenderCard(item) {
   var price = item.price ? ('$' + parseFloat(item.price).toFixed(2)) : 'See details';
+  var priceNum = item.price ? parseFloat(item.price) : 0;
+  var name = (item.name || '').replace(/['"]/g, '');
+  var desc = (item.desc || '').replace(/['"]/g, '');
+  var cat = (item.category || '').replace(/['"]/g, '');
+  var onclick = "openOrderSheet('" + name + "'," + priceNum + ",'" + desc + "','" + cat + "')";
   var imgHtml = item.imageUrl
     ? '<img src="' + item.imageUrl + '" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy">'
     : '';
-  var placeholder = '<div class="lcard-img-placeholder">' + imgHtml + '</div>';
-  var safeDesc = (item.desc || '').replace(/'/g, '\'');
-  var safeName = (item.name || '').replace(/'/g, '\'');
-  var priceNum = item.price ? parseFloat(item.price) : 0;
-  return '<div class="lcard" onclick="openOrderSheet('' + safeName + '',' + priceNum + ','' + safeDesc + '','' + (item.category || '') + '')">'
-    + placeholder
+  return '<div class="lcard" onclick="' + onclick + '">'
+    + '<div class="lcard-img-placeholder">' + imgHtml + '</div>'
     + '<div class="lcard-body">'
-    + '<div class="lcard-tag">' + (item.subcategory || item.category || '') + '</div>'
+    + '<div class="lcard-tag">' + (item.subcategory || cat) + '</div>'
     + '<div class="lcard-name">' + (item.name || '') + '</div>'
     + '<div class="lcard-desc">' + (item.desc || '') + '</div>'
     + '<div class="lcard-price">' + price + '</div>'
@@ -5398,14 +5399,19 @@ async function bvmmLoadSquareCatalog() {
   var loading = document.getElementById('sq-menu-loading');
   var errDiv = document.getElementById('sq-menu-error');
 
+  console.log('[BVMM] Starting Square catalog load...');
+
   try {
+    console.log('[BVMM] Fetching from:', BVMM_WORKER);
     var resp = await fetch(BVMM_WORKER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'square-catalog' })
     });
 
+    console.log('[BVMM] Response status:', resp.status);
     var data = await resp.json();
+    console.log('[BVMM] Data ok:', data.ok, 'total:', data.total);
 
     if (!data.ok) {
       throw new Error(data.error || 'Square catalog fetch failed');
@@ -5420,7 +5426,7 @@ async function bvmmLoadSquareCatalog() {
     // Render each category into its tab panel
     Object.keys(grouped).forEach(function(cat) {
       var tabId = SQ_CAT_TO_TAB[cat];
-      if (!tabId) tabId = 'sq-Butcher Shop'; // fallback
+      if (!tabId) return; // skip unknown categories
       var items = grouped[cat].map(function(item) {
         return {
           name: item.name,
@@ -5436,9 +5442,10 @@ async function bvmmLoadSquareCatalog() {
     });
 
     // Update first tab button label with count
-    var firstBtn = document.querySelector('#sq-menu-tabs .mtab.active');
-    if (firstBtn && rendered > 0) {
-      showTab('sq-Butcher', document.querySelector('#sq-menu-tabs .mtab'));
+    // Activate first tab
+    if (rendered > 0) {
+      var firstTabBtn = document.querySelector('#sq-menu-tabs .mtab');
+      if (firstTabBtn) showTab('sq-Butcher', firstTabBtn);
     }
 
     console.log('[BVMM] Square catalog loaded: ' + rendered + ' items across ' + Object.keys(grouped).length + ' categories');
@@ -5448,7 +5455,7 @@ async function bvmmLoadSquareCatalog() {
     if (loading) loading.style.display = 'none';
     if (errDiv) {
       errDiv.style.display = 'block';
-      errDiv.textContent = 'Could not load menu from Square. Retrying…';
+      errDiv.textContent = 'Error: ' + err.message + ' — Retrying...';
       // Retry once after 3 seconds
       setTimeout(bvmmLoadSquareCatalog, 3000);
     }
@@ -5456,9 +5463,14 @@ async function bvmmLoadSquareCatalog() {
 }
 
 // Load Square catalog on page load
-document.addEventListener('DOMContentLoaded', function() {
+// Run immediately if DOM already loaded, otherwise wait
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    bvmmLoadSquareCatalog();
+  });
+} else {
   bvmmLoadSquareCatalog();
-});
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 window.bvmmCartCheckout = function(){
