@@ -5395,6 +5395,46 @@ function bvmmRenderPanel(tabId, items) {
   panel.innerHTML = html;
 }
 
+// Hydrate "Shop the Counter" hardcoded cards with real Square photos.
+// Reads the first arg of each card's onclick (which is the canonical item name),
+// looks it up against Square's catalog (case-insensitive, with substring fallback),
+// and injects the imageUrl into the placeholder. No-ops cards that don't match.
+function bvmmHydrateShowcase(allItems) {
+  if (!allItems || allItems.length === 0) return;
+  var nameMap = {};
+  allItems.forEach(function(it){
+    if (it && it.imageUrl && it.name) nameMap[it.name.toLowerCase()] = it.imageUrl;
+  });
+  var hydrated = 0, missed = 0;
+  document.querySelectorAll('.sc-card').forEach(function(card){
+    if (card.querySelector('.sc-img-wrap img')) return; // already has image
+    var oc = card.getAttribute('onclick') || '';
+    var m = oc.match(/openOrderSheet\(\s*['"]([^'"]+)['"]/);
+    if (!m) return;
+    var name = m[1].toLowerCase().trim();
+    var url = nameMap[name];
+    if (!url) {
+      // substring fallback (handles e.g. "Jumbo Shrimp" vs "Jumbo Shrimp (16-20 ct)")
+      for (var sq in nameMap) {
+        if (sq.indexOf(name) !== -1 || name.indexOf(sq) !== -1) {
+          url = nameMap[sq];
+          break;
+        }
+      }
+    }
+    if (url) {
+      var wrap = card.querySelector('.sc-img-wrap');
+      if (wrap) {
+        wrap.innerHTML = '<img src="' + url + '" class="sc-img" loading="lazy" alt="' + name.replace(/"/g,'') + '">';
+        hydrated++;
+      }
+    } else {
+      missed++;
+    }
+  });
+  console.log('[BVMM] Showcase hydrated: ' + hydrated + ' matched, ' + missed + ' unmatched');
+}
+
 async function bvmmLoadSquareCatalog() {
   var loading = document.getElementById('sq-menu-loading');
   var errDiv = document.getElementById('sq-menu-error');
@@ -5447,6 +5487,13 @@ async function bvmmLoadSquareCatalog() {
       var firstTabBtn = document.querySelector('#sq-menu-tabs .mtab');
       if (firstTabBtn) showTab('sq-Butcher', firstTabBtn);
     }
+
+    // Hydrate "Shop the Counter" cards with Square images by name match
+    var allFlat = [];
+    Object.keys(grouped).forEach(function(cat){
+      grouped[cat].forEach(function(it){ allFlat.push(it); });
+    });
+    bvmmHydrateShowcase(allFlat);
 
     console.log('[BVMM] Square catalog loaded: ' + rendered + ' items across ' + Object.keys(grouped).length + ' categories');
 
