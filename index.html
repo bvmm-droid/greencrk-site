@@ -1280,25 +1280,25 @@ nav.scrolled {
   <p class="section-sub reveal reveal-delay-2" style="display:none">Fresh cuts, prepared foods, and seafood — made in-house daily.</p>
   <div class="menu-wrap">
     <div class="menu-tabs" id="sq-menu-tabs">
-      <button class="mtab active" onclick="showTab('sq-Butcher Shop',this)">Butcher Shop</button>
-      <button class="mtab" onclick="showTab('sq-Wagyu',this)">Wagyu</button>
-      <button class="mtab" onclick="showTab('sq-Lunch',this)">Lunch</button>
-      <button class="mtab" onclick="showTab('sq-Catering',this)">Catering</button>
+      <button class="mtab active" onclick="showTab('sq-Butcher',this)">Butcher</button>
+      <button class="mtab" onclick="showTab('sq-Sandwiches',this)">Sandwiches</button>
+      <button class="mtab" onclick="showTab('sq-Prepared',this)">Prepared</button>
       <button class="mtab" onclick="showTab('sq-Deli',this)">Deli</button>
-      <button class="mtab" onclick="showTab('sq-Market',this)">Market</button>
+      <button class="mtab" onclick="showTab('sq-Catering',this)">Catering</button>
+      <button class="mtab" onclick="showTab('sq-Soups',this)">Soups</button>
       <button class="mtab" onclick="showTab('sq-Seafood',this)">Seafood</button>
-      <button class="mtab" onclick="showTab('sq-Gear',this)">Gear</button>
+      <button class="mtab" onclick="showTab('sq-Other',this)">Other</button>
     </div>
     <div id="sq-menu-loading" style="padding:40px;text-align:center;color:var(--muted);font-size:.8rem">Loading menu from Square…</div>
     <div id="sq-menu-error" style="display:none;padding:40px;text-align:center;color:#c0392b;font-size:.8rem"></div>
-    <div class="mpanel active" id="tab-sq-Butcher Shop"></div>
-    <div class="mpanel" id="tab-sq-Wagyu"></div>
-    <div class="mpanel" id="tab-sq-Lunch"></div>
-    <div class="mpanel" id="tab-sq-Catering"></div>
+    <div class="mpanel active" id="tab-sq-Butcher"></div>
+    <div class="mpanel" id="tab-sq-Sandwiches"></div>
+    <div class="mpanel" id="tab-sq-Prepared"></div>
     <div class="mpanel" id="tab-sq-Deli"></div>
-    <div class="mpanel" id="tab-sq-Market"></div>
+    <div class="mpanel" id="tab-sq-Catering"></div>
+    <div class="mpanel" id="tab-sq-Soups"></div>
     <div class="mpanel" id="tab-sq-Seafood"></div>
-    <div class="mpanel" id="tab-sq-Gear"></div>
+    <div class="mpanel" id="tab-sq-Other"></div>
     <!-- LEGACY fallback (hidden) -->
     <div class="mpanel" id="tab-deli" style="display:none">
   <a id="deli-top" style="display:block;height:0;visibility:hidden"></a>
@@ -5348,15 +5348,18 @@ var BVMM_WORKER = 'https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
 
 // Map Square category names to tab IDs
 var SQ_CAT_TO_TAB = {
-  'Butcher Shop': 'sq-Butcher Shop',
-  'Wagyu': 'sq-Wagyu',
-  'Lunch': 'sq-Lunch',
-  'Catering': 'sq-Catering',
-  'Deli Meats & Cheeses': 'sq-Deli',
-  'Deli': 'sq-Deli',
-  'Market Place': 'sq-Market',
-  'Frozen Seafood': 'sq-Seafood',
-  'Gear': 'sq-Gear',
+  'Butcher - Beef':     'sq-Butcher',
+  'Butcher - Lamb':     'sq-Butcher',
+  'Butcher - Pork':     'sq-Butcher',
+  'Butcher - Poultry':  'sq-Butcher',
+  'Butcher - Veal':     'sq-Butcher',
+  'Butcher - Seafood':  'sq-Seafood',
+  'Sandwiches':         'sq-Sandwiches',
+  'Prepared Foods':     'sq-Prepared',
+  'Cheese & Deli':      'sq-Deli',
+  'Catering':           'sq-Catering',
+  'Soups':              'sq-Soups',
+  'Other':              'sq-Other',
 };
 
 function bvmmRenderCard(item) {
@@ -5435,10 +5438,7 @@ async function bvmmLoadSquareCatalog() {
     // Update first tab button label with count
     var firstBtn = document.querySelector('#sq-menu-tabs .mtab.active');
     if (firstBtn && rendered > 0) {
-      // Just activate first tab that has content
-      var firstTabWithContent = Object.keys(SQ_CAT_TO_TAB)[0];
-      var firstTab = SQ_CAT_TO_TAB[firstTabWithContent];
-      showTab(firstTab, document.querySelector('#sq-menu-tabs .mtab'));
+      showTab('sq-Butcher', document.querySelector('#sq-menu-tabs .mtab'));
     }
 
     console.log('[BVMM] Square catalog loaded: ' + rendered + ' items across ' + Object.keys(grouped).length + ' categories');
