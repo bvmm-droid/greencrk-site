@@ -1279,14 +1279,28 @@ nav.scrolled {
   <h2 class="section-h reveal reveal-delay-1" style="display:none">Behind the <em>Counter</em></h2>
   <p class="section-sub reveal reveal-delay-2" style="display:none">Fresh cuts, prepared foods, and seafood — made in-house daily.</p>
   <div class="menu-wrap">
-    <div class="menu-tabs">
-      <button class="mtab active" onclick="showTab('deli',this)">Deli</button>
-      <button class="mtab" onclick="showTab('beef',this)">Butcher</button>
-      <button class="mtab" onclick="showTab('catering-tab',this)">Catering</button>
+    <div class="menu-tabs" id="sq-menu-tabs">
+      <button class="mtab active" onclick="showTab('sq-Butcher Shop',this)">Butcher Shop</button>
+      <button class="mtab" onclick="showTab('sq-Wagyu',this)">Wagyu</button>
+      <button class="mtab" onclick="showTab('sq-Lunch',this)">Lunch</button>
+      <button class="mtab" onclick="showTab('sq-Catering',this)">Catering</button>
+      <button class="mtab" onclick="showTab('sq-Deli',this)">Deli</button>
+      <button class="mtab" onclick="showTab('sq-Market',this)">Market</button>
+      <button class="mtab" onclick="showTab('sq-Seafood',this)">Seafood</button>
+      <button class="mtab" onclick="showTab('sq-Gear',this)">Gear</button>
     </div>
-
-    <!-- BEEF -->
-    <div class="mpanel active" id="tab-deli">
+    <div id="sq-menu-loading" style="padding:40px;text-align:center;color:var(--muted);font-size:.8rem">Loading menu from Square…</div>
+    <div id="sq-menu-error" style="display:none;padding:40px;text-align:center;color:#c0392b;font-size:.8rem"></div>
+    <div class="mpanel active" id="tab-sq-Butcher Shop"></div>
+    <div class="mpanel" id="tab-sq-Wagyu"></div>
+    <div class="mpanel" id="tab-sq-Lunch"></div>
+    <div class="mpanel" id="tab-sq-Catering"></div>
+    <div class="mpanel" id="tab-sq-Deli"></div>
+    <div class="mpanel" id="tab-sq-Market"></div>
+    <div class="mpanel" id="tab-sq-Seafood"></div>
+    <div class="mpanel" id="tab-sq-Gear"></div>
+    <!-- LEGACY fallback (hidden) -->
+    <div class="mpanel" id="tab-deli" style="display:none">
   <a id="deli-top" style="display:block;height:0;visibility:hidden"></a>
 
   <!-- CHIP NAV -->
@@ -1303,7 +1317,6 @@ nav.scrolled {
   <div id="deli-sandwiches" class="deli-section">
     <div class="deli-section-head" data-bvmm-edit="auto_deli_section_head_7cc7ab">Sandwiches & Wraps</div>
     <div class="lunch-grid">
-      <div class="lcard" onclick="openOrderSheet('Test',1,'Test item for Square payment testing','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Test</div><div class="lcard-name">Test</div><div class="lcard-desc">Test item for Square payment testing</div><div class="lcard-price">$1</div></div></div>
       <div class="lcard" onclick="openOrderSheet('The Abe Lincoln',16,'Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">The Abe Lincoln</div><div class="lcard-desc">Homemade dry aged prime roast beef, melted american, bacon & bbq sauce on a roll</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Rustic London',16,'Prime steak on rustic bread with sautéed mushrooms and onions','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Rustic London</div><div class="lcard-desc">Prime steak on rustic bread with sautéed mushrooms and onions</div><div class="lcard-price">$16</div></div></div>
       <div class="lcard" onclick="openOrderSheet('Reubenville',18,'Corned beef, swiss cheese, sauerkraut, mustard on rye bread','Sandwich')"><div class="lcard-img-placeholder"><img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy"></div><div class="lcard-body"><div class="lcard-tag">Sandwich</div><div class="lcard-name">Reubenville</div><div class="lcard-desc">Corned beef, swiss cheese, sauerkraut, mustard on rye bread</div><div class="lcard-price">$18</div></div></div>
@@ -3928,10 +3941,13 @@ function ogRenderCart(){
       total+=sub;
       count+=qty;
       var icon = catIcon[item.cat] || catIcon['default'];
+      var thumb = item.img
+        ? '<img src="'+item.img+'" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+        : '<div style="width:42px;height:42px;border-radius:8px;flex-shrink:0;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">'+icon+'</div>';
       var d=document.createElement('div');
       d.className='cart-item';
       d.innerHTML=
-        '<div style="width:42px;height:42px;border-radius:8px;flex-shrink:0;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">'+icon+'</div>'
+        thumb
         +'<div class="cart-item-body">'
           +'<div class="cart-item-name">'+item.name+'</div>'
           +'<div class="cart-item-price">$'+sub.toFixed(2)+' ('+qty+' × $'+item.price.toFixed(2)+(item.unit||'')+')</div>'
@@ -4359,9 +4375,9 @@ var osCurrentItem = {name:'',price:0,desc:'',cat:''};
 var osQty = 1;
 var osCartItems = {};
 
-function openOrderSheet(name, price, desc, cat) {
+function openOrderSheet(name, price, desc, cat, img) {
   // Square mode uses same cart — checkout button handles Square payment
-  osCurrentItem = {name:name, price:price, desc:desc, cat:cat};
+  osCurrentItem = {name:name, price:price, desc:desc, cat:cat, img:img||''};
   osQty = osCartItems[name] || 1;
   document.getElementById('osTag').textContent = cat;
   document.getElementById('osName').textContent = name;
@@ -4402,8 +4418,7 @@ function osAddToCart() {
 
   // Register in ogData so ogRenderCart can look it up
   if(!ogData[id]){
-    ogData[id] = { id:id, name:name, price:price, unit:'', cat:cat };
-    console.log('Created ogData entry:', ogData[id]);
+    ogData[id] = { id:id, name:name, price:price, unit:'', cat:cat, img:osCurrentItem.img||'' };
   }
 
   // Add quantity to unified cart
@@ -5323,6 +5338,129 @@ document.addEventListener('DOMContentLoaded', function(){
   bvmmSetOrderMode(window.bvmmOrderMode);
 });
 // Cart checkout -- Square mode sends full cart total to Square, otherwise shows order form
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SQUARE CATALOG LOADER — pulls live items from Square via Cloudflare Worker
+//  Runs on DOMContentLoaded, replaces menu panels with live Square data
+// ══════════════════════════════════════════════════════════════════════════════
+
+var BVMM_WORKER = 'https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
+
+// Map Square category names to tab IDs
+var SQ_CAT_TO_TAB = {
+  'Butcher Shop': 'sq-Butcher Shop',
+  'Wagyu': 'sq-Wagyu',
+  'Lunch': 'sq-Lunch',
+  'Catering': 'sq-Catering',
+  'Deli Meats & Cheeses': 'sq-Deli',
+  'Deli': 'sq-Deli',
+  'Market Place': 'sq-Market',
+  'Frozen Seafood': 'sq-Seafood',
+  'Gear': 'sq-Gear',
+};
+
+function bvmmRenderCard(item) {
+  var price = item.price ? ('$' + parseFloat(item.price).toFixed(2)) : 'See details';
+  var imgHtml = item.imageUrl
+    ? '<img src="' + item.imageUrl + '" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy">'
+    : '';
+  var placeholder = '<div class="lcard-img-placeholder">' + imgHtml + '</div>';
+  var safeDesc = (item.desc || '').replace(/'/g, '\'');
+  var safeName = (item.name || '').replace(/'/g, '\'');
+  var priceNum = item.price ? parseFloat(item.price) : 0;
+  return '<div class="lcard" onclick="openOrderSheet('' + safeName + '',' + priceNum + ','' + safeDesc + '','' + (item.category || '') + '')">'
+    + placeholder
+    + '<div class="lcard-body">'
+    + '<div class="lcard-tag">' + (item.subcategory || item.category || '') + '</div>'
+    + '<div class="lcard-name">' + (item.name || '') + '</div>'
+    + '<div class="lcard-desc">' + (item.desc || '') + '</div>'
+    + '<div class="lcard-price">' + price + '</div>'
+    + '</div></div>';
+}
+
+function bvmmRenderPanel(tabId, items) {
+  var panel = document.getElementById('tab-' + tabId);
+  if (!panel) return;
+  if (!items || items.length === 0) {
+    panel.innerHTML = '<p style="color:var(--muted);padding:20px;font-size:.8rem">No items in this category yet.</p>';
+    return;
+  }
+  var html = '<div class="deli-section"><div class="lunch-grid">';
+  items.forEach(function(item) { html += bvmmRenderCard(item); });
+  html += '</div></div>';
+  panel.innerHTML = html;
+}
+
+async function bvmmLoadSquareCatalog() {
+  var loading = document.getElementById('sq-menu-loading');
+  var errDiv = document.getElementById('sq-menu-error');
+
+  try {
+    var resp = await fetch(BVMM_WORKER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'square-catalog' })
+    });
+
+    var data = await resp.json();
+
+    if (!data.ok) {
+      throw new Error(data.error || 'Square catalog fetch failed');
+    }
+
+    // Hide loading spinner
+    if (loading) loading.style.display = 'none';
+
+    var grouped = data.grouped || {};
+    var rendered = 0;
+
+    // Render each category into its tab panel
+    Object.keys(grouped).forEach(function(cat) {
+      var tabId = SQ_CAT_TO_TAB[cat];
+      if (!tabId) tabId = 'sq-Butcher Shop'; // fallback
+      var items = grouped[cat].map(function(item) {
+        return {
+          name: item.name,
+          desc: item.desc || '',
+          price: item.price,
+          category: cat,
+          subcategory: item.category || cat,
+          imageUrl: null // Square image upload via bulk upload — URLs come after upload
+        };
+      });
+      bvmmRenderPanel(tabId, items);
+      rendered += items.length;
+    });
+
+    // Update first tab button label with count
+    var firstBtn = document.querySelector('#sq-menu-tabs .mtab.active');
+    if (firstBtn && rendered > 0) {
+      // Just activate first tab that has content
+      var firstTabWithContent = Object.keys(SQ_CAT_TO_TAB)[0];
+      var firstTab = SQ_CAT_TO_TAB[firstTabWithContent];
+      showTab(firstTab, document.querySelector('#sq-menu-tabs .mtab'));
+    }
+
+    console.log('[BVMM] Square catalog loaded: ' + rendered + ' items across ' + Object.keys(grouped).length + ' categories');
+
+  } catch(err) {
+    console.warn('[BVMM] Square catalog error:', err);
+    if (loading) loading.style.display = 'none';
+    if (errDiv) {
+      errDiv.style.display = 'block';
+      errDiv.textContent = 'Could not load menu from Square. Retrying…';
+      // Retry once after 3 seconds
+      setTimeout(bvmmLoadSquareCatalog, 3000);
+    }
+  }
+}
+
+// Load Square catalog on page load
+document.addEventListener('DOMContentLoaded', function() {
+  bvmmLoadSquareCatalog();
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
 window.bvmmCartCheckout = function(){
   if(window.bvmmOrderMode === 'square'){
     var total = 0;
