@@ -2760,7 +2760,8 @@ nav.scrolled {
       <span class="cart-total-val" id="cartTotal">$0.00</span>
     </div>
     <div class="cart-ctas">
-      <button class="cart-cta-call" onclick="ogShowOrderForm()">Place Order Request →</button>
+      <button class="cart-cta-call" id="cart-checkout-btn" onclick="bvmmCartCheckout()">Place Order Request →</button>
+      <button onclick="ogCloseCart()" style="width:100%;padding:11px;background:transparent;border:2px solid var(--border);color:var(--mint);border-radius:100px;font-weight:700;cursor:pointer;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-top:6px;">+ Continue Shopping</button>
       <a href="https://www.babylonvillagemeatmarket.com/store/Quick-Catering-c127420012" target="_blank" class="cart-cta-online">Order Online</a>
     </div>
     <div class="cart-note">We'll confirm your order by phone within 1 hour.</div>
@@ -3907,7 +3908,13 @@ function ogRenderCart(){
   var total=0;
   var count=0;
 
-  // Update items
+  var catIcon = {
+    'beef':'🥩','pork':'🥓','poultry':'🍗','seafood':'🦐','prepared':'🍲',
+    'Sandwich':'🥪','sandwich':'🥪','Wrap':'🌯','wrap':'🌯','Hero':'🥖','hero':'🥖',
+    'Butcher':'🔪','butcher':'🔪','deli':'🥩','Deli':'🥩','Sides':'🥗','sides':'🥗',
+    'Prepared':'🍲','Catering':'🍽️','catering':'🍽️','default':'🛒'
+  };
+
   var container=document.getElementById('cartItems');
   container.innerHTML='';
   if(ids.length===0){
@@ -3920,14 +3927,14 @@ function ogRenderCart(){
       var sub=item.price*qty;
       total+=sub;
       count+=qty;
-      var cat=item.cat;
-      var artClass='og-art-'+cat;
+      var icon = catIcon[item.cat] || catIcon['default'];
       var d=document.createElement('div');
       d.className='cart-item';
-      d.innerHTML='<div class="cart-item-vis '+artClass+'" style="width:42px;height:42px;border-radius:6px;flex-shrink:0"></div>'
+      d.innerHTML=
+        '<div style="width:42px;height:42px;border-radius:8px;flex-shrink:0;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">'+icon+'</div>'
         +'<div class="cart-item-body">'
           +'<div class="cart-item-name">'+item.name+'</div>'
-          +'<div class="cart-item-price">$'+sub.toFixed(2)+' ('+qty+' × $'+item.price.toFixed(2)+item.unit+')</div>'
+          +'<div class="cart-item-price">$'+sub.toFixed(2)+' ('+qty+' × $'+item.price.toFixed(2)+(item.unit||'')+')</div>'
           +'<div class="cart-item-controls">'
             +'<button class="cibtn" onclick="ogDecCart(\''+id+'\')">−</button>'
             +'<span class="ciqty">'+qty+'</span>'
@@ -3951,6 +3958,7 @@ function ogRenderCart(){
   var fab=document.getElementById('ogCartFab');
   fab.classList.toggle('show', count>0);
 }
+
 
 function ogIncCart(id){ogInc(id);}
 function ogDecCart(id){ogDec(id);}
@@ -4352,37 +4360,7 @@ var osQty = 1;
 var osCartItems = {};
 
 function openOrderSheet(name, price, desc, cat) {
-  // Check order mode — if Square mode, generate payment link directly
-  if(window.bvmmOrderMode === 'square') {
-  // iOS Safari blocks window.open() after async calls -- open immediately then redirect
-  var squareWin = window.open('', '_blank');
-  if(squareWin) squareWin.document.write('<html><body style="background:#1a1008;color:#f5f0e8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1rem;">Opening Square checkout...</body></html>');
-  fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        action:'square-payment-link',
-        customerName: 'Online Order',
-        orderTotal: price.toFixed(2),
-        orderSummary: name + ' - ' + desc,
-        pickupDate: '', pickupTime: ''
-      })
-    })
-    .then(function(r){return r.json();})
-    .then(function(res){
-      if(res.ok && res.url){
-        if(squareWin) squareWin.location.href = res.url;
-        else window.open(res.url,'_blank');
-      } else {
-        if(squareWin) squareWin.close();
-        alert('Could not open Square checkout: '+(res.error||'Unknown error'));
-      }
-    })
-    .catch(function(){
-      if(squareWin) squareWin.close();
-      alert('Network error. Please try again.');
-    });
-  return;
-  }
+  // Square mode uses same cart — checkout button handles Square payment
   osCurrentItem = {name:name, price:price, desc:desc, cat:cat};
   osQty = osCartItems[name] || 1;
   document.getElementById('osTag').textContent = cat;
@@ -5344,6 +5322,46 @@ window.bvmmSetOrderMode = function(mode){
 document.addEventListener('DOMContentLoaded', function(){
   bvmmSetOrderMode(window.bvmmOrderMode);
 });
+// Cart checkout -- Square mode sends full cart total to Square, otherwise shows order form
+window.bvmmCartCheckout = function(){
+  if(window.bvmmOrderMode === 'square'){
+    var total = 0;
+    var lines = [];
+    Object.keys(ogCart).forEach(function(id){
+      var item = ogData[id];
+      if(!item) return;
+      var qty = ogCart[id];
+      total += item.price * qty;
+      lines.push(item.name + ' x' + qty);
+    });
+    if(total <= 0){ alert('Your cart is empty.'); return; }
+    var squareWin = window.open('', '_blank');
+    if(squareWin) squareWin.document.write('<html><body style="background:#1a1008;color:#f5f0e8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:1rem;">Opening Square checkout...</body></html>');
+    fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'square-payment-link',
+        customerName:'Online Order',
+        orderTotal:total.toFixed(2),
+        orderSummary:lines.join(', '),
+        pickupDate:'',pickupTime:''
+      })
+    })
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res.ok && res.url){ if(squareWin) squareWin.location.href=res.url; else window.open(res.url,'_blank'); }
+      else{ if(squareWin) squareWin.close(); alert('Square error: '+(res.error||'Unknown')); }
+    })
+    .catch(function(){ if(squareWin) squareWin.close(); alert('Network error. Try again.'); });
+  } else {
+    ogShowOrderForm();
+  }
+};
+window.bvmmUpdateCartBtn = function(){
+  var btn = document.getElementById('cart-checkout-btn');
+  if(btn) btn.textContent = window.bvmmOrderMode==='square' ? 'Checkout via Square \u2192' : 'Place Order Request \u2192';
+};
+document.addEventListener('DOMContentLoaded', function(){ if(typeof bvmmUpdateCartBtn==='function') bvmmUpdateCartBtn(); });
 var bvmmBackupsOpen = true;
 // Unified top bar dropdown toggle
 var BAB_DROPDOWNS = {
