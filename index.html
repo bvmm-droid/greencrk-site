@@ -6089,6 +6089,7 @@ window.bvmmDeleteMenuItem=function(id){
           action: 'admin-deploy',
           filename: 'index.html',
           content: encoded,
+          versionLabel: (f && f.name) ? String(f.name).slice(0, 80) : '',
           token: tok
         }),
         signal: ctrl.signal
