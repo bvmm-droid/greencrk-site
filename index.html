@@ -5364,27 +5364,17 @@ var SQ_CAT_TO_TAB = {
   'Other':              'sq-Other',
 };
 
-function bvmmCardClick(el) {
-  var name  = el.getAttribute('data-name')  || '';
-  var price = parseFloat(el.getAttribute('data-price')) || 0;
-  var desc  = el.getAttribute('data-desc')  || '';
-  var cat   = el.getAttribute('data-cat')   || '';
-  openOrderSheet(name, price, desc, cat);
-}
 function bvmmRenderCard(item) {
   var price = item.price ? ('$' + parseFloat(item.price).toFixed(2)) : 'See details';
   var priceNum = item.price ? parseFloat(item.price) : 0;
-  var name = (item.name || '');
-  var desc = (item.desc || '').replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim();
-  var cat = (item.category || '');
+  var name = (item.name || '').replace(/['"]/g, '');
+  var desc = (item.desc || '').replace(/['"]/g, '');
+  var cat = (item.category || '').replace(/['"]/g, '');
+  var onclick = "openOrderSheet('" + name + "'," + priceNum + ",'" + desc + "','" + cat + "')";
   var imgHtml = item.imageUrl
     ? '<img src="' + item.imageUrl + '" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy">'
     : '';
-  var dataAttrs = ' data-name="' + name.replace(/"/g,'&quot;') + '"'
-    + ' data-price="' + priceNum + '"'
-    + ' data-desc="' + desc.replace(/"/g,'&quot;') + '"'
-    + ' data-cat="' + cat.replace(/"/g,'&quot;') + '"';
-  return '<div class="lcard" onclick="bvmmCardClick(this)"' + dataAttrs + '>'
+  return '<div class="lcard" onclick="' + onclick + '">'
     + '<div class="lcard-img-placeholder">' + imgHtml + '</div>'
     + '<div class="lcard-body">'
     + '<div class="lcard-tag">' + (item.subcategory || cat) + '</div>'
@@ -5405,6 +5395,10 @@ function bvmmRenderPanel(tabId, items) {
   items.forEach(function(item) { html += bvmmRenderCard(item); });
   html += '</div></div>';
   panel.innerHTML = html;
+  // Re-attach admin pencils after Square rendering. Pencils are CSS-gated
+  // to body.admin-mode, so this is a no-op for regular customers.
+  try { if (window.__bvmmPhaseC2 && window.__bvmmPhaseC2.attachPencils) window.__bvmmPhaseC2.attachPencils(); } catch(e) {}
+  try { if (window.__bvmmPhaseC2d && window.__bvmmPhaseC2d.attachImgPencils) window.__bvmmPhaseC2d.attachImgPencils(); } catch(e) {}
 }
 
 // Hydrate "Shop the Counter" hardcoded cards with real Square photos.
