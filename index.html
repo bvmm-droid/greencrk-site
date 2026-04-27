@@ -4819,11 +4819,6 @@ if('serviceWorker' in navigator){
     </div>
     <button onclick="bvmmRunHealth()" style="width:100%;padding:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:#f5f0e8;font-size:.72rem;cursor:pointer;">Run Health Check</button>
     <div id="bvmm-health-results" style="margin-top:6px;font-size:.7rem;display:flex;flex-direction:column;gap:4px;"></div>
-    <!-- Square Diagnostic — calls the worker's `health` action and shows real Square status -->
-    <button onclick="bvmmSquareDiagnostic()" style="width:100%;padding:6px;background:rgba(143,191,95,.15);border:1px solid rgba(143,191,95,.4);border-radius:6px;color:#a9b7a0;font-size:.72rem;cursor:pointer;margin-top:6px;">🔬 Square Diagnostic</button>
-    <div id="bvmm-square-diag-results" style="margin-top:6px;font-size:.68rem;display:flex;flex-direction:column;gap:4px;"></div>
-    <button onclick="bvmmClearSquareCache()" style="width:100%;padding:6px;background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.4);border-radius:6px;color:#e74c3c;font-size:.72rem;cursor:pointer;margin-top:6px;">🗑 Clear Square Cache</button>
-    <div id="bvmm-cache-clear-result" style="margin-top:4px;font-size:.68rem;"></div>
   </div>
   <div id="btool-email" style="display:none;margin-top:4px;">
     <div style="font-size:.7rem;color:#a9b7a0;margin-bottom:6px;">Sends a test email to babylonvillagemeatmarket@gmail.com</div>
@@ -5691,86 +5686,6 @@ window.bvmmRunHealth=function(){
           }).join('');
         }
       });
-  });
-};
-
-// ── Square Diagnostic — calls worker `health` action and renders real status ──
-window.bvmmSquareDiagnostic = function(){
-  var el = document.getElementById('bvmm-square-diag-results');
-  el.innerHTML = '<div style="color:#a9b7a0;">Calling worker health...</div>';
-  fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({action:'health'})
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(!d || typeof d !== 'object'){ el.innerHTML = '<div style="color:#e74c3c;">Bad response from worker</div>'; return; }
-    var rows = [];
-    function row(label, ok, detail){
-      var icon = ok === true ? '✅' : ok === false ? '❌' : 'ℹ️';
-      var color = ok === true ? '#8fbf5f' : ok === false ? '#e74c3c' : '#a9b7a0';
-      rows.push('<div style="background:rgba(255,255,255,.04);border-radius:4px;padding:5px 7px;"><div style="color:'+color+';font-weight:700;">'+icon+' '+label+'</div>'+(detail?'<div style="color:#a9b7a0;font-size:.65rem;margin-top:2px;word-break:break-word;">'+detail+'</div>':'')+'</div>');
-    }
-    var c = d.config || {};
-    row('Token configured', !!c.square_token_present, c.square_token_present ? ('length: '+c.square_token_length) : 'SQUARE_ACCESS_TOKEN missing in Cloudflare secrets');
-    var loc = (d.square && d.square.locations) || {};
-    if(loc.error && !loc.http_status){
-      row('Square /locations', false, loc.error);
-    } else {
-      row('Square /locations', !!loc.ok, 'HTTP '+loc.http_status+(loc.ok?' — '+loc.count+' location(s)':' — '+(loc.error||'error')));
-    }
-    var srch = (d.square && d.square.catalog_search) || {};
-    if(srch.error && !srch.http_status){
-      row('Square /catalog/search', false, srch.error);
-    } else {
-      row('Square /catalog/search', !!srch.ok, 'HTTP '+srch.http_status+(srch.ok?' — '+srch.returned+' item(s)':' — '+(srch.error||'error')));
-    }
-    var lst = (d.square && d.square.catalog_list) || {};
-    if(lst.error && !lst.http_status){
-      row('Square /catalog/list', false, lst.error);
-    } else {
-      row('Square /catalog/list', !!lst.ok, 'HTTP '+lst.http_status+(lst.ok?' — '+lst.returned+' item(s); samples: '+(lst.sample_names||[]).join(', '):' — '+(lst.error||'error')));
-    }
-    var kv = d.kv || {};
-    if(kv.square_catalog_v3){
-      row('KV cached catalog', !!kv.square_catalog_v3.present, kv.square_catalog_v3.present ? (kv.square_catalog_v3.bytes+' bytes cached') : 'no cached catalog (next fetch will hit Square live)');
-    }
-    var verdictText = Array.isArray(d.verdict) ? d.verdict.join('; ') : String(d.verdict||'');
-    var verdictOk = verdictText === 'ALL OK';
-    rows.push('<div style="background:'+(verdictOk?'rgba(143,191,95,.15)':'rgba(231,76,60,.15)')+';border:1px solid '+(verdictOk?'rgba(143,191,95,.5)':'rgba(231,76,60,.5)')+';border-radius:4px;padding:6px 8px;margin-top:4px;"><div style="color:'+(verdictOk?'#8fbf5f':'#e74c3c')+';font-weight:700;">VERDICT: '+verdictText+'</div></div>');
-    el.innerHTML = rows.join('');
-  })
-  .catch(function(err){
-    el.innerHTML = '<div style="color:#e74c3c;">Network error: '+(err && err.message ? err.message : String(err))+'</div>';
-  });
-};
-
-// ── Clear Square KV cache (forces next fetch to hit Square live) ──
-window.bvmmClearSquareCache = function(){
-  var el = document.getElementById('bvmm-cache-clear-result');
-  var tok = null;
-  try{
-    var s = JSON.parse(localStorage.getItem('bvmm_session_v1')||'null');
-    if(s && s.token && (!s.exp || Date.now() < s.exp)) tok = s.token;
-  }catch(e){}
-  if(!tok){ el.innerHTML = '<span style="color:#e74c3c;">Log in first.</span>'; return; }
-  el.innerHTML = '<span style="color:#a9b7a0;">Clearing...</span>';
-  fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({action:'cache-clear', token:tok})
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(d && d.ok){
-      el.innerHTML = '<span style="color:#8fbf5f;">✅ Cleared. Reload the page to refetch from Square.</span>';
-    } else {
-      el.innerHTML = '<span style="color:#e74c3c;">Failed: '+((d && d.error)||'unknown')+'</span>';
-    }
-  })
-  .catch(function(err){
-    el.innerHTML = '<span style="color:#e74c3c;">Network error: '+(err && err.message ? err.message : String(err))+'</span>';
   });
 };
 window.bvmmTestEmail=function(){
