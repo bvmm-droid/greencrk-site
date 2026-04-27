@@ -1288,6 +1288,7 @@ nav.scrolled {
       <button class="mtab" onclick="showTab('sq-Soups',this)">Soups</button>
       <button class="mtab" onclick="showTab('sq-Seafood',this)">Seafood</button>
       <button class="mtab" onclick="showTab('sq-Other',this)">Other</button>
+      <button class="mtab" onclick="showTab('sq-AllItems',this)" style="background:#1f4e78;color:#fff">📋 All Items</button>
     </div>
     <div id="sq-menu-loading" style="padding:40px;text-align:center;color:var(--muted);font-size:.8rem">Loading menu from Square…</div>
     <div id="sq-menu-error" style="display:none;padding:40px;text-align:center;color:#c0392b;font-size:.8rem"></div>
@@ -1299,6 +1300,7 @@ nav.scrolled {
     <div class="mpanel" id="tab-sq-Soups"></div>
     <div class="mpanel" id="tab-sq-Seafood"></div>
     <div class="mpanel" id="tab-sq-Other"></div>
+    <div class="mpanel" id="tab-sq-AllItems"></div>
     <!-- LEGACY fallback (hidden) -->
     <div class="mpanel" id="tab-deli" style="display:none">
   <a id="deli-top" style="display:block;height:0;visibility:hidden"></a>
@@ -5462,11 +5464,11 @@ async function bvmmLoadSquareCatalog() {
 
     var grouped = data.grouped || {};
     var rendered = 0;
+    var allItemsFlat = [];
 
     // Render each category into its tab panel
     Object.keys(grouped).forEach(function(cat) {
       var tabId = SQ_CAT_TO_TAB[cat];
-      if (!tabId) return; // skip unknown categories
       var items = grouped[cat].map(function(item) {
         return {
           name: item.name,
@@ -5477,9 +5479,16 @@ async function bvmmLoadSquareCatalog() {
           imageUrl: item.imageUrl || null
         };
       });
+      // Also collect every item for the All Items tab
+      allItemsFlat = allItemsFlat.concat(items);
+      if (!tabId) return; // unknown category — skip rendering into a category tab, but still in All Items
       bvmmRenderPanel(tabId, items);
       rendered += items.length;
     });
+
+    // Render the All Items tab with everything, sorted alphabetically
+    allItemsFlat.sort(function(a,b){ return a.name.localeCompare(b.name); });
+    bvmmRenderPanel('sq-AllItems', allItemsFlat);
 
     // Update first tab button label with count
     // Activate first tab
