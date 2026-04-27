@@ -5383,11 +5383,13 @@ function bvmmRenderCard(item) {
   var name = (item.name || '').replace(/['"]/g, '');
   var desc = (item.desc || '').replace(/['"]/g, '');
   var cat = (item.category || '').replace(/['"]/g, '');
+  var sqId = (item.id || '').replace(/['"]/g, '');
   var onclick = "openOrderSheet('" + name + "'," + priceNum + ",'" + desc + "','" + cat + "')";
   var imgHtml = item.imageUrl
     ? '<img src="' + item.imageUrl + '" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy">'
     : '';
-  return '<div class="lcard" onclick="' + onclick + '">'
+  // data-square-id lets the admin pencil save handler push edits back to Square (two-way sync)
+  return '<div class="lcard" data-square-id="' + sqId + '" onclick="' + onclick + '">'
     + '<div class="lcard-img-placeholder">' + imgHtml + '</div>'
     + '<div class="lcard-body">'
     + '<div class="lcard-tag">' + (item.subcategory || cat) + '</div>'
@@ -5396,6 +5398,61 @@ function bvmmRenderCard(item) {
     + '<div class="lcard-price">' + price + '</div>'
     + '</div></div>';
 }
+
+// ── TWO-WAY SQUARE SYNC ──────────────────────────────────────────────
+// Called from the admin pencil save handler when the edited card is a
+// Square-rendered card (has data-square-id). Compares orig vs newData and
+// POSTs only the changed fields to the worker's square-item-update action.
+// Edits still save locally (pending) so the deploy still bakes them into
+// index.html — this is purely additive: same edit also lands in Square.
+window.bvmmPushSquareEdit = function(squareId, orig, newData) {
+  if (!squareId) return;
+  var session;
+  try { session = JSON.parse(localStorage.getItem('bvmm_session_v1') || 'null'); } catch(e) { session = null; }
+  if (!session || !session.token) {
+    console.warn('[BVMM] Square sync skipped — no admin session');
+    return;
+  }
+  orig = orig || {};
+  newData = newData || {};
+
+  var payload = { action: 'square-item-update', token: session.token, id: squareId };
+
+  if (newData.name && newData.name !== orig.name) {
+    payload.name = newData.name;
+  }
+  if (newData.desc !== orig.desc) {
+    payload.description = newData.desc || '';
+  }
+  if (newData.price !== orig.price) {
+    // Parse first number out of strings like "$28.99/lb" or "28.99" → 2899 cents
+    var m = String(newData.price || '').match(/(\d+(?:\.\d+)?)/);
+    if (m) payload.priceCents = Math.round(parseFloat(m[1]) * 100);
+  }
+
+  // Nothing relevant changed — skip the POST entirely
+  if (!('name' in payload) && !('description' in payload) && !('priceCents' in payload)) return;
+
+  console.log('[BVMM] Pushing edit to Square:', squareId, payload);
+  fetch(BVMM_WORKER, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    if (res.ok) {
+      console.log('[BVMM] ✓ Square synced:', squareId, 'v' + (res.version || '?'));
+    } else {
+      console.error('[BVMM] ✗ Square sync failed:', res.error || res);
+      // Soft alert — local edit is still saved, just not synced
+      try { alert('Edit saved locally. Square sync failed: ' + (res.error || 'unknown') + '\n\n(Your edit will still bake into index.html on Push Live.)'); } catch(_){}
+    }
+  })
+  .catch(function(err){
+    console.error('[BVMM] ✗ Square sync threw:', err);
+  });
+};
 
 function bvmmRenderPanel(tabId, items) {
   var panel = document.getElementById('tab-' + tabId);
@@ -7419,6 +7476,16 @@ body.admin-mode .bvmm-pending-card {
           });
           // Live-apply to DOM for immediate visual feedback
           applyCardEditToDOM(card, newData);
+          // Two-way Square sync: if this card is rendered from Square (has
+          // data-square-id), also push the change to Square so admin and
+          // dashboard stay aligned. Local pending still bakes into index.html
+          // on Push Live — this is purely additive.
+          try {
+            var squareId = card.getAttribute && card.getAttribute('data-square-id');
+            if (squareId && typeof window.bvmmPushSquareEdit === 'function') {
+              window.bvmmPushSquareEdit(squareId, orig, newData);
+            }
+          } catch(e) { console.error('[BVMM] Square push call failed:', e); }
         }
         refreshCardPending();
       }
