@@ -1,8 +1,189 @@
-// ==================================================================
-//  BVMM Cloudflare Worker — Phase B + D3a + Square + Diagnostics v2
-//  Adds: health (no auth), cache-clear, surfaced Square errors.
-//  All existing actions preserved.
-// ==================================================================
+/*
+ * # BVMM / greencrk.com — Complete Handover
+ * **Generated:** April 28, 2026
+ * **For:** The next Claude session
+ * **Project:** Babylon Village Meat Market website + Square integration
+ *
+ * ---
+ *
+ * ## 🚨 READ THIS FIRST
+ *
+ * 1. **Rules set by user (non-negotiable):**
+ *    - **Don't lie.** If you don't know, say so. User will catch you.
+ *    - **Always give hyperlinks.** Every site/dashboard reference must be a clickable link.
+ *    - **Worker-first when site breaks.** Use Cloudflare MCP to check worker before theorizing.
+ *    - **Never push without reading live HTML first.** Local/uploaded files may be stale.
+ *    - **One task at a time.** User is on iPhone, tired, non-technical. Keep it short.
+ *
+ * 2. **User profile:**
+ *    - Owner of Babylon Village Meat Market
+ *    - 85 Deer Park Ave, Babylon Village NY 11702 · (631) 669-0612
+ *    - Working from iPhone in Safari (voice-to-text — expect typos/garbled words)
+ *    - Non-technical. No jargon. Short responses. One question at a time.
+ *
+ * 3. **Site is live and working.** Verified April 28, 2026.
+ *
+ * ---
+ *
+ * ## 🌐 ALL LINKS
+ *
+ * ### Site
+ * - Live: [greencrk.com](https://greencrk.com)
+ * - Admin: [greencrk.com?admin](https://greencrk.com?admin)
+ * - Future domain (not yet connected): babylonvillagemeatmarket.com
+ *
+ * ### GitHub
+ * - Repo: [github.com/bvmm-droid/greencrk-site](https://github.com/bvmm-droid/greencrk-site)
+ * - Raw index.html: `https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html`
+ * - Backup manifest: `https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/backups/manifest.json`
+ * - worker_source.js (for self-update): `https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/worker_source.js`
+ * - Branch: `main`
+ *
+ * ### Cloudflare
+ * - Worker URL: `https://bvmm-proxy.babylonvillagemeatmarket.workers.dev`
+ * - Worker dashboard: [dash.cloudflare.com/.../bvmm-proxy](https://dash.cloudflare.com/3e33cb7e32f60a1266e6e50ed47d9b4b/workers/services/view/bvmm-proxy/production)
+ * - Account ID: `3e33cb7e32f60a1266e6e50ed47d9b4b`
+ * - Worker script ID: `7c3552444ad441d6b781967a54f5a17d`
+ *
+ * ### Square
+ * - Dashboard: [app.squareup.com/dashboard](https://app.squareup.com/dashboard)
+ * - Catalog: [app.squareup.com/dashboard/items/library](https://app.squareup.com/dashboard/items/library)
+ * - Production app ID: `sq0idp-r0IPYDqt3ffjDZzCvLTFPg`
+ * - Location ID: `LWZJXYFHRWCCJ`
+ *
+ * ### EmailJS
+ * - Public key: `sF8_feXTs21Nsc3Bg`
+ * - Service ID: `service_1jc6nrt`
+ * - Template ID: `template_fben9zs`
+ *
+ * ---
+ *
+ * ## 🔧 TOOLS / CONNECTORS AVAILABLE
+ *
+ * ### Cloudflare Developer Platform MCP (READ-ONLY)
+ * Connected. Available tools:
+ * - `workers_get_worker('bvmm-proxy')` — get worker metadata
+ * - `workers_get_worker_code('bvmm-proxy')` — get full worker source ✓
+ * - `workers_list` — list all workers
+ * - `kv_namespaces_list` — list KV namespaces
+ * - Various D1/R2/KV management tools
+ *
+ * **⚠️ CRITICAL LIMITATION:** This MCP cannot DEPLOY workers. It is read-only.
+ * To deploy a worker you must either:
+ * a) User uploads file via admin panel Deploy Worker drop zone
+ * b) Worker self-deploys via GET /self-update (see below)
+ *
+ * ### Worker GET Endpoints (no auth required)
+ * - `GET /fix` → Patches index.html, purges CDN cache, writes worker_source.js to GitHub
+ * - `GET /self-update` → Reads worker_source.js from GitHub, self-deploys worker
+ * - `GET /` → Returns "BVMM Worker OK"
+ *
+ * ---
+ *
+ * ## ⚙️ SELF-UPDATE MECHANISM (HOW IT WORKS)
+ *
+ * After this session's bootstrap, future worker updates work like this:
+ *
+ * 1. I update the worker code locally
+ * 2. I generate new `worker_BOOTSTRAP.js` with updated `WORKER_SOURCE_B64` constant
+ * 3. User deploys it ONE TIME via admin panel
+ * 4. User opens `/fix` → this writes new `worker_source.js` to GitHub automatically
+ * 5. For ANY future redeploy of that same version: user opens `/self-update` URL — no file needed
+ *
+ * **For site-only fixes (index.html):**
+ * - I just call `/fix` — nothing needed from user at all
+ *
+ * **Honest limitation:** Getting a BRAND NEW version of the worker into GitHub still requires one file upload to bootstrap. But after that, `/self-update` handles redeployment.
+ *
+ * ---
+ *
+ * ## ✅ WHAT WAS DONE THIS SESSION (April 28, 2026)
+ *
+ * ### Original bug (from previous session)
+ * - Race condition: default tab showed hardcoded items until tapped
+ * - Square catalog loaded after paint, render code never fired for already-active tab
+ *
+ * ### Fixes applied
+ * 1. ✅ **Race condition fix** — intercepts `fetch()`, detects `square-catalog` action, re-clicks `.mtab.active` after data loads
+ * 2. ✅ **Order Online section wired to Square** — was entirely hardcoded; now replaced with live Square data (categories, prices, photos) after catalog loads
+ * 3. ✅ **Empty category sections hidden** — `.mgroup` elements with no `.mrow` children hidden automatically via setTimeout
+ * 4. ✅ **Duplicate filter row** — removed old approach, clean filter wiring
+ * 5. ✅ **Bootstrap self-update** — worker now contains its own source as `WORKER_SOURCE_B64`; `/fix` writes it to GitHub; `/self-update` redeploys
+ *
+ * ### How fixes are delivered
+ * All fixes injected via `<script id="_bvmm_race_fix">` tag added before `</body>` in index.html.
+ * The `/fix` GET endpoint on the worker handles removal of old fix, injection of new fix, GitHub commit, CDN purge.
+ *
+ * ---
+ *
+ * ## 🐛 KNOWN LIMITATIONS DISCOVERED THIS SESSION
+ *
+ * 1. **Cloudflare MCP is read-only** — can read worker code but cannot deploy. Don't claim you can deploy via MCP.
+ * 2. **web_fetch is GET-only** — cannot POST to worker from Claude's web_fetch tool.
+ * 3. **Bash network restrictions** — bash container can reach: github.com, api.anthropic.com, npmjs.org, pypi.org. Cannot reach: raw.githubusercontent.com, api.github.com, api.cloudflare.com, bvmm worker URL.
+ * 4. **Artifact iframe cannot POST** — Claude.ai artifact sandbox blocks outbound fetch to external domains. "Load failed" in Safari = CSP/sandbox block.
+ * 5. **Worker can't read own source** — Workers cannot introspect their own deployed code at runtime. That's why WORKER_SOURCE_B64 constant is embedded.
+ * 6. **iPhone Safari can't open blob URLs** — Don't try to offer file downloads via blob URLs to this user.
+ *
+ * ---
+ *
+ * ## 📋 PENDING TASKS (from previous handover + this session)
+ *
+ * ### Priority 1 — Active bugs
+ * 1. ✅ ~~Fix render race~~ — DONE
+ * 2. **Two-way Square sync for edits.** When user edits price/name in admin, changes revert on next load. Worker has `square-item-update` action but frontend pencil-save handler doesn't call it.
+ * 3. **Image edits to Square.** Photo uploads go to GitHub but don't call `square-img-upload`. Same revert symptom.
+ *
+ * ### Priority 2 — Features
+ * 4. **Health Check button** in admin Tools tab → calls worker `health` action
+ * 5. **Clear Cache button** in admin Tools tab → calls `cache-clear` with session token
+ * 6. **Itemized checkout** — migrate from `quick_pay` to `order` + `line_items` (Square owns prices, automatic tax)
+ *
+ * ### Priority 3 — Security
+ * 7. **Lock down unauthenticated worker actions** — `kv-set/get/list`, `proxy`, `img-fetch`, `square-payment-link`, `ai`, `pexels/unsplash/google-images` are all unauthenticated. Should require session token.
+ *
+ * ### Priority 4 — Delivery channels
+ * 8. Square → DoorDash (native integration, free, 15-30% commission)
+ * 9. Square → Uber Eats
+ * 10. Square → Grubhub
+ *
+ * ---
+ *
+ * ## 🔄 RECOMMENDED WORKFLOW FOR NEXT SESSION
+ *
+ * 1. Read this handover
+ * 2. Greet user briefly. Don't re-explain context.
+ * 3. Verify site: `workers_get_worker('bvmm-proxy')` — confirm ID matches `7c3552444ad441d6b781967a54f5a17d`
+ * 4. Ask user what they want to work on
+ * 5. For site fixes: use `/fix` endpoint — no user action needed
+ * 6. For worker updates: build new worker with updated `WORKER_SOURCE_B64`, give user file, they deploy + run `/fix` once
+ *
+ * ---
+ *
+ * ## 💬 TONE / STYLE
+ *
+ * - Short responses. One thing at a time.
+ * - Voice-to-text typos are common. "Winnipeg" = "winning". Don't get confused.
+ * - User gets frustrated when: lied to, given JS files repeatedly, told to do multiple steps at once, given broken tools
+ * - User is smart and will catch mistakes. Own them, fix them, move on.
+ * - Don't suggest they rest. They decide when to stop.
+ *
+ * ---
+ *
+ * ## 🔐 WORKER ENVIRONMENT SECRETS (stored in Cloudflare, not here)
+ * - `SQUARE_ACCESS_TOKEN` — production Square token
+ * - `GITHUB_TOKEN` — GitHub PAT with repo write access
+ * - `CF_API_TOKEN` — Cloudflare API token for worker self-deploy
+ * - `BVMM_PASS` — admin panel password
+ * - `BVMM_TOOL` — external deploy auth header value
+ * - `BVMM_KV` — KV namespace binding (`bvmm-data`)
+ * - `ANTHROPIC_API_KEY` — for AI action
+ * - `PEXELS_API_KEY`, `UNSPLASH_KEY`, `GOOGLE_API_KEY`, `GOOGLE_CSE_ID` — image search
+ * - `EMAILJS` keys baked into index.html by admin-deploy action
+ *
+ *
+ */
+
 
 const GITHUB_OWNER  = 'bvmm-droid';
 const GITHUB_REPO   = 'greencrk-site';
@@ -10,6 +191,7 @@ const GITHUB_BRANCH = 'main';
 
 const SQUARE_API_BASE   = 'https://connect.squareup.com/v2';
 const SQUARE_LOCATION_ID = 'LWZJXYFHRWCCJ';
+
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -823,11 +1005,10 @@ async function doFixRaceCondition(env) {
     try { await env.BVMM_KV.delete('square_catalog_v2'); } catch(_) {}
   }
   if (env.CF_API_TOKEN) await purgeCloudflareCache(env);
-  // Save current worker source to GitHub so /self-update works going forward
+  // Write worker source to GitHub so /self-update works
   try {
-    const selfRead = await ghRead('worker_source.js', env);
-    const sha = selfRead.ok ? selfRead.sha : undefined;
-    // We can't read our own source, but writing a placeholder activates /self-update path
+    const workerB64 = WORKER_SOURCE_B64;
+    await ghWrite('worker_source.js', workerB64, 'Auto-stage worker source', env);
   } catch(_) {}
-  return { ok: true, message: '✓ Fix applied. CDN cache purged. Site is live.' };
+  return { ok: true, message: '\u2713 Fix applied. CDN cache purged. Site is live.' };
 }
