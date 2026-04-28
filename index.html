@@ -9633,18 +9633,59 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
-  function cleanFilters(){
-    var rows=document.querySelectorAll('.og-filter');
-    if(rows.length>1){for(var i=0;i<rows.length-1;i++)rows[i].style.display='none';}
+  var sqData=null;
+  function catKey(c){
+    c=(c||'').toLowerCase();
+    if(c.indexOf('beef')>-1) return 'beef';
+    if(c.indexOf('pork')>-1||c.indexOf('veal')>-1||c.indexOf('lamb')>-1) return 'pork';
+    if(c.indexOf('chicken')>-1||c.indexOf('poultry')>-1||c.indexOf('turkey')>-1) return 'poultry';
+    if(c.indexOf('seafood')>-1||c.indexOf('fish')>-1||c.indexOf('shellfish')>-1) return 'seafood';
+    return 'prepared';
   }
-  function rerenderAll(){
-    cleanFilters();
-    var mt=document.querySelector('.mtab.active');
-    if(mt)mt.click();
-    var og=document.querySelector('.og-ftab.active');
-    if(og)og.click();
+  function esc(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').slice(0,100);}
+  function buildOG(data){
+    var grid=document.querySelector('.og-grid');
+    if(!grid) return;
+    var g=data.grouped||{};
+    var items=[];
+    Object.keys(g).forEach(function(cat){(g[cat]||[]).forEach(function(i){items.push({i:i,cat:cat});});});
+    if(!items.length) return;
+    var html='';
+    items.forEach(function(e){
+      var i=e.i,cat=e.cat,ck=catKey(cat);
+      var price=i.price?'$'+parseFloat(i.price).toFixed(2):'';
+      var unit=price?'/LB':'';
+      html+='<div class="og-card" data-cat="'+ck+'" onclick="openOrderSheet(\''+esc(i.name)+'\','+( parseFloat(i.price)||0)+',\''+esc(i.desc||'')+'\',\''+esc(cat)+'\')">';
+      html+='<div class="og-vis og-art-'+ck+'" style="position:relative;overflow:hidden">';
+      if(i.imageUrl) html+='<img src="'+i.imageUrl+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" loading="lazy">';
+      html+='<span class="og-cat-chip chip-'+ck+'">'+esc(cat)+'</span>';
+      html+='</div><div class="og-body"><div class="og-name">'+esc(i.name)+'</div>';
+      if(i.desc) html+='<div class="og-desc">'+esc(i.desc)+'</div>';
+      html+='<div class="og-foot"><span class="og-price">'+price+'<span class="og-unit">'+unit+'</span></span>';
+      html+='<button class="og-add" onclick="event.stopPropagation();openOrderSheet(\''+esc(i.name)+'\','+( parseFloat(i.price)||0)+',\''+esc(i.desc||'')+'\',\''+esc(cat)+'\')">+</button>';
+      html+='</div></div></div>';
+    });
+    grid.innerHTML=html;
+    document.querySelectorAll('.og-ftab').forEach(function(btn){
+      btn.onclick=function(){
+        document.querySelectorAll('.og-ftab').forEach(function(b){b.classList.remove('active');});
+        btn.classList.add('active');
+        var cat=(btn.getAttribute('data-filter')||btn.textContent.trim().toLowerCase().replace(/\s*[&\/]\s*/g,'-').replace(/\s+/g,'-').replace(/[^a-z-]/g,''));
+        document.querySelectorAll('.og-card').forEach(function(c){
+          c.style.display=(cat==='all-items'||cat==='all'||!cat||c.getAttribute('data-cat')===cat)?'':'none';
+        });
+      };
+    });
+    var at=document.querySelector('.og-ftab.active')||document.querySelector('.og-ftab');
+    if(at) at.click();
+  }
+  function rerender(){
+    var mt=document.querySelector('.mtab.active'); if(mt) mt.click();
+    if(sqData) buildOG(sqData);
   }
   var _f=window.fetch;
   window.fetch=function(){
@@ -9653,13 +9694,12 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
       var b=arguments[1]&&arguments[1].body;
       if(b&&JSON.parse(b).action==='square-catalog'){
         p.then(function(r){return r.clone().json();}).then(function(d){
-          if(d&&d.ok){setTimeout(rerenderAll,120);}
+          if(d&&d.ok){sqData=d;setTimeout(rerender,150);}
         }).catch(function(){});
       }
     }catch(e){}
     return p;
   };
-  document.addEventListener('DOMContentLoaded',function(){setTimeout(cleanFilters,500);});
 })();
 </script>
 </body>
