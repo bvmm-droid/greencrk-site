@@ -9643,6 +9643,8 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
   var sqData=null;
@@ -9694,6 +9696,7 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
   function rerender(){
     var mt=document.querySelector('.mtab.active'); if(mt) mt.click();
     if(sqData) buildOG(sqData);
+    setTimeout(function(){document.querySelectorAll('.mgroup').forEach(function(g){g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';});},400);
   }
   var _f=window.fetch;
   window.fetch=function(){
