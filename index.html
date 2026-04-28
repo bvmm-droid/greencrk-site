@@ -9625,11 +9625,20 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
   function cleanFilters(){
     var rows=document.querySelectorAll('.og-filter');
     if(rows.length>1){for(var i=0;i<rows.length-1;i++)rows[i].style.display='none';}
+  }
+  function rerenderAll(){
+    cleanFilters();
+    var mt=document.querySelector('.mtab.active');
+    if(mt)mt.click();
+    var og=document.querySelector('.og-ftab.active');
+    if(og)og.click();
   }
   var _f=window.fetch;
   window.fetch=function(){
@@ -9638,11 +9647,7 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
       var b=arguments[1]&&arguments[1].body;
       if(b&&JSON.parse(b).action==='square-catalog'){
         p.then(function(r){return r.clone().json();}).then(function(d){
-          if(d&&d.ok){setTimeout(function(){
-            cleanFilters();
-            var t=document.querySelector('.mtab.active');
-            if(t)t.click();
-          },120);}
+          if(d&&d.ok){setTimeout(rerenderAll,120);}
         }).catch(function(){});
       }
     }catch(e){}
