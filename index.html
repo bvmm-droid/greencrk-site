@@ -9683,292 +9683,66 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
-  var sqData=null;
-  var isAdmin=false;
-
-  // Detect admin from DOM or session
-  try{
-    var _t=sessionStorage.getItem('bvmm_token');
-    if(_t) isAdmin=true;
-    else if(document.querySelector('.admin-bar')||document.body.classList.contains('admin-active')) isAdmin=true;
-  }catch(e){}
-
+  var sqData=null,isAdmin=false;
+  try{if(sessionStorage.getItem('bvmm_token'))isAdmin=true;}catch(e){}
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').slice(0,200);}
   function escQ(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").slice(0,200);}
-
-  function getToken(cb){
-    var t=sessionStorage.getItem('bvmm_token');
-    if(t){cb(t);return;}
-    // Auto-login using password prompt
-    var pw=prompt('Enter your admin password to save:');
-    if(!pw){cb(null);return;}
-    fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'login',password:pw})
-    }).then(function(r){return r.json();}).then(function(d){
-      if(d.ok&&d.token){sessionStorage.setItem('bvmm_token',d.token);cb(d.token);}
-      else{alert('Wrong password');cb(null);}
-    }).catch(function(){cb(null);});
+  function collapseAdminBar(){
+    var bar=document.querySelector('.admin-bar');
+    if(!bar||bar.getAttribute('data-col'))return;
+    bar.setAttribute('data-col','1');
+    var btn=document.createElement('div');btn.id='bvmm-admin-toggle';btn.innerHTML='&#9776; Admin';
+    btn.style.cssText='position:fixed;top:8px;left:8px;z-index:99999;background:#1a1a1a;color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)';
+    bar.style.cssText='position:fixed;top:-400px;left:0;right:0;z-index:99998;transition:top 0.2s ease';
+    document.body.appendChild(btn);
+    var open=false;
+    btn.onclick=function(e){e.stopPropagation();open=!open;bar.style.top=open?'0':'-400px';btn.style.background=open?'#555':'#1a1a1a';};
+    document.addEventListener('click',function(e){if(open&&!bar.contains(e.target)&&e.target!==btn){open=false;bar.style.top='-400px';btn.style.background='#1a1a1a';}});
   }
-
-  function hideBTC(){
-    document.querySelectorAll('.mtab,.mpanel,.mgroup,.menu-tabs,.menu-tabs-wrap').forEach(function(el){
-      var sec=el.closest('section')||el.closest('.page-section');
-      if(sec) sec.style.display='none';
-      else el.style.display='none';
-    });
-  }
-
+  function hideBTC(){document.querySelectorAll('.mtab,.mpanel,.mgroup,.menu-tabs,.menu-tabs-wrap').forEach(function(el){var sec=el.closest('section')||el.closest('.page-section');if(sec)sec.style.display='none';else el.style.display='none';});}
   var pexCache={};
-  function loadPexels(name,imgEl){
-    if(pexCache[name]){imgEl.src=pexCache[name];imgEl.style.display='';if(imgEl.nextElementSibling)imgEl.nextElementSibling.style.display='none';return;}
-    fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'pexels',query:name+' meat butcher food',per_page:1})
-    }).then(function(r){return r.json();}).then(function(d){
-      var url=d.ok&&d.photos&&d.photos[0]?d.photos[0].src.large:null;
-      if(url){pexCache[name]=url;imgEl.src=url;imgEl.style.display='';if(imgEl.nextElementSibling)imgEl.nextElementSibling.style.display='none';}
-    }).catch(function(){});
-  }
-
-  var catMap={
-    'butcher - beef':'Beef','beef roast':'Beef','prime beef':'Beef','steak':'Beef','wagyu':'Beef','butcher shop':'Beef',
-    'butcher - veal':'Pork & Veal','butcher - pork':'Pork & Veal','veal':'Pork & Veal','veal & pork':'Pork & Veal',
-    'butcher - lamb':'Lamb',
-    'butcher - poultry':'Poultry','poultry':'Poultry',
-    'butcher - seafood':'Seafood','fish':'Seafood','frozen sea food':'Seafood',
-    'cheese & deli':'Deli','deli meats & cheeses':'Deli','cold salads':'Deli',
-    'sandwiches':'Sandwiches','heroes breads & wraps':'Sandwiches','paninis':'Sandwiches','lunch':'Sandwiches',
-    'soups':'Soups',
-    'pasta & eggplant':'Prepared','prepared foods':'Prepared','family dinners':'Prepared',
-    'vegetables potatoes & rice':'Prepared','appetizers':'Prepared','desserts':'Prepared','coffee':'Prepared','the regulars':'Prepared',
-    'catering':'Catering','all catering':'Catering','quick catering':'Catering',
-    'specials':'Specials','special orders':'Specials','dartagnan':'Specials','market place':'Specials','gear':'Specials',
-    'other':'Other'
-  };
+  function loadPexels(name,imgEl){if(pexCache[name]){imgEl.src=pexCache[name];imgEl.style.display='';if(imgEl.nextElementSibling)imgEl.nextElementSibling.style.display='none';return;}fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'pexels',query:name+' meat butcher food',per_page:1})}).then(function(r){return r.json();}).then(function(d){var url=d.ok&&d.photos&&d.photos[0]?d.photos[0].src.large:null;if(url){pexCache[name]=url;imgEl.src=url;imgEl.style.display='';if(imgEl.nextElementSibling)imgEl.nextElementSibling.style.display='none';}}).catch(function(){});}
+  var catMap={'butcher - beef':'Beef','beef roast':'Beef','prime beef':'Beef','steak':'Beef','wagyu':'Beef','butcher shop':'Beef','butcher - veal':'Pork & Veal','butcher - pork':'Pork & Veal','veal':'Pork & Veal','veal & pork':'Pork & Veal','butcher - lamb':'Lamb','butcher - poultry':'Poultry','poultry':'Poultry','butcher - seafood':'Seafood','fish':'Seafood','frozen sea food':'Seafood','cheese & deli':'Deli','deli meats & cheeses':'Deli','cold salads':'Deli','sandwiches':'Sandwiches','heroes breads & wraps':'Sandwiches','paninis':'Sandwiches','lunch':'Sandwiches','soups':'Soups','pasta & eggplant':'Prepared','prepared foods':'Prepared','family dinners':'Prepared','vegetables potatoes & rice':'Prepared','appetizers':'Prepared','desserts':'Prepared','coffee':'Prepared','the regulars':'Prepared','catering':'Catering','all catering':'Catering','quick catering':'Catering','specials':'Specials','special orders':'Specials','dartagnan':'Specials','market place':'Specials','gear':'Specials','other':'Other'};
   var tabOrder=['Beef','Pork & Veal','Lamb','Poultry','Seafood','Deli','Sandwiches','Soups','Prepared','Catering','Specials','Other'];
   function mapCat(c){return catMap[(c||'').toLowerCase()]||'Other';}
   function slug(s){return (s||'').toLowerCase().replace(/\s*[&\/]\s*/g,'-').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');}
-
+  function getToken(cb){var t=sessionStorage.getItem('bvmm_token');if(t){cb(t);return;}cb(null);}
   function adminBtns(item){
-    if(!isAdmin) return '';
+    if(!isAdmin)return '';
     return '<div style="position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:10">'
-      +'<button onclick="event.stopPropagation();bvmmEditPhoto(\''+escQ(item.id)+'\',\''+escQ(item.name)+'\')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.92);border:none;cursor:pointer;font-size:15px">📷</button>'
-      +'<button onclick="event.stopPropagation();bvmmEditItem(\''+escQ(item.id)+'\',\''+escQ(item.name)+'\',\''+escQ(item.price||'')+'\',\''+escQ(item.desc||'')+'\')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.92);border:none;cursor:pointer;font-size:15px">✏️</button>'
+      +'<button onclick="event.stopPropagation();bvmmEditPhoto(\''+escQ(item.id)+'\',\''+escQ(item.name)+'\')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.95);border:none;cursor:pointer;font-size:15px;box-shadow:0 1px 4px rgba(0,0,0,0.2)">&#128247;</button>'
+      +'<button onclick="event.stopPropagation();bvmmEditItem(\''+escQ(item.id)+'\',\''+escQ(item.name)+'\',\''+escQ(item.price||'')+'\',\''+escQ(item.desc||'')+'\')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.95);border:none;cursor:pointer;font-size:15px;box-shadow:0 1px 4px rgba(0,0,0,0.2)">&#9999;&#65039;</button>'
       +'</div>';
   }
-
-  function buildFilters(usedGroups){
-    var el=document.querySelector('.og-filter');
-    if(!el) return;
-    var html='<button class="og-ftab active" data-filter="all">All Items</button>';
-    tabOrder.forEach(function(g){if(usedGroups[g])html+='<button class="og-ftab" data-filter="'+slug(g)+'">'+g+'</button>';});
-    el.innerHTML=html;
-    document.querySelectorAll('.og-ftab').forEach(function(btn){
-      btn.onclick=function(){
-        document.querySelectorAll('.og-ftab').forEach(function(b){b.classList.remove('active');});
-        btn.classList.add('active');
-        var f=btn.getAttribute('data-filter');
-        document.querySelectorAll('.bvmm-card').forEach(function(c){c.style.display=(f==='all'||c.getAttribute('data-cat')===f)?'':'none';});
-      };
-    });
-  }
-
+  function buildFilters(usedGroups){var el=document.querySelector('.og-filter');if(!el)return;var html='<button class="og-ftab active" data-filter="all">All Items</button>';tabOrder.forEach(function(g){if(usedGroups[g])html+='<button class="og-ftab" data-filter="'+slug(g)+'">'+g+'</button>';});el.innerHTML=html;document.querySelectorAll('.og-ftab').forEach(function(btn){btn.onclick=function(){document.querySelectorAll('.og-ftab').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');var f=btn.getAttribute('data-filter');document.querySelectorAll('.bvmm-card').forEach(function(c){c.style.display=(f==='all'||c.getAttribute('data-cat')===f)?'':'none';});};});}
   function buildOG(data){
-    var grid=document.querySelector('.og-grid');
-    if(!grid) return;
-    var g=data.grouped||{};
-    var cats=Object.keys(g).sort();
-    var items=[],usedGroups={};
-    cats.forEach(function(cat){(g[cat]||[]).forEach(function(i){var group=mapCat(cat);usedGroups[group]=true;items.push({i:i,cat:cat,group:group});});});
-    if(!items.length) return;
-
-    if(!document.getElementById('bvmm-card-css')){
-      var s=document.createElement('style');s.id='bvmm-card-css';
-      s.textContent='.bvmm-card{background:#fff;border-radius:12px;border:1px solid #e8e4de;overflow:hidden;cursor:pointer;position:relative;display:flex;flex-direction:column}'
-        +'.bvmm-card-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}'
-        +'.bvmm-card-img-ph{width:100%;aspect-ratio:4/3;background:#f0ede8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:12px}'
-        +'.bvmm-card-body{padding:12px 14px 14px;flex:1;display:flex;flex-direction:column}'
-        +'.bvmm-card-cat{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 5px}'
-        +'.bvmm-card-name{font-size:16px;font-weight:600;color:#1a1a1a;margin:0 0 6px;line-height:1.3}'
-        +'.bvmm-card-desc{font-size:12px;color:#777;margin:0 0 10px;line-height:1.5;flex:1}'
-        +'.bvmm-card-price{font-size:15px;font-weight:600;color:#1a1a1a;margin:0}'
-        +'.og-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}'
-        +'.og-ftab{padding:8px 16px;border-radius:40px;border:1.5px solid #d4cfc8;background:#fff;font-size:13px;font-weight:500;cursor:pointer;color:#555}'
-        +'.og-ftab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}';
-      document.head.appendChild(s);
-    }
-
+    var grid=document.querySelector('.og-grid');if(!grid)return;
+    var g=data.grouped||{},cats=Object.keys(g).sort(),items=[],usedGroups={};
+    cats.forEach(function(cat){(g[cat]||[]).forEach(function(i){var gr=mapCat(cat);usedGroups[gr]=true;items.push({i:i,cat:cat,group:gr});});});
+    if(!items.length)return;
+    if(!document.getElementById('bvmm-card-css')){var s=document.createElement('style');s.id='bvmm-card-css';s.textContent='.bvmm-card{background:#fff;border-radius:12px;border:1px solid #e8e4de;overflow:hidden;cursor:pointer;position:relative;display:flex;flex-direction:column}.bvmm-card-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.bvmm-card-img-ph{width:100%;aspect-ratio:4/3;background:#f0ede8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:12px}.bvmm-card-body{padding:12px 14px 14px;flex:1;display:flex;flex-direction:column}.bvmm-card-cat{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 5px}.bvmm-card-name{font-size:16px;font-weight:600;color:#1a1a1a;margin:0 0 6px;line-height:1.3}.bvmm-card-desc{font-size:12px;color:#777;margin:0 0 10px;line-height:1.5;flex:1}.bvmm-card-price{font-size:15px;font-weight:600;color:#1a1a1a;margin:0}.og-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}.og-ftab{padding:8px 16px;border-radius:40px;border:1.5px solid #d4cfc8;background:#fff;font-size:13px;font-weight:500;cursor:pointer;color:#555}.og-ftab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}';document.head.appendChild(s);}
     buildFilters(usedGroups);
-
     var html='';
-    items.forEach(function(e){
-      var i=e.i,group=e.group,ck=slug(group);
-      var price=i.price?'$'+parseFloat(i.price).toFixed(2)+' /lb':'';
-      var imgHtml=i.imageUrl
-        ?'<img class="bvmm-card-img" src="'+esc(i.imageUrl)+'" loading="lazy" alt="'+esc(i.name)+'">'
-        :'<img class="bvmm-card-img" data-pexels="'+esc(i.name)+'" style="display:none" alt="'+esc(i.name)+'">'
-         +'<div class="bvmm-card-img-ph">'+esc(group)+'</div>';
-      html+='<div class="bvmm-card" data-id="'+esc(i.id)+'" data-cat="'+esc(ck)+'" onclick="bvmmOpen(\''+escQ(i.id)+'\')">'
-        +adminBtns(i)+imgHtml
-        +'<div class="bvmm-card-body">'
-        +'<p class="bvmm-card-cat">'+esc(group)+'</p>'
-        +'<p class="bvmm-card-name">'+esc(i.name)+'</p>'
-        +(i.desc?'<p class="bvmm-card-desc">'+esc(i.desc)+'</p>':'<p class="bvmm-card-desc"></p>')
-        +'<p class="bvmm-card-price">'+price+'</p>'
-        +'</div></div>';
-    });
+    items.forEach(function(e){var i=e.i,gr=e.group,ck=slug(gr);var price=i.price?'$'+parseFloat(i.price).toFixed(2)+' /lb':'';var imgHtml=i.imageUrl?'<img class="bvmm-card-img" src="'+esc(i.imageUrl)+'" loading="lazy" alt="'+esc(i.name)+'">':'<img class="bvmm-card-img" data-pexels="'+esc(i.name)+'" style="display:none" alt="'+esc(i.name)+'"><div class="bvmm-card-img-ph">'+esc(gr)+'</div>';html+='<div class="bvmm-card" data-id="'+esc(i.id)+'" data-cat="'+esc(ck)+'" onclick="bvmmOpen(\''+escQ(i.id)+'\')">'+adminBtns(i)+imgHtml+'<div class="bvmm-card-body"><p class="bvmm-card-cat">'+esc(gr)+'</p><p class="bvmm-card-name">'+esc(i.name)+'</p>'+(i.desc&&i.desc!=='NEEDS_REVIEW'?'<p class="bvmm-card-desc">'+esc(i.desc)+'</p>':'<p class="bvmm-card-desc"></p>')+'<p class="bvmm-card-price">'+price+'</p></div></div>';});
     grid.innerHTML=html;
     grid.querySelectorAll('[data-pexels]').forEach(function(img){loadPexels(img.getAttribute('data-pexels'),img);});
-    var first=document.querySelector('.og-ftab.active')||document.querySelector('.og-ftab');
-    if(first) first.click();
+    var first=document.querySelector('.og-ftab.active')||document.querySelector('.og-ftab');if(first)first.click();
   }
-
-  window.bvmmOpen=function(id){
-    if(!sqData) return;
-    var found=null,foundCat='',foundGroup='';
-    Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id){found=i;foundCat=cat;foundGroup=mapCat(cat);}});});
-    if(!found) return;
-    var existing=document.getElementById('bvmm-popup');
-    if(existing) existing.remove();
-    bvmmQtyVal=1; bvmmCurrentPrice=found.price?parseFloat(found.price):0;
-    var pop=document.createElement('div');
-    pop.id='bvmm-popup';
-    pop.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center';
-    var img=found.imageUrl?'<img src="'+esc(found.imageUrl)+'" style="width:100%;height:240px;object-fit:cover;border-radius:20px 20px 0 0;display:block">':'';
-    pop.innerHTML='<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto">'
-      +img+'<div style="padding:20px 20px 36px">'
-      +'<button onclick="document.getElementById(\'bvmm-popup\').remove()" style="float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#aaa;margin-top:-4px">&times;</button>'
-      +'<p style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 6px">'+esc(foundGroup)+'</p>'
-      +'<p style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px;line-height:1.2">'+esc(found.name)+'</p>'
-      +(found.desc&&found.desc!=='NEEDS_REVIEW'?'<p style="font-size:14px;color:#666;line-height:1.6;margin:0 0 16px">'+esc(found.desc)+'</p>':'')
-      +'<p style="font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 20px">'+(bvmmCurrentPrice?'$'+bvmmCurrentPrice.toFixed(2)+' /lb':'Price on request')+'</p>'
-      +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">'
-      +'<div style="display:flex;align-items:center;border:2px solid #e0e0e0;border-radius:40px">'
-      +'<button onclick="bvmmQty(-1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333">&#8722;</button>'
-      +'<span id="bvmm-qty-display" style="min-width:32px;text-align:center;font-size:18px;font-weight:700">1</span>'
-      +'<button onclick="bvmmQty(1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333">+</button>'
-      +'</div>'
-      +'<span style="font-size:13px;color:#888">lbs</span>'
-      +'<span style="margin-left:auto;font-size:16px;font-weight:700;color:#1a1a1a" id="bvmm-subtotal">'+(bvmmCurrentPrice?'$'+bvmmCurrentPrice.toFixed(2):'')+'</span>'
-      +'</div>'
-      +'<button onclick="bvmmAddToOrder(\''+escQ(found.id)+'\',\''+escQ(found.name)+'\','+bvmmCurrentPrice+')" style="width:100%;padding:16px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">Add to Order</button>'
-      +'</div></div>';
-    document.body.appendChild(pop);
-    pop.addEventListener('click',function(e){if(e.target===pop) pop.remove();});
-  };
-
+  window.bvmmOpen=function(id){if(!sqData)return;var found=null,fGr='';Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id){found=i;fGr=mapCat(cat);}});});if(!found)return;var ex=document.getElementById('bvmm-popup');if(ex)ex.remove();bvmmQtyVal=1;bvmmCurrentPrice=found.price?parseFloat(found.price):0;var pop=document.createElement('div');pop.id='bvmm-popup';pop.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center';var img=found.imageUrl?'<img src="'+esc(found.imageUrl)+'" style="width:100%;height:240px;object-fit:cover;border-radius:20px 20px 0 0;display:block">':'';pop.innerHTML='<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto">'+img+'<div style="padding:20px 20px 36px"><button onclick="document.getElementById(\'bvmm-popup\').remove()" style="float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#aaa;margin-top:-4px">&times;</button><p style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 6px">'+esc(fGr)+'</p><p style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px;line-height:1.2">'+esc(found.name)+'</p>'+(found.desc&&found.desc!=='NEEDS_REVIEW'?'<p style="font-size:14px;color:#666;line-height:1.6;margin:0 0 16px">'+esc(found.desc)+'</p>':'')+'<p style="font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 20px">'+(bvmmCurrentPrice?'$'+bvmmCurrentPrice.toFixed(2)+' /lb':'Price on request')+'</p><div style="display:flex;align-items:center;gap:16px;margin-bottom:12px"><div style="display:flex;align-items:center;border:2px solid #e0e0e0;border-radius:40px"><button onclick="bvmmQty(-1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333">&#8722;</button><span id="bvmm-qty-display" style="min-width:32px;text-align:center;font-size:18px;font-weight:700">1</span><button onclick="bvmmQty(1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333">+</button></div><span style="font-size:13px;color:#888">lbs</span><span style="margin-left:auto;font-size:16px;font-weight:700;color:#1a1a1a" id="bvmm-subtotal">'+(bvmmCurrentPrice?'$'+bvmmCurrentPrice.toFixed(2):'')+'</span></div><button onclick="bvmmAddToOrder(\''+escQ(found.id)+'\',\''+escQ(found.name)+'\','+bvmmCurrentPrice+')" style="width:100%;padding:16px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">Add to Order</button></div></div>';document.body.appendChild(pop);pop.addEventListener('click',function(e){if(e.target===pop)pop.remove();});};
   var bvmmQtyVal=1,bvmmCurrentPrice=0;
-  window.bvmmQty=function(d){
-    bvmmQtyVal=Math.max(1,Math.min(99,bvmmQtyVal+d));
-    var el=document.getElementById('bvmm-qty-display');if(el)el.textContent=bvmmQtyVal;
-    var s=document.getElementById('bvmm-subtotal');if(s&&bvmmCurrentPrice)s.textContent='$'+(bvmmCurrentPrice*bvmmQtyVal).toFixed(2);
-  };
-  window.bvmmAddToOrder=function(id,name,price){
-    var pop=document.getElementById('bvmm-popup');if(pop)pop.remove();
-    if(typeof openOrderSheet==='function') openOrderSheet(name,price,'','');
-    bvmmQtyVal=1;
-  };
-
-  window.bvmmEditPhoto=function(id,name){
-    var inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-    inp.onchange=function(){
-      var file=inp.files[0];if(!file) return;
-      var reader=new FileReader();
-      reader.onload=function(e){
-        var b64=e.target.result.split(',')[1];
-        getToken(function(token){
-          if(!token) return;
-          fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({action:'square-img-upload',itemId:id,imageName:name,imageBase64:b64,imageMime:file.type||'image/jpeg',token:token})
-          }).then(function(r){return r.json();}).then(function(d){
-            if(d.ok){
-              if(sqData) Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id&&d.imageUrl)i.imageUrl=d.imageUrl;});});
-              buildOG(sqData);alert('Photo updated!');
-            } else {alert('Error: '+(d.error||'Unknown'));}
-          }).catch(function(e){alert('Upload failed: '+e.message);});
-        });
-      };
-      reader.readAsDataURL(file);
-    };
-    inp.click();
-  };
-
-  window.bvmmEditItem=function(id,name,price,desc){
-    var ex=document.getElementById('bvmm-edit-modal');if(ex)ex.remove();
-    var modal=document.createElement('div');
-    modal.id='bvmm-edit-modal';
-    modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:20px';
-    var cleanDesc=(desc==='NEEDS_REVIEW'?'':desc);
-    modal.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:460px;padding:24px">'
-      +'<p style="font-size:17px;font-weight:700;margin:0 0 16px">Edit Item</p>'
-      +'<label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Item Name</label>'
-      +'<input id="bvmm-edit-name" type="text" value="'+esc(name)+'" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;box-sizing:border-box">'
-      +'<label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Price per lb ($)</label>'
-      +'<input id="bvmm-edit-price" type="number" step="0.01" value="'+esc(price)+'" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;box-sizing:border-box">'
-      +'<label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Description</label>'
-      +'<textarea id="bvmm-edit-desc" rows="3" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box">'+esc(cleanDesc)+'</textarea>'
-      +'<div style="display:flex;gap:10px;margin-top:16px">'
-      +'<button onclick="document.getElementById(\'bvmm-edit-modal\').remove()" style="flex:1;padding:12px;border:1.5px solid #ddd;background:#fff;border-radius:8px;font-size:15px;cursor:pointer">Cancel</button>'
-      +'<button id="bvmm-save-btn" onclick="bvmmSaveItem(\''+escQ(id)+'\')" style="flex:1;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">Save to Square</button>'
-      +'</div></div>';
-    document.body.appendChild(modal);
-    modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
-  };
-
-  window.bvmmSaveItem=function(id){
-    var nameVal=(document.getElementById('bvmm-edit-name')||{value:''}).value;
-    var priceVal=document.getElementById('bvmm-edit-price').value;
-    var descVal=document.getElementById('bvmm-edit-desc').value;
-    var priceCents=priceVal?Math.round(parseFloat(priceVal)*100):null;
-    var btn=document.getElementById('bvmm-save-btn');
-    if(btn)btn.textContent='Saving...';
-    getToken(function(token){
-      if(!token){if(btn)btn.textContent='Save to Square';return;}
-      fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'square-item-update',id:id,name:nameVal,description:descVal,priceCents:priceCents,token:token})
-      }).then(function(r){return r.json();}).then(function(d){
-        if(d.ok){
-          if(sqData) Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){
-            if(i.id===id){if(nameVal)i.name=nameVal;if(priceCents)i.price=(priceCents/100).toFixed(2);i.desc=descVal;}
-          });});
-          var modal=document.getElementById('bvmm-edit-modal');if(modal)modal.remove();
-          buildOG(sqData);
-        } else {if(btn)btn.textContent='Save to Square';alert('Error: '+(d.error||'Unknown'));}
-      }).catch(function(e){if(btn)btn.textContent='Save to Square';alert('Save failed: '+e.message);});
-    });
-  };
-
-  function rerender(){
-    hideBTC();
-    if(sqData) buildOG(sqData);
-    setTimeout(function(){document.querySelectorAll('.mgroup').forEach(function(g){g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';});},400);
-  }
-
+  window.bvmmQty=function(d){bvmmQtyVal=Math.max(1,Math.min(99,bvmmQtyVal+d));var el=document.getElementById('bvmm-qty-display');if(el)el.textContent=bvmmQtyVal;var s=document.getElementById('bvmm-subtotal');if(s&&bvmmCurrentPrice)s.textContent='$'+(bvmmCurrentPrice*bvmmQtyVal).toFixed(2);};
+  window.bvmmAddToOrder=function(id,name,price){var pop=document.getElementById('bvmm-popup');if(pop)pop.remove();if(typeof openOrderSheet==='function')openOrderSheet(name,price,'','');bvmmQtyVal=1;};
+  window.bvmmEditPhoto=function(id,name){var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=function(){var file=inp.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){var b64=e.target.result.split(',')[1];getToken(function(token){if(!token){alert('Please log in first');return;}fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'square-img-upload',itemId:id,imageName:name,imageBase64:b64,imageMime:file.type||'image/jpeg',token:token})}).then(function(r){return r.json();}).then(function(d){if(d.ok){if(sqData)Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id&&d.imageUrl)i.imageUrl=d.imageUrl;});});buildOG(sqData);alert('Photo updated!');}else{alert('Error: '+(d.error||'Unknown'));}}).catch(function(e){alert('Upload failed: '+e.message);});});};reader.readAsDataURL(file);};inp.click();};
+  window.bvmmEditItem=function(id,name,price,desc){var ex=document.getElementById('bvmm-edit-modal');if(ex)ex.remove();var modal=document.createElement('div');modal.id='bvmm-edit-modal';modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:20px';var cleanDesc=(desc==='NEEDS_REVIEW'?'':desc);modal.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:460px;padding:24px"><p style="font-size:17px;font-weight:700;margin:0 0 16px">Edit Item</p><label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Item Name</label><input id="bvmm-edit-name" type="text" value="'+esc(name)+'" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;box-sizing:border-box"><label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Price per lb ($)</label><input id="bvmm-edit-price" type="number" step="0.01" value="'+esc(price)+'" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;box-sizing:border-box"><label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Description</label><textarea id="bvmm-edit-desc" rows="3" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box">'+esc(cleanDesc)+'</textarea><div style="display:flex;gap:10px;margin-top:16px"><button onclick="document.getElementById(\'bvmm-edit-modal\').remove()" style="flex:1;padding:12px;border:1.5px solid #ddd;background:#fff;border-radius:8px;font-size:15px;cursor:pointer">Cancel</button><button id="bvmm-save-btn" onclick="bvmmSaveItem(\''+escQ(id)+'\')" style="flex:1;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">Save to Square</button></div></div>';document.body.appendChild(modal);modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});};
+  window.bvmmSaveItem=function(id){var nameVal=(document.getElementById('bvmm-edit-name')||{value:''}).value;var priceVal=document.getElementById('bvmm-edit-price').value;var descVal=document.getElementById('bvmm-edit-desc').value;var priceCents=priceVal?Math.round(parseFloat(priceVal)*100):null;var btn=document.getElementById('bvmm-save-btn');if(btn)btn.textContent='Saving...';getToken(function(token){if(!token){if(btn)btn.textContent='Save to Square';alert('Please log in first');return;}fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'square-item-update',id:id,name:nameVal,description:descVal,priceCents:priceCents,token:token})}).then(function(r){return r.json();}).then(function(d){if(d.ok){if(sqData)Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id){if(nameVal)i.name=nameVal;if(priceCents)i.price=(priceCents/100).toFixed(2);i.desc=descVal;}});});var modal=document.getElementById('bvmm-edit-modal');if(modal)modal.remove();buildOG(sqData);}else{if(btn)btn.textContent='Save to Square';alert('Error: '+(d.error||'Unknown'));}}).catch(function(e){if(btn)btn.textContent='Save to Square';alert('Save failed: '+e.message);});});};
+  function rerender(){hideBTC();collapseAdminBar();if(sqData)buildOG(sqData);setTimeout(function(){document.querySelectorAll('.mgroup').forEach(function(g){g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';});},400);}
   var _f=window.fetch;
-  window.fetch=function(){
-    var p=_f.apply(this,arguments);
-    try{
-      var b=arguments[1]&&arguments[1].body;
-      if(b){
-        var parsed=JSON.parse(b);
-        if(parsed.action==='square-catalog'){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok){sqData=d;setTimeout(rerender,150);}}).catch(function(){});}
-        if(parsed.action==='login'&&parsed.password){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok&&d.token){sessionStorage.setItem('bvmm_token',d.token);isAdmin=true;setTimeout(function(){if(sqData)buildOG(sqData);},200);}}).catch(function(){});}
-      }
-    }catch(e){}
-    return p;
-  };
-
-  // Check admin bar after DOM loads
-  document.addEventListener('DOMContentLoaded',function(){
-    try{if(document.querySelector('.admin-bar')||document.querySelector('#bvmm-admin')){isAdmin=true;}}catch(e){}
-  });
+  window.fetch=function(){var p=_f.apply(this,arguments);try{var b=arguments[1]&&arguments[1].body;if(b){var parsed=JSON.parse(b);if(parsed.action==='square-catalog'){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok){sqData=d;setTimeout(rerender,150);}}).catch(function(){});}if(parsed.action==='login'&&parsed.password){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok&&d.token){sessionStorage.setItem('bvmm_token',d.token);isAdmin=true;setTimeout(function(){if(sqData)buildOG(sqData);},200);}}).catch(function(){});}}}catch(e){}return p;};
 })();
-
 </script>
 </body>
 </html>
