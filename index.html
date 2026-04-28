@@ -9657,40 +9657,25 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
   var sqData=null;
 
-  function catKey(c){
-    c=(c||'').toLowerCase();
-    if(c.indexOf('beef')>-1) return 'beef';
-    if(c.indexOf('pork')>-1||c.indexOf('veal')>-1||c.indexOf('lamb')>-1) return 'pork';
-    if(c.indexOf('chicken')>-1||c.indexOf('poultry')>-1||c.indexOf('turkey')>-1) return 'poultry';
-    if(c.indexOf('seafood')>-1||c.indexOf('fish')>-1||c.indexOf('shellfish')>-1) return 'seafood';
-    if(c.indexOf('sandwich')>-1||c.indexOf('deli')>-1) return 'deli';
-    return 'prepared';
-  }
-
+  function slug(s){return (s||'').toLowerCase().replace(/\s*[&\/]\s*/g,'-').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');}
   function esc(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').slice(0,120);}
 
   // Hide Behind the Counter section
   function hideBTC(){
-    document.querySelectorAll('.mtab,.mpanel,.mgroup,.menu-tabs,.menu-tabs-wrap,.showcase-section,.btc-section,.btc-wrap').forEach(function(el){
+    document.querySelectorAll('.mtab,.mpanel,.mgroup,.menu-tabs,.menu-tabs-wrap').forEach(function(el){
       var sec=el.closest('section')||el.closest('.page-section');
       if(sec) sec.style.display='none';
       else el.style.display='none';
     });
-    document.querySelectorAll('section,div').forEach(function(el){
-      var h=el.querySelector(':scope>h1,:scope>h2,:scope>.section-header h2,:scope>.section-header h3');
-      if(!h) return;
-      var t=h.textContent.toLowerCase();
-      if((t.indexOf('behind')>-1&&t.indexOf('counter')>-1)||t.indexOf('butcher shop')>-1||t.indexOf('the counter')>-1){
-        el.style.display='none';
-      }
-    });
   }
 
-  // Pexels fallback — ONLY called when item has no Square photo AND no uploaded photo
+  // Pexels fallback — ONLY for items with no Square photo
   var pexCache={};
   function loadPexels(name, imgEl){
     if(pexCache[name]){imgEl.src=pexCache[name];imgEl.style.display='';return;}
@@ -9703,33 +9688,44 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     }).catch(function(){});
   }
 
+  // Build filter tabs dynamically from Square categories
+  function buildFilters(categories){
+    var filterEl=document.querySelector('.og-filter');
+    if(!filterEl) return;
+    var html='<button class="og-ftab active" data-filter="all">All Items</button>';
+    categories.forEach(function(cat){
+      html+='<button class="og-ftab" data-filter="'+esc(slug(cat))+'">'+esc(cat)+'</button>';
+    });
+    filterEl.innerHTML=html;
+  }
+
   // Build Order Online grid
   function buildOG(data){
     var grid=document.querySelector('.og-grid');
     if(!grid) return;
     var g=data.grouped||{};
+    var categories=Object.keys(g).sort();
     var items=[];
-    Object.keys(g).forEach(function(cat){(g[cat]||[]).forEach(function(i){items.push({i:i,cat:cat});});});
+    categories.forEach(function(cat){(g[cat]||[]).forEach(function(i){items.push({i:i,cat:cat});});});
     if(!items.length) return;
+
+    // Rebuild filter tabs with real Square categories
+    buildFilters(categories);
 
     var html='';
     items.forEach(function(e){
-      var i=e.i,cat=e.cat,ck=catKey(cat);
+      var i=e.i, cat=e.cat, ck=slug(cat);
       var price=i.price?'$'+parseFloat(i.price).toFixed(2):'';
       var unit=price?'/LB':'';
-
-      // Photo priority: Square > uploaded admin photo > Pexels lazy
-      // Square photo is in i.imageUrl (already the highest quality source)
-      // We NEVER override it with Pexels
-      var hasSquarePhoto=!!(i.imageUrl);
-      var imgTag=hasSquarePhoto
+      // Photo priority: Square photo first, Pexels only as fallback
+      var imgTag=i.imageUrl
         ?'<img src="'+i.imageUrl+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" loading="lazy">'
-        :'<img data-pexels="'+esc(i.name)+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none" loading="lazy"><div class="og-vis-bg" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0ede8;position:absolute;inset:0"><span style="font-size:11px;color:#aaa;text-align:center;padding:8px">'+esc(cat)+'</span></div>';
+        :'<img data-pexels="'+esc(i.name)+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none" loading="lazy"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0ede8;position:absolute;inset:0"><span style="font-size:11px;color:#aaa;text-align:center;padding:8px">'+esc(cat)+'</span></div>';
 
-      html+='<div class="og-card" data-cat="'+ck+'" data-id="'+esc(i.id)+'">';
-      html+='<div class="og-vis og-art-'+ck+'" style="position:relative;overflow:hidden;cursor:pointer" onclick="bvmmOpen(\''+esc(i.id)+'\')">';
+      html+='<div class="og-card" data-cat="'+esc(ck)+'">';
+      html+='<div class="og-vis" style="position:relative;overflow:hidden;cursor:pointer" onclick="bvmmOpen(\''+esc(i.id)+'\')">';
       html+=imgTag;
-      html+='<span class="og-cat-chip chip-'+ck+'">'+esc(cat)+'</span>';
+      html+='<span class="og-cat-chip" style="position:absolute;top:10px;left:10px;background:rgba(26,26,26,0.75);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px">'+esc(cat)+'</span>';
       html+='</div>';
       html+='<div class="og-body" style="cursor:pointer" onclick="bvmmOpen(\''+esc(i.id)+'\')">';
       html+='<div class="og-name">'+esc(i.name)+'</div>';
@@ -9740,27 +9736,27 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     });
     grid.innerHTML=html;
 
-    // Pexels lazy load — only for items with no Square photo
+    // Lazy-load Pexels for items with no Square photo
     grid.querySelectorAll('[data-pexels]').forEach(function(img){
       loadPexels(img.getAttribute('data-pexels'), img);
     });
 
-    // Wire filter tabs
+    // Wire new filter tabs
     document.querySelectorAll('.og-ftab').forEach(function(btn){
       btn.onclick=function(){
         document.querySelectorAll('.og-ftab').forEach(function(b){b.classList.remove('active');});
         btn.classList.add('active');
-        var cat=(btn.getAttribute('data-filter')||btn.textContent.trim().toLowerCase().replace(/\s*[&\/]\s*/g,'-').replace(/\s+/g,'-').replace(/[^a-z-]/g,''));
+        var cat=btn.getAttribute('data-filter')||'all';
         document.querySelectorAll('.og-card').forEach(function(c){
-          c.style.display=(cat==='all-items'||cat==='all'||!cat||c.getAttribute('data-cat')===cat)?'':'none';
+          c.style.display=(cat==='all'||c.getAttribute('data-cat')===cat)?'':'none';
         });
       };
     });
-    var at=document.querySelector('.og-ftab.active')||document.querySelector('.og-ftab');
-    if(at) at.click();
+    var first=document.querySelector('.og-ftab.active')||document.querySelector('.og-ftab');
+    if(first) first.click();
   }
 
-  // Item popup — Square style
+  // Item popup
   window.bvmmOpen=function(id){
     if(!sqData) return;
     var found=null, foundCat='';
@@ -9771,10 +9767,11 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     if(existing) existing.remove();
     bvmmQtyVal=1;
     var price=found.price?parseFloat(found.price):0;
+    bvmmCurrentPrice=price;
     var pop=document.createElement('div');
     pop.id='bvmm-popup';
     pop.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
-    var img=found.imageUrl?'<img src="'+found.imageUrl+'" style="width:100%;height:220px;object-fit:cover;border-radius:16px 16px 0 0;display:block">':'';
+    var img=found.imageUrl?'<img src="'+found.imageUrl+'" style="width:100%;height:220px;object-fit:cover;border-radius:20px 20px 0 0;display:block">':'';
     pop.innerHTML='<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;overflow:hidden;max-height:92vh;display:flex;flex-direction:column">'
       +img
       +'<div style="padding:20px 20px 32px;overflow-y:auto">'
@@ -9784,20 +9781,18 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
       +(found.desc?'<div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px">'+esc(found.desc)+'</div>':'')
       +'<div style="font-size:20px;font-weight:700;color:#8B6914;margin-bottom:24px">'+(price?'$'+price.toFixed(2)+' /lb':'Price on request')+'</div>'
       +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">'
-      +'<div style="display:flex;align-items:center;border:2px solid #e0e0e0;border-radius:40px;overflow:hidden;flex-shrink:0">'
-      +'<button onclick="bvmmQty(-1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333;font-weight:300">−</button>'
+      +'<div style="display:flex;align-items:center;border:2px solid #e0e0e0;border-radius:40px;overflow:hidden">'
+      +'<button onclick="bvmmQty(-1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333">−</button>'
       +'<span id="bvmm-qty-display" style="min-width:36px;text-align:center;font-size:18px;font-weight:700">1</span>'
-      +'<button onclick="bvmmQty(1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333;font-weight:300">+</button>'
+      +'<button onclick="bvmmQty(1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333">+</button>'
       +'</div>'
       +'<span style="font-size:14px;color:#888">lbs</span>'
       +'<span style="margin-left:auto;font-size:16px;font-weight:700;color:#1a1a1a" id="bvmm-subtotal">'+(price?'$'+price.toFixed(2):'')+'</span>'
       +'</div>'
-      +'<button onclick="bvmmAddToOrder(\''+esc(found.id)+'\',\''+esc(found.name)+'\','+price+')" '
-      +'style="width:100%;padding:18px;background:#1a1a1a;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;letter-spacing:0.5px">Add to Order</button>'
+      +'<button onclick="bvmmAddToOrder(\''+esc(found.id)+'\',\''+esc(found.name)+'\','+price+')" style="width:100%;padding:18px;background:#1a1a1a;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:700;cursor:pointer">Add to Order</button>'
       +'</div></div>';
     document.body.appendChild(pop);
     pop.addEventListener('click',function(e){if(e.target===pop) pop.remove();});
-    bvmmCurrentPrice=price;
   };
 
   var bvmmQtyVal=1, bvmmCurrentPrice=0;
@@ -9840,7 +9835,6 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     return p;
   };
 })();
-
 </script>
 </body>
 </html>
