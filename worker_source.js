@@ -1,196 +1,10 @@
-/*
- * # BVMM / greencrk.com — Complete Handover
- * **Generated:** April 28, 2026
- * **For:** The next Claude session
- * **Project:** Babylon Village Meat Market website + Square integration
- *
- * ---
- *
- * ## 🚨 READ THIS FIRST
- *
- * 1. **Rules set by user (non-negotiable):**
- *    - **Don't lie.** If you don't know, say so. User will catch you.
- *    - **Always give hyperlinks.** Every site/dashboard reference must be a clickable link.
- *    - **Worker-first when site breaks.** Use Cloudflare MCP to check worker before theorizing.
- *    - **Never push without reading live HTML first.** Local/uploaded files may be stale.
- *    - **One task at a time.** User is on iPhone, tired, non-technical. Keep it short.
- *
- * 2. **User profile:**
- *    - Owner of Babylon Village Meat Market
- *    - 85 Deer Park Ave, Babylon Village NY 11702 · (631) 669-0612
- *    - Working from iPhone in Safari (voice-to-text — expect typos/garbled words)
- *    - Non-technical. No jargon. Short responses. One question at a time.
- *
- * 3. **Site is live and working.** Verified April 28, 2026.
- *
- * ---
- *
- * ## 🌐 ALL LINKS
- *
- * ### Site
- * - Live: [greencrk.com](https://greencrk.com)
- * - Admin: [greencrk.com?admin](https://greencrk.com?admin)
- * - Future domain (not yet connected): babylonvillagemeatmarket.com
- *
- * ### GitHub
- * - Repo: [github.com/bvmm-droid/greencrk-site](https://github.com/bvmm-droid/greencrk-site)
- * - Raw index.html: `https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/index.html`
- * - Backup manifest: `https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/backups/manifest.json`
- * - worker_source.js (for self-update): `https://raw.githubusercontent.com/bvmm-droid/greencrk-site/main/worker_source.js`
- * - Branch: `main`
- *
- * ### Cloudflare
- * - Worker URL: `https://bvmm-proxy.babylonvillagemeatmarket.workers.dev`
- * - Worker dashboard: [dash.cloudflare.com/.../bvmm-proxy](https://dash.cloudflare.com/3e33cb7e32f60a1266e6e50ed47d9b4b/workers/services/view/bvmm-proxy/production)
- * - Account ID: `3e33cb7e32f60a1266e6e50ed47d9b4b`
- * - Worker script ID: `7c3552444ad441d6b781967a54f5a17d`
- *
- * ### Square
- * - Dashboard: [app.squareup.com/dashboard](https://app.squareup.com/dashboard)
- * - Catalog: [app.squareup.com/dashboard/items/library](https://app.squareup.com/dashboard/items/library)
- * - Production app ID: `sq0idp-r0IPYDqt3ffjDZzCvLTFPg`
- * - Location ID: `LWZJXYFHRWCCJ`
- *
- * ### EmailJS
- * - Public key: `sF8_feXTs21Nsc3Bg`
- * - Service ID: `service_1jc6nrt`
- * - Template ID: `template_fben9zs`
- *
- * ---
- *
- * ## 🔧 TOOLS / CONNECTORS AVAILABLE
- *
- * ### Cloudflare Developer Platform MCP (READ-ONLY)
- * Connected. Available tools:
- * - `workers_get_worker('bvmm-proxy')` — get worker metadata
- * - `workers_get_worker_code('bvmm-proxy')` — get full worker source ✓
- * - `workers_list` — list all workers
- * - `kv_namespaces_list` — list KV namespaces
- * - Various D1/R2/KV management tools
- *
- * **⚠️ CRITICAL LIMITATION:** This MCP cannot DEPLOY workers. It is read-only.
- * To deploy a worker you must either:
- * a) User uploads file via admin panel Deploy Worker drop zone
- * b) Worker self-deploys via GET /self-update (see below)
- *
- * ### Worker GET Endpoints (no auth required)
- * - `GET /fix` → Patches index.html, purges CDN cache, writes worker_source.js to GitHub
- * - `GET /self-update` → Reads worker_source.js from GitHub, self-deploys worker
- * - `GET /` → Returns "BVMM Worker OK"
- *
- * ---
- *
- * ## ⚙️ SELF-UPDATE MECHANISM (HOW IT WORKS)
- *
- * After this session's bootstrap, future worker updates work like this:
- *
- * 1. I update the worker code locally
- * 2. I generate new `worker_BOOTSTRAP.js` with updated `WORKER_SOURCE_B64` constant
- * 3. User deploys it ONE TIME via admin panel
- * 4. User opens `/fix` → this writes new `worker_source.js` to GitHub automatically
- * 5. For ANY future redeploy of that same version: user opens `/self-update` URL — no file needed
- *
- * **For site-only fixes (index.html):**
- * - I just call `/fix` — nothing needed from user at all
- *
- * **Honest limitation:** Getting a BRAND NEW version of the worker into GitHub still requires one file upload to bootstrap. But after that, `/self-update` handles redeployment.
- *
- * ---
- *
- * ## ✅ WHAT WAS DONE THIS SESSION (April 28, 2026)
- *
- * ### Original bug (from previous session)
- * - Race condition: default tab showed hardcoded items until tapped
- * - Square catalog loaded after paint, render code never fired for already-active tab
- *
- * ### Fixes applied
- * 1. ✅ **Race condition fix** — intercepts `fetch()`, detects `square-catalog` action, re-clicks `.mtab.active` after data loads
- * 2. ✅ **Order Online section wired to Square** — was entirely hardcoded; now replaced with live Square data (categories, prices, photos) after catalog loads
- * 3. ✅ **Empty category sections hidden** — `.mgroup` elements with no `.mrow` children hidden automatically via setTimeout
- * 4. ✅ **Duplicate filter row** — removed old approach, clean filter wiring
- * 5. ✅ **Bootstrap self-update** — worker now contains its own source as `WORKER_SOURCE_B64`; `/fix` writes it to GitHub; `/self-update` redeploys
- *
- * ### How fixes are delivered
- * All fixes injected via `<script id="_bvmm_race_fix">` tag added before `</body>` in index.html.
- * The `/fix` GET endpoint on the worker handles removal of old fix, injection of new fix, GitHub commit, CDN purge.
- *
- * ---
- *
- * ## 🐛 KNOWN LIMITATIONS DISCOVERED THIS SESSION
- *
- * 1. **Cloudflare MCP is read-only** — can read worker code but cannot deploy. Don't claim you can deploy via MCP.
- * 2. **web_fetch is GET-only** — cannot POST to worker from Claude's web_fetch tool.
- * 3. **Bash network restrictions** — bash container can reach: github.com, api.anthropic.com, npmjs.org, pypi.org. Cannot reach: raw.githubusercontent.com, api.github.com, api.cloudflare.com, bvmm worker URL.
- * 4. **Artifact iframe cannot POST** — Claude.ai artifact sandbox blocks outbound fetch to external domains. "Load failed" in Safari = CSP/sandbox block.
- * 5. **Worker can't read own source** — Workers cannot introspect their own deployed code at runtime. That's why WORKER_SOURCE_B64 constant is embedded.
- * 6. **iPhone Safari can't open blob URLs** — Don't try to offer file downloads via blob URLs to this user.
- *
- * ---
- *
- * ## 📋 PENDING TASKS (from previous handover + this session)
- *
- * ### Priority 1 — Active bugs
- * 1. ✅ ~~Fix render race~~ — DONE
- * 2. **Two-way Square sync for edits.** When user edits price/name in admin, changes revert on next load. Worker has `square-item-update` action but frontend pencil-save handler doesn't call it.
- * 3. **Image edits to Square.** Photo uploads go to GitHub but don't call `square-img-upload`. Same revert symptom.
- *
- * ### Priority 2 — Features
- * 4. **Health Check button** in admin Tools tab → calls worker `health` action
- * 5. **Clear Cache button** in admin Tools tab → calls `cache-clear` with session token
- * 6. **Itemized checkout** — migrate from `quick_pay` to `order` + `line_items` (Square owns prices, automatic tax)
- *
- * ### Priority 3 — Security
- * 7. **Lock down unauthenticated worker actions** — `kv-set/get/list`, `proxy`, `img-fetch`, `square-payment-link`, `ai`, `pexels/unsplash/google-images` are all unauthenticated. Should require session token.
- *
- * ### Priority 4 — Delivery channels
- * 8. Square → DoorDash (native integration, free, 15-30% commission)
- * 9. Square → Uber Eats
- * 10. Square → Grubhub
- *
- * ---
- *
- * ## 🔄 RECOMMENDED WORKFLOW FOR NEXT SESSION
- *
- * 1. Read this handover
- * 2. Greet user briefly. Don't re-explain context.
- * 3. Verify site: `workers_get_worker('bvmm-proxy')` — confirm ID matches `7c3552444ad441d6b781967a54f5a17d`
- * 4. Ask user what they want to work on
- * 5. For site fixes: use `/fix` endpoint — no user action needed
- * 6. For worker updates: build new worker with updated `WORKER_SOURCE_B64`, give user file, they deploy + run `/fix` once
- *
- * ---
- *
- * ## 💬 TONE / STYLE
- *
- * - Short responses. One thing at a time.
- * - Voice-to-text typos are common. "Winnipeg" = "winning". Don't get confused.
- * - User gets frustrated when: lied to, given JS files repeatedly, told to do multiple steps at once, given broken tools
- * - User is smart and will catch mistakes. Own them, fix them, move on.
- * - Don't suggest they rest. They decide when to stop.
- *
- * ---
- *
- * ## 🔐 WORKER ENVIRONMENT SECRETS (stored in Cloudflare, not here)
- * - `SQUARE_ACCESS_TOKEN` — production Square token
- * - `GITHUB_TOKEN` — GitHub PAT with repo write access
- * - `CF_API_TOKEN` — Cloudflare API token for worker self-deploy
- * - `BVMM_PASS` — admin panel password
- * - `BVMM_TOOL` — external deploy auth header value
- * - `BVMM_KV` — KV namespace binding (`bvmm-data`)
- * - `ANTHROPIC_API_KEY` — for AI action
- * - `PEXELS_API_KEY`, `UNSPLASH_KEY`, `GOOGLE_API_KEY`, `GOOGLE_CSE_ID` — image search
- * - `EMAILJS` keys baked into index.html by admin-deploy action
- *
- *
- */
-
-
 const GITHUB_OWNER  = 'bvmm-droid';
 const GITHUB_REPO   = 'greencrk-site';
 const GITHUB_BRANCH = 'main';
 
 const SQUARE_API_BASE   = 'https://connect.squareup.com/v2';
 const SQUARE_LOCATION_ID = 'LWZJXYFHRWCCJ';
+const WORKER_SOURCE_B64 = 'PLACEHOLDER';
 
 
 
@@ -1028,7 +842,54 @@ async function doFixRaceCondition(env) {
     if (html.includes('_bvmm_race_fix')) {
     html = html.replace(/<script id="_bvmm_race_fix">[\s\S]*?<\/script>/g, '');
   }
-  const fixScript = `\n<script id="_bvmm_race_fix">\n(function(){\n  var sqData=null,isAdmin=false;\n  try{if(sessionStorage.getItem('bvmm_token'))isAdmin=true;}catch(e){}\n  function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').slice(0,200);}\n  function escQ(s){return (s||'').replace(/\\\\/g,'\\\\\\\\').replace(/'/g,\"\\\\'\").slice(0,200);}\n  function collapseAdminBar(){\n    var bar=document.querySelector('.admin-bar');\n    if(!bar||bar.getAttribute('data-col'))return;\n    bar.setAttribute('data-col','1');\n    var btn=document.createElement('div');btn.id='bvmm-admin-toggle';btn.innerHTML='&#9776; Admin';\n    btn.style.cssText='position:fixed;top:8px;left:8px;z-index:99999;background:#1a1a1a;color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)';\n    bar.style.cssText='position:fixed;top:-400px;left:0;right:0;z-index:99998;transition:top 0.2s ease';\n    document.body.appendChild(btn);\n    var open=false;\n    btn.onclick=function(e){e.stopPropagation();open=!open;bar.style.top=open?'0':'-400px';btn.style.background=open?'#555':'#1a1a1a';};\n    document.addEventListener('click',function(e){if(open&&!bar.contains(e.target)&&e.target!==btn){open=false;bar.style.top='-400px';btn.style.background='#1a1a1a';}});\n  }\n  function hideBTC(){document.querySelectorAll('.mtab,.mpanel,.mgroup,.menu-tabs,.menu-tabs-wrap').forEach(function(el){var sec=el.closest('section')||el.closest('.page-section');if(sec)sec.style.display='none';else el.style.display='none';});}\n  var pexCache={};\n  function loadPexels(name,imgEl){if(pexCache[name]){imgEl.src=pexCache[name];imgEl.style.display='';if(imgEl.nextElementSibling)imgEl.nextElementSibling.style.display='none';return;}fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'pexels',query:name+' meat butcher food',per_page:1})}).then(function(r){return r.json();}).then(function(d){var url=d.ok&&d.photos&&d.photos[0]?d.photos[0].src.large:null;if(url){pexCache[name]=url;imgEl.src=url;imgEl.style.display='';if(imgEl.nextElementSibling)imgEl.nextElementSibling.style.display='none';}}).catch(function(){});}\n  var catMap={'butcher - beef':'Beef','beef roast':'Beef','prime beef':'Beef','steak':'Beef','wagyu':'Beef','butcher shop':'Beef','butcher - veal':'Pork & Veal','butcher - pork':'Pork & Veal','veal':'Pork & Veal','veal & pork':'Pork & Veal','butcher - lamb':'Lamb','butcher - poultry':'Poultry','poultry':'Poultry','butcher - seafood':'Seafood','fish':'Seafood','frozen sea food':'Seafood','cheese & deli':'Deli','deli meats & cheeses':'Deli','cold salads':'Deli','sandwiches':'Sandwiches','heroes breads & wraps':'Sandwiches','paninis':'Sandwiches','lunch':'Sandwiches','soups':'Soups','pasta & eggplant':'Prepared','prepared foods':'Prepared','family dinners':'Prepared','vegetables potatoes & rice':'Prepared','appetizers':'Prepared','desserts':'Prepared','coffee':'Prepared','the regulars':'Prepared','catering':'Catering','all catering':'Catering','quick catering':'Catering','specials':'Specials','special orders':'Specials','dartagnan':'Specials','market place':'Specials','gear':'Specials','other':'Other'};\n  var tabOrder=['Beef','Pork & Veal','Lamb','Poultry','Seafood','Deli','Sandwiches','Soups','Prepared','Catering','Specials','Other'];\n  function mapCat(c){return catMap[(c||'').toLowerCase()]||'Other';}\n  function slug(s){return (s||'').toLowerCase().replace(/\\s*[&\\/]\\s*/g,'-').replace(/\\s+/g,'-').replace(/[^a-z0-9-]/g,'');}\n  function getToken(cb){var t=sessionStorage.getItem('bvmm_token');if(t){cb(t);return;}cb(null);}\n  function adminBtns(item){\n    if(!isAdmin)return '';\n    return '<div style=\"position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:10\">'\n      +'<button onclick=\"event.stopPropagation();bvmmEditPhoto(\\''+escQ(item.id)+'\\',\\''+escQ(item.name)+'\\')\" style=\"width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.95);border:none;cursor:pointer;font-size:15px;box-shadow:0 1px 4px rgba(0,0,0,0.2)\">&#128247;</button>'\n      +'<button onclick=\"event.stopPropagation();bvmmEditItem(\\''+escQ(item.id)+'\\',\\''+escQ(item.name)+'\\',\\''+escQ(item.price||'')+'\\',\\''+escQ(item.desc||'')+'\\')\" style=\"width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.95);border:none;cursor:pointer;font-size:15px;box-shadow:0 1px 4px rgba(0,0,0,0.2)\">&#9999;&#65039;</button>'\n      +'</div>';\n  }\n  function buildFilters(usedGroups){var el=document.querySelector('.og-filter');if(!el)return;var html='<button class=\"og-ftab active\" data-filter=\"all\">All Items</button>';tabOrder.forEach(function(g){if(usedGroups[g])html+='<button class=\"og-ftab\" data-filter=\"'+slug(g)+'\">'+g+'</button>';});el.innerHTML=html;document.querySelectorAll('.og-ftab').forEach(function(btn){btn.onclick=function(){document.querySelectorAll('.og-ftab').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');var f=btn.getAttribute('data-filter');document.querySelectorAll('.bvmm-card').forEach(function(c){c.style.display=(f==='all'||c.getAttribute('data-cat')===f)?'':'none';});};});}\n  function buildOG(data){\n    var grid=document.querySelector('.og-grid');if(!grid)return;\n    var g=data.grouped||{},cats=Object.keys(g).sort(),items=[],usedGroups={};\n    cats.forEach(function(cat){(g[cat]||[]).forEach(function(i){var gr=mapCat(cat);usedGroups[gr]=true;items.push({i:i,cat:cat,group:gr});});});\n    if(!items.length)return;\n    if(!document.getElementById('bvmm-card-css')){var s=document.createElement('style');s.id='bvmm-card-css';s.textContent='.bvmm-card{background:#fff;border-radius:12px;border:1px solid #e8e4de;overflow:hidden;cursor:pointer;position:relative;display:flex;flex-direction:column}.bvmm-card-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.bvmm-card-img-ph{width:100%;aspect-ratio:4/3;background:#f0ede8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:12px}.bvmm-card-body{padding:12px 14px 14px;flex:1;display:flex;flex-direction:column}.bvmm-card-cat{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 5px}.bvmm-card-name{font-size:16px;font-weight:600;color:#1a1a1a;margin:0 0 6px;line-height:1.3}.bvmm-card-desc{font-size:12px;color:#777;margin:0 0 10px;line-height:1.5;flex:1}.bvmm-card-price{font-size:15px;font-weight:600;color:#1a1a1a;margin:0}.og-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}.og-ftab{padding:8px 16px;border-radius:40px;border:1.5px solid #d4cfc8;background:#fff;font-size:13px;font-weight:500;cursor:pointer;color:#555}.og-ftab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}';document.head.appendChild(s);}\n    buildFilters(usedGroups);\n    var html='';\n    items.forEach(function(e){var i=e.i,gr=e.group,ck=slug(gr);var price=i.price?'$'+parseFloat(i.price).toFixed(2)+' /lb':'';var imgHtml=i.imageUrl?'<img class=\"bvmm-card-img\" src=\"'+esc(i.imageUrl)+'\" loading=\"lazy\" alt=\"'+esc(i.name)+'\">':'<img class=\"bvmm-card-img\" data-pexels=\"'+esc(i.name)+'\" style=\"display:none\" alt=\"'+esc(i.name)+'\"><div class=\"bvmm-card-img-ph\">'+esc(gr)+'</div>';html+='<div class=\"bvmm-card\" data-id=\"'+esc(i.id)+'\" data-cat=\"'+esc(ck)+'\" onclick=\"bvmmOpen(\\''+escQ(i.id)+'\\')\">'+adminBtns(i)+imgHtml+'<div class=\"bvmm-card-body\"><p class=\"bvmm-card-cat\">'+esc(gr)+'</p><p class=\"bvmm-card-name\">'+esc(i.name)+'</p>'+(i.desc&&i.desc!=='NEEDS_REVIEW'?'<p class=\"bvmm-card-desc\">'+esc(i.desc)+'</p>':'<p class=\"bvmm-card-desc\"></p>')+'<p class=\"bvmm-card-price\">'+price+'</p></div></div>';});\n    grid.innerHTML=html;\n    grid.querySelectorAll('[data-pexels]').forEach(function(img){loadPexels(img.getAttribute('data-pexels'),img);});\n    var first=document.querySelector('.og-ftab.active')||document.querySelector('.og-ftab');if(first)first.click();\n  }\n  window.bvmmOpen=function(id){if(!sqData)return;var found=null,fGr='';Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id){found=i;fGr=mapCat(cat);}});});if(!found)return;var ex=document.getElementById('bvmm-popup');if(ex)ex.remove();bvmmQtyVal=1;bvmmCurrentPrice=found.price?parseFloat(found.price):0;var pop=document.createElement('div');pop.id='bvmm-popup';pop.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center';var img=found.imageUrl?'<img src=\"'+esc(found.imageUrl)+'\" style=\"width:100%;height:240px;object-fit:cover;border-radius:20px 20px 0 0;display:block\">':'';pop.innerHTML='<div style=\"background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto\">'+img+'<div style=\"padding:20px 20px 36px\"><button onclick=\"document.getElementById(\\'bvmm-popup\\').remove()\" style=\"float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#aaa;margin-top:-4px\">&times;</button><p style=\"font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 6px\">'+esc(fGr)+'</p><p style=\"font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px;line-height:1.2\">'+esc(found.name)+'</p>'+(found.desc&&found.desc!=='NEEDS_REVIEW'?'<p style=\"font-size:14px;color:#666;line-height:1.6;margin:0 0 16px\">'+esc(found.desc)+'</p>':'')+'<p style=\"font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 20px\">'+(bvmmCurrentPrice?'$'+bvmmCurrentPrice.toFixed(2)+' /lb':'Price on request')+'</p><div style=\"display:flex;align-items:center;gap:16px;margin-bottom:12px\"><div style=\"display:flex;align-items:center;border:2px solid #e0e0e0;border-radius:40px\"><button onclick=\"bvmmQty(-1)\" style=\"width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333\">&#8722;</button><span id=\"bvmm-qty-display\" style=\"min-width:32px;text-align:center;font-size:18px;font-weight:700\">1</span><button onclick=\"bvmmQty(1)\" style=\"width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer;color:#333\">+</button></div><span style=\"font-size:13px;color:#888\">lbs</span><span style=\"margin-left:auto;font-size:16px;font-weight:700;color:#1a1a1a\" id=\"bvmm-subtotal\">'+(bvmmCurrentPrice?'$'+bvmmCurrentPrice.toFixed(2):'')+'</span></div><button onclick=\"bvmmAddToOrder(\\''+escQ(found.id)+'\\',\\''+escQ(found.name)+'\\','+bvmmCurrentPrice+')\" style=\"width:100%;padding:16px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer\">Add to Order</button></div></div>';document.body.appendChild(pop);pop.addEventListener('click',function(e){if(e.target===pop)pop.remove();});};\n  var bvmmQtyVal=1,bvmmCurrentPrice=0;\n  window.bvmmQty=function(d){bvmmQtyVal=Math.max(1,Math.min(99,bvmmQtyVal+d));var el=document.getElementById('bvmm-qty-display');if(el)el.textContent=bvmmQtyVal;var s=document.getElementById('bvmm-subtotal');if(s&&bvmmCurrentPrice)s.textContent='$'+(bvmmCurrentPrice*bvmmQtyVal).toFixed(2);};\n  window.bvmmAddToOrder=function(id,name,price){var pop=document.getElementById('bvmm-popup');if(pop)pop.remove();if(typeof openOrderSheet==='function')openOrderSheet(name,price,'','');bvmmQtyVal=1;};\n  window.bvmmEditPhoto=function(id,name){var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.onchange=function(){var file=inp.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){var b64=e.target.result.split(',')[1];getToken(function(token){if(!token){alert('Please log in first');return;}fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'square-img-upload',itemId:id,imageName:name,imageBase64:b64,imageMime:file.type||'image/jpeg',token:token})}).then(function(r){return r.json();}).then(function(d){if(d.ok){if(sqData)Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id&&d.imageUrl)i.imageUrl=d.imageUrl;});});buildOG(sqData);alert('Photo updated!');}else{alert('Error: '+(d.error||'Unknown'));}}).catch(function(e){alert('Upload failed: '+e.message);});});};reader.readAsDataURL(file);};inp.click();};\n  window.bvmmEditItem=function(id,name,price,desc){var ex=document.getElementById('bvmm-edit-modal');if(ex)ex.remove();var modal=document.createElement('div');modal.id='bvmm-edit-modal';modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:20px';var cleanDesc=(desc==='NEEDS_REVIEW'?'':desc);modal.innerHTML='<div style=\"background:#fff;border-radius:16px;width:100%;max-width:460px;padding:24px\"><p style=\"font-size:17px;font-weight:700;margin:0 0 16px\">Edit Item</p><label style=\"font-size:12px;color:#888;display:block;margin-bottom:4px\">Item Name</label><input id=\"bvmm-edit-name\" type=\"text\" value=\"'+esc(name)+'\" style=\"width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;box-sizing:border-box\"><label style=\"font-size:12px;color:#888;display:block;margin-bottom:4px\">Price per lb ($)</label><input id=\"bvmm-edit-price\" type=\"number\" step=\"0.01\" value=\"'+esc(price)+'\" style=\"width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;box-sizing:border-box\"><label style=\"font-size:12px;color:#888;display:block;margin-bottom:4px\">Description</label><textarea id=\"bvmm-edit-desc\" rows=\"3\" style=\"width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box\">'+esc(cleanDesc)+'</textarea><div style=\"display:flex;gap:10px;margin-top:16px\"><button onclick=\"document.getElementById(\\'bvmm-edit-modal\\').remove()\" style=\"flex:1;padding:12px;border:1.5px solid #ddd;background:#fff;border-radius:8px;font-size:15px;cursor:pointer\">Cancel</button><button id=\"bvmm-save-btn\" onclick=\"bvmmSaveItem(\\''+escQ(id)+'\\')\" style=\"flex:1;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer\">Save to Square</button></div></div>';document.body.appendChild(modal);modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});};\n  window.bvmmSaveItem=function(id){var nameVal=(document.getElementById('bvmm-edit-name')||{value:''}).value;var priceVal=document.getElementById('bvmm-edit-price').value;var descVal=document.getElementById('bvmm-edit-desc').value;var priceCents=priceVal?Math.round(parseFloat(priceVal)*100):null;var btn=document.getElementById('bvmm-save-btn');if(btn)btn.textContent='Saving...';getToken(function(token){if(!token){if(btn)btn.textContent='Save to Square';alert('Please log in first');return;}fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'square-item-update',id:id,name:nameVal,description:descVal,priceCents:priceCents,token:token})}).then(function(r){return r.json();}).then(function(d){if(d.ok){if(sqData)Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id){if(nameVal)i.name=nameVal;if(priceCents)i.price=(priceCents/100).toFixed(2);i.desc=descVal;}});});var modal=document.getElementById('bvmm-edit-modal');if(modal)modal.remove();buildOG(sqData);}else{if(btn)btn.textContent='Save to Square';alert('Error: '+(d.error||'Unknown'));}}).catch(function(e){if(btn)btn.textContent='Save to Square';alert('Save failed: '+e.message);});});};\n  function rerender(){hideBTC();collapseAdminBar();if(sqData)buildOG(sqData);setTimeout(function(){document.querySelectorAll('.mgroup').forEach(function(g){g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';});},400);}\n  var _f=window.fetch;\n  window.fetch=function(){var p=_f.apply(this,arguments);try{var b=arguments[1]&&arguments[1].body;if(b){var parsed=JSON.parse(b);if(parsed.action==='square-catalog'){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok){sqData=d;setTimeout(rerender,150);}}).catch(function(){});}if(parsed.action==='login'&&parsed.password){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok&&d.token){sessionStorage.setItem('bvmm_token',d.token);isAdmin=true;setTimeout(function(){if(sqData)buildOG(sqData);},200);}}).catch(function(){});}}}catch(e){}return p;};\n})();\n</script>`;
+  const fixScript = `
+<script id="_bvmm_race_fix">
+(function(){
+  // Hide item rows during Square load to prevent flash of hardcoded content
+  var _s=document.createElement('style');
+  _s.textContent='.bvmm-sq-loading .mgroup{visibility:hidden}.bvmm-sq-loading .mpanel{visibility:hidden}';
+  document.head.appendChild(_s);
+  document.documentElement.classList.add('bvmm-sq-loading');
+  var _shown=false;
+  function showAll(){if(_shown)return;_shown=true;document.documentElement.classList.remove('bvmm-sq-loading');}
+  // Failsafe: always show after 5s
+  setTimeout(showAll,5000);
+  var _f=window.fetch;
+  window.fetch=function(){
+    var p=_f.apply(this,arguments);
+    try{
+      var b=arguments[1]&&arguments[1].body;
+      if(b){
+        var parsed=JSON.parse(b);
+        if(parsed.action==='square-catalog'){
+          p.then(function(r){return r.clone().json();}).then(function(d){
+            if(d&&d.ok){
+              setTimeout(function(){
+                // Re-click active tab to render fresh Square data into original layout
+                var active=document.querySelector('.mtab.active');
+                if(active)active.click();
+                showAll();
+                // Hide empty category groups
+                setTimeout(function(){
+                  document.querySelectorAll('.mgroup').forEach(function(g){
+                    g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';
+                  });
+                },400);
+              },150);
+            }else{showAll();}
+          }).catch(showAll);
+        }
+        if(parsed.action==='login'&&parsed.password){
+          p.then(function(r){return r.clone().json();}).then(function(d){
+            if(d&&d.ok&&d.token){try{sessionStorage.setItem('bvmm_token',d.token);}catch(e){}}
+          }).catch(function(){});
+        }
+      }
+    }catch(e){}
+    return p;
+  };
+})();
+</script>`
 
   // Insert before </body>
   const insertAt = html.lastIndexOf('</body>');
