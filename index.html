@@ -9659,14 +9659,63 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
   var sqData=null;
 
+  
+  var catMap = {
+    'butcher - beef':    'Beef',
+    'beef roast':        'Beef',
+    'prime beef':        'Beef',
+    'steak':             'Beef',
+    'wagyu':             'Beef',
+    'butcher shop':      'Beef',
+    'butcher - veal':    'Pork & Veal',
+    'butcher - pork':    'Pork & Veal',
+    'veal':              'Pork & Veal',
+    'veal & pork':       'Pork & Veal',
+    'butcher - lamb':    'Lamb',
+    'butcher - poultry': 'Poultry',
+    'poultry':           'Poultry',
+    'butcher - seafood': 'Seafood',
+    'fish':              'Seafood',
+    'frozen sea food':   'Seafood',
+    'cheese & deli':     'Deli',
+    'deli meats & cheeses': 'Deli',
+    'cold salads':       'Deli',
+    'sandwiches':        'Sandwiches',
+    'heroes breads & wraps': 'Sandwiches',
+    'paninis':           'Sandwiches',
+    'lunch':             'Sandwiches',
+    'soups':             'Soups',
+    'pasta & eggplant':  'Prepared',
+    'prepared foods':    'Prepared',
+    'family dinners':    'Prepared',
+    'vegetables potatoes & rice': 'Prepared',
+    'appetizers':        'Prepared',
+    'desserts':          'Prepared',
+    'coffee':            'Prepared',
+    'the regulars':      'Prepared',
+    'catering':          'Catering',
+    'all catering':      'Catering',
+    'quick catering':    'Catering',
+    'specials':          'Specials',
+    'special orders':    'Specials',
+    'dartagnan':         'Specials',
+    'market place':      'Specials',
+    'gear':              'Specials',
+    'other':             'Other'
+  };
+  var tabOrder = ['Beef','Pork & Veal','Lamb','Poultry','Seafood','Deli','Sandwiches','Soups','Prepared','Catering','Specials','Other'];
+  function mapCat(c){ return catMap[(c||'').toLowerCase()] || 'Other'; }
+
+
   function slug(s){return (s||'').toLowerCase().replace(/\s*[&\/]\s*/g,'-').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');}
   function esc(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').slice(0,120);}
 
-  // Hide Behind the Counter section
   function hideBTC(){
     document.querySelectorAll('.mtab,.mpanel,.mgroup,.menu-tabs,.menu-tabs-wrap').forEach(function(el){
       var sec=el.closest('section')||el.closest('.page-section');
@@ -9675,7 +9724,6 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     });
   }
 
-  // Pexels fallback — ONLY for items with no Square photo
   var pexCache={};
   function loadPexels(name, imgEl){
     if(pexCache[name]){imgEl.src=pexCache[name];imgEl.style.display='';return;}
@@ -9688,44 +9736,45 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     }).catch(function(){});
   }
 
-  // Build filter tabs dynamically from Square categories
-  function buildFilters(categories){
+  function buildFilters(usedGroups){
     var filterEl=document.querySelector('.og-filter');
     if(!filterEl) return;
     var html='<button class="og-ftab active" data-filter="all">All Items</button>';
-    categories.forEach(function(cat){
-      html+='<button class="og-ftab" data-filter="'+esc(slug(cat))+'">'+esc(cat)+'</button>';
+    tabOrder.forEach(function(g){
+      if(usedGroups[g]) html+='<button class="og-ftab" data-filter="'+slug(g)+'">'+g+'</button>';
     });
     filterEl.innerHTML=html;
   }
 
-  // Build Order Online grid
   function buildOG(data){
     var grid=document.querySelector('.og-grid');
     if(!grid) return;
     var g=data.grouped||{};
-    var categories=Object.keys(g).sort();
-    var items=[];
-    categories.forEach(function(cat){(g[cat]||[]).forEach(function(i){items.push({i:i,cat:cat});});});
+    var items=[], usedGroups={};
+    Object.keys(g).forEach(function(cat){
+      (g[cat]||[]).forEach(function(i){
+        var group=mapCat(cat);
+        usedGroups[group]=true;
+        items.push({i:i,cat:cat,group:group});
+      });
+    });
     if(!items.length) return;
 
-    // Rebuild filter tabs with real Square categories
-    buildFilters(categories);
+    buildFilters(usedGroups);
 
     var html='';
     items.forEach(function(e){
-      var i=e.i, cat=e.cat, ck=slug(cat);
+      var i=e.i, group=e.group, ck=slug(group);
       var price=i.price?'$'+parseFloat(i.price).toFixed(2):'';
       var unit=price?'/LB':'';
-      // Photo priority: Square photo first, Pexels only as fallback
       var imgTag=i.imageUrl
         ?'<img src="'+i.imageUrl+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" loading="lazy">'
-        :'<img data-pexels="'+esc(i.name)+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none" loading="lazy"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0ede8;position:absolute;inset:0"><span style="font-size:11px;color:#aaa;text-align:center;padding:8px">'+esc(cat)+'</span></div>';
+        :'<img data-pexels="'+esc(i.name)+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none" loading="lazy"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0ede8;position:absolute;inset:0"><span style="font-size:11px;color:#aaa;text-align:center;padding:8px">'+esc(group)+'</span></div>';
 
       html+='<div class="og-card" data-cat="'+esc(ck)+'">';
       html+='<div class="og-vis" style="position:relative;overflow:hidden;cursor:pointer" onclick="bvmmOpen(\''+esc(i.id)+'\')">';
       html+=imgTag;
-      html+='<span class="og-cat-chip" style="position:absolute;top:10px;left:10px;background:rgba(26,26,26,0.75);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px">'+esc(cat)+'</span>';
+      html+='<span style="position:absolute;top:10px;left:10px;background:rgba(26,26,26,0.75);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px">'+esc(group)+'</span>';
       html+='</div>';
       html+='<div class="og-body" style="cursor:pointer" onclick="bvmmOpen(\''+esc(i.id)+'\')">';
       html+='<div class="og-name">'+esc(i.name)+'</div>';
@@ -9736,12 +9785,10 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     });
     grid.innerHTML=html;
 
-    // Lazy-load Pexels for items with no Square photo
     grid.querySelectorAll('[data-pexels]').forEach(function(img){
       loadPexels(img.getAttribute('data-pexels'), img);
     });
 
-    // Wire new filter tabs
     document.querySelectorAll('.og-ftab').forEach(function(btn){
       btn.onclick=function(){
         document.querySelectorAll('.og-ftab').forEach(function(b){b.classList.remove('active');});
@@ -9756,12 +9803,11 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     if(first) first.click();
   }
 
-  // Item popup
   window.bvmmOpen=function(id){
     if(!sqData) return;
-    var found=null, foundCat='';
+    var found=null, foundCat='', foundGroup='';
     var g=sqData.grouped||{};
-    Object.keys(g).forEach(function(cat){g[cat].forEach(function(i){if(i.id===id){found=i;foundCat=cat;}});});
+    Object.keys(g).forEach(function(cat){g[cat].forEach(function(i){if(i.id===id){found=i;foundCat=cat;foundGroup=mapCat(cat);}});});
     if(!found) return;
     var existing=document.getElementById('bvmm-popup');
     if(existing) existing.remove();
@@ -9776,7 +9822,7 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
       +img
       +'<div style="padding:20px 20px 32px;overflow-y:auto">'
       +'<button onclick="document.getElementById(\'bvmm-popup\').remove()" style="float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#999;margin-top:-4px">&times;</button>'
-      +'<div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">'+esc(foundCat)+'</div>'
+      +'<div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">'+esc(foundGroup)+'</div>'
       +'<div style="font-size:22px;font-weight:800;color:#1a1a1a;margin-bottom:8px;line-height:1.2">'+esc(found.name)+'</div>'
       +(found.desc?'<div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px">'+esc(found.desc)+'</div>':'')
       +'<div style="font-size:20px;font-weight:700;color:#8B6914;margin-bottom:24px">'+(price?'$'+price.toFixed(2)+' /lb':'Price on request')+'</div>'
