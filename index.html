@@ -9679,13 +9679,37 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
   var sqData=null;
   var isAdmin=false;
 
+  // Detect admin from DOM or session
+  try{
+    var _t=sessionStorage.getItem('bvmm_token');
+    if(_t) isAdmin=true;
+    else if(document.querySelector('.admin-bar')||document.body.classList.contains('admin-active')) isAdmin=true;
+  }catch(e){}
+
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').slice(0,200);}
   function escQ(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").slice(0,200);}
+
+  function getToken(cb){
+    var t=sessionStorage.getItem('bvmm_token');
+    if(t){cb(t);return;}
+    // Auto-login using password prompt
+    var pw=prompt('Enter your admin password to save:');
+    if(!pw){cb(null);return;}
+    fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'login',password:pw})
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.ok&&d.token){sessionStorage.setItem('bvmm_token',d.token);cb(d.token);}
+      else{alert('Wrong password');cb(null);}
+    }).catch(function(){cb(null);});
+  }
 
   function hideBTC(){
     document.querySelectorAll('.mtab,.mpanel,.mgroup,.menu-tabs,.menu-tabs-wrap').forEach(function(el){
@@ -9817,7 +9841,7 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
       +'<button onclick="document.getElementById(\'bvmm-popup\').remove()" style="float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#aaa;margin-top:-4px">&times;</button>'
       +'<p style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 6px">'+esc(foundGroup)+'</p>'
       +'<p style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px;line-height:1.2">'+esc(found.name)+'</p>'
-      +(found.desc?'<p style="font-size:14px;color:#666;line-height:1.6;margin:0 0 16px">'+esc(found.desc)+'</p>':'')
+      +(found.desc&&found.desc!=='NEEDS_REVIEW'?'<p style="font-size:14px;color:#666;line-height:1.6;margin:0 0 16px">'+esc(found.desc)+'</p>':'')
       +'<p style="font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 20px">'+(bvmmCurrentPrice?'$'+bvmmCurrentPrice.toFixed(2)+' /lb':'Price on request')+'</p>'
       +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">'
       +'<div style="display:flex;align-items:center;border:2px solid #e0e0e0;border-radius:40px">'
@@ -9853,17 +9877,18 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
       var reader=new FileReader();
       reader.onload=function(e){
         var b64=e.target.result.split(',')[1];
-        var token=sessionStorage.getItem('bvmm_token')||'';
-        fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({action:'square-img-upload',itemId:id,imageName:name,imageBase64:b64,imageMime:file.type||'image/jpeg',token:token})
-        }).then(function(r){return r.json();}).then(function(d){
-          if(d.ok){
-            if(sqData) Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id&&d.imageUrl)i.imageUrl=d.imageUrl;});});
-            buildOG(sqData);
-            alert('Photo updated!');
-          } else {alert('Error: '+(d.error||'Unknown'));}
-        }).catch(function(e){alert('Upload failed: '+e.message);});
+        getToken(function(token){
+          if(!token) return;
+          fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'square-img-upload',itemId:id,imageName:name,imageBase64:b64,imageMime:file.type||'image/jpeg',token:token})
+          }).then(function(r){return r.json();}).then(function(d){
+            if(d.ok){
+              if(sqData) Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){if(i.id===id&&d.imageUrl)i.imageUrl=d.imageUrl;});});
+              buildOG(sqData);alert('Photo updated!');
+            } else {alert('Error: '+(d.error||'Unknown'));}
+          }).catch(function(e){alert('Upload failed: '+e.message);});
+        });
       };
       reader.readAsDataURL(file);
     };
@@ -9875,6 +9900,7 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     var modal=document.createElement('div');
     modal.id='bvmm-edit-modal';
     modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:20px';
+    var cleanDesc=(desc==='NEEDS_REVIEW'?'':desc);
     modal.innerHTML='<div style="background:#fff;border-radius:16px;width:100%;max-width:460px;padding:24px">'
       +'<p style="font-size:17px;font-weight:700;margin:0 0 16px">Edit Item</p>'
       +'<label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Item Name</label>'
@@ -9882,10 +9908,10 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
       +'<label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Price per lb ($)</label>'
       +'<input id="bvmm-edit-price" type="number" step="0.01" value="'+esc(price)+'" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;box-sizing:border-box">'
       +'<label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Description</label>'
-      +'<textarea id="bvmm-edit-desc" rows="3" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box">'+esc(desc)+'</textarea>'
+      +'<textarea id="bvmm-edit-desc" rows="3" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box">'+esc(cleanDesc)+'</textarea>'
       +'<div style="display:flex;gap:10px;margin-top:16px">'
       +'<button onclick="document.getElementById(\'bvmm-edit-modal\').remove()" style="flex:1;padding:12px;border:1.5px solid #ddd;background:#fff;border-radius:8px;font-size:15px;cursor:pointer">Cancel</button>'
-      +'<button onclick="bvmmSaveItem(\''+escQ(id)+'\')" style="flex:1;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">Save to Square</button>'
+      +'<button id="bvmm-save-btn" onclick="bvmmSaveItem(\''+escQ(id)+'\')" style="flex:1;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">Save to Square</button>'
       +'</div></div>';
     document.body.appendChild(modal);
     modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
@@ -9896,21 +9922,23 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     var priceVal=document.getElementById('bvmm-edit-price').value;
     var descVal=document.getElementById('bvmm-edit-desc').value;
     var priceCents=priceVal?Math.round(parseFloat(priceVal)*100):null;
-    var token=sessionStorage.getItem('bvmm_token')||'';
-    var btn=document.querySelector('#bvmm-edit-modal button:last-child');
+    var btn=document.getElementById('bvmm-save-btn');
     if(btn)btn.textContent='Saving...';
-    fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'square-item-update',id:id,name:nameVal,description:descVal,priceCents:priceCents,token:token})
-    }).then(function(r){return r.json();}).then(function(d){
-      if(d.ok){
-        if(sqData) Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){
-          if(i.id===id){if(nameVal)i.name=nameVal;if(priceCents)i.price=(priceCents/100).toFixed(2);i.desc=descVal;}
-        });});
-        var modal=document.getElementById('bvmm-edit-modal');if(modal)modal.remove();
-        buildOG(sqData);
-      } else {alert('Error: '+(d.error||'Unknown'));}
-    }).catch(function(e){alert('Save failed: '+e.message);});
+    getToken(function(token){
+      if(!token){if(btn)btn.textContent='Save to Square';return;}
+      fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'square-item-update',id:id,name:nameVal,description:descVal,priceCents:priceCents,token:token})
+      }).then(function(r){return r.json();}).then(function(d){
+        if(d.ok){
+          if(sqData) Object.keys(sqData.grouped||{}).forEach(function(cat){(sqData.grouped[cat]||[]).forEach(function(i){
+            if(i.id===id){if(nameVal)i.name=nameVal;if(priceCents)i.price=(priceCents/100).toFixed(2);i.desc=descVal;}
+          });});
+          var modal=document.getElementById('bvmm-edit-modal');if(modal)modal.remove();
+          buildOG(sqData);
+        } else {if(btn)btn.textContent='Save to Square';alert('Error: '+(d.error||'Unknown'));}
+      }).catch(function(e){if(btn)btn.textContent='Save to Square';alert('Save failed: '+e.message);});
+    });
   };
 
   function rerender(){
@@ -9918,8 +9946,6 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     if(sqData) buildOG(sqData);
     setTimeout(function(){document.querySelectorAll('.mgroup').forEach(function(g){g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';});},400);
   }
-
-  try{if(sessionStorage.getItem('bvmm_token'))isAdmin=true;}catch(e){}
 
   var _f=window.fetch;
   window.fetch=function(){
@@ -9929,11 +9955,16 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
       if(b){
         var parsed=JSON.parse(b);
         if(parsed.action==='square-catalog'){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok){sqData=d;setTimeout(rerender,150);}}).catch(function(){});}
-        if(parsed.action==='login'&&parsed.password){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok&&d.token){isAdmin=true;setTimeout(function(){if(sqData)buildOG(sqData);},200);}}).catch(function(){});}
+        if(parsed.action==='login'&&parsed.password){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok&&d.token){sessionStorage.setItem('bvmm_token',d.token);isAdmin=true;setTimeout(function(){if(sqData)buildOG(sqData);},200);}}).catch(function(){});}
       }
     }catch(e){}
     return p;
   };
+
+  // Check admin bar after DOM loads
+  document.addEventListener('DOMContentLoaded',function(){
+    try{if(document.querySelector('.admin-bar')||document.querySelector('#bvmm-admin')){isAdmin=true;}}catch(e){}
+  });
 })();
 
 </script>
