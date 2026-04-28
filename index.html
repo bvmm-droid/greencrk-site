@@ -9651,18 +9651,66 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
   var sqData=null;
+
+  // ── Category key ──────────────────────────────────────────────
   function catKey(c){
     c=(c||'').toLowerCase();
     if(c.indexOf('beef')>-1) return 'beef';
     if(c.indexOf('pork')>-1||c.indexOf('veal')>-1||c.indexOf('lamb')>-1) return 'pork';
     if(c.indexOf('chicken')>-1||c.indexOf('poultry')>-1||c.indexOf('turkey')>-1) return 'poultry';
     if(c.indexOf('seafood')>-1||c.indexOf('fish')>-1||c.indexOf('shellfish')>-1) return 'seafood';
-    return 'prepared';
+    if(c.indexOf('sandwich')>-1||c.indexOf('deli')>-1) return 'deli';
+    if(c.indexOf('soup')>-1) return 'prepared';
+    if(c.indexOf('catering')>-1) return 'prepared';
+    if(c.indexOf('prepared')>-1) return 'prepared';
+    return 'other';
   }
-  function esc(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').slice(0,100);}
+
+  function esc(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').slice(0,120);}
+
+  // ── Hide Behind the Counter section entirely ──────────────────
+  function hideBTC(){
+    // .menu-section or section containing .mtab tabs
+    document.querySelectorAll('.menu-section,.btc-section,.showcase-section').forEach(function(el){el.style.display='none';});
+    // Hide any section whose heading contains "behind the counter" or "butcher shop"
+    document.querySelectorAll('section,div').forEach(function(el){
+      var h=el.querySelector('h1,h2,h3,h4');
+      if(!h) return;
+      var t=h.textContent.toLowerCase();
+      if((t.indexOf('behind')>-1&&t.indexOf('counter')>-1)||(t.indexOf('butcher')>-1&&t.indexOf('shop')>-1)){
+        el.style.display='none';
+      }
+    });
+    // Also hide the tab-based menu panel area
+    var tabArea=document.querySelector('.menu-tabs-wrap,.menu-panel-wrap,.btc-wrap');
+    if(tabArea) tabArea.style.display='none';
+    // Hide mgroup/mtab sections
+    document.querySelectorAll('.mtab,.mpanel,.mgroup,.menu-tabs').forEach(function(el){
+      var parent=el.closest('section');
+      if(parent) parent.style.display='none';
+    });
+  }
+
+  // ── Pexels fallback for missing images ────────────────────────
+  var pexelsCache={};
+  function getPexelsPhoto(name, cb){
+    if(pexelsCache[name]){cb(pexelsCache[name]);return;}
+    var worker='https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
+    fetch(worker,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'pexels',query:name+' food meat',per_page:1})
+    }).then(function(r){return r.json();}).then(function(d){
+      var url=d.ok&&d.photos&&d.photos[0]?d.photos[0].src.medium:null;
+      pexelsCache[name]=url;
+      cb(url);
+    }).catch(function(){cb(null);});
+  }
+
+  // ── Build Order Online grid ───────────────────────────────────
   function buildOG(data){
     var grid=document.querySelector('.og-grid');
     if(!grid) return;
@@ -9670,22 +9718,44 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     var items=[];
     Object.keys(g).forEach(function(cat){(g[cat]||[]).forEach(function(i){items.push({i:i,cat:cat});});});
     if(!items.length) return;
+
     var html='';
     items.forEach(function(e){
       var i=e.i,cat=e.cat,ck=catKey(cat);
       var price=i.price?'$'+parseFloat(i.price).toFixed(2):'';
       var unit=price?'/LB':'';
-      html+='<div class="og-card" data-cat="'+ck+'" onclick="openOrderSheet(\''+esc(i.name)+'\','+( parseFloat(i.price)||0)+',\''+esc(i.desc||'')+'\',\''+esc(cat)+'\')">';
-      html+='<div class="og-vis og-art-'+ck+'" style="position:relative;overflow:hidden">';
-      if(i.imageUrl) html+='<img src="'+i.imageUrl+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" loading="lazy">';
+      var imgHtml=i.imageUrl
+        ?'<img src="'+i.imageUrl+'" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" loading="lazy">'
+        :'<div class="og-vis-placeholder" data-pexels="'+esc(i.name)+'" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0ede8"><span style="font-size:11px;color:#999;text-align:center;padding:8px">'+esc(cat)+'</span></div>';
+      html+='<div class="og-card" data-cat="'+ck+'" data-id="'+esc(i.id)+'" data-name="'+esc(i.name)+'" data-price="'+(i.price||'')+'" data-cat-label="'+esc(cat)+'">';
+      html+='<div class="og-vis og-art-'+ck+'" style="position:relative;overflow:hidden;cursor:pointer" onclick="bvmmOpenItem(\''+esc(i.id)+'\')">';
+      html+=imgHtml;
       html+='<span class="og-cat-chip chip-'+ck+'">'+esc(cat)+'</span>';
-      html+='</div><div class="og-body"><div class="og-name">'+esc(i.name)+'</div>';
+      html+='</div>';
+      html+='<div class="og-body" style="cursor:pointer" onclick="bvmmOpenItem(\''+esc(i.id)+'\')">';
+      html+='<div class="og-name">'+esc(i.name)+'</div>';
       if(i.desc) html+='<div class="og-desc">'+esc(i.desc)+'</div>';
       html+='<div class="og-foot"><span class="og-price">'+price+'<span class="og-unit">'+unit+'</span></span>';
-      html+='<button class="og-add" onclick="event.stopPropagation();openOrderSheet(\''+esc(i.name)+'\','+( parseFloat(i.price)||0)+',\''+esc(i.desc||'')+'\',\''+esc(cat)+'\')">+</button>';
+      html+='<button class="og-add" onclick="event.stopPropagation();bvmmOpenItem(\''+esc(i.id)+'\')">+</button>';
       html+='</div></div></div>';
     });
     grid.innerHTML=html;
+
+    // Lazy-load Pexels for placeholder cards
+    grid.querySelectorAll('[data-pexels]').forEach(function(el){
+      var name=el.getAttribute('data-pexels');
+      getPexelsPhoto(name,function(url){
+        if(!url) return;
+        var img=document.createElement('img');
+        img.src=url;
+        img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0';
+        img.loading='lazy';
+        el.parentNode.insertBefore(img,el);
+        el.remove();
+      });
+    });
+
+    // Wire filters
     document.querySelectorAll('.og-ftab').forEach(function(btn){
       btn.onclick=function(){
         document.querySelectorAll('.og-ftab').forEach(function(b){b.classList.remove('active');});
@@ -9699,11 +9769,83 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     var at=document.querySelector('.og-ftab.active')||document.querySelector('.og-ftab');
     if(at) at.click();
   }
+
+  // ── Item popup (Square-style) ─────────────────────────────────
+  window.bvmmOpenItem=function(id){
+    if(!sqData) return;
+    var found=null;
+    var foundCat='';
+    var g=sqData.grouped||{};
+    Object.keys(g).forEach(function(cat){
+      g[cat].forEach(function(i){if(i.id===id){found=i;foundCat=cat;}});
+    });
+    if(!found) return;
+
+    var price=found.price?parseFloat(found.price):0;
+    var existing=document.getElementById('bvmm-popup');
+    if(existing) existing.remove();
+
+    var pop=document.createElement('div');
+    pop.id='bvmm-popup';
+    pop.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center';
+    pop.innerHTML='<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:24px;position:relative;max-height:90vh;overflow-y:auto">'
+      +'<button onclick="document.getElementById(\'bvmm-popup\').remove()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#666">&times;</button>'
+      +(found.imageUrl?'<img src="'+found.imageUrl+'" style="width:100%;height:200px;object-fit:cover;border-radius:12px;margin-bottom:16px">':'')
+      +'<div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">'+esc(foundCat)+'</div>'
+      +'<div style="font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:8px">'+esc(found.name)+'</div>'
+      +(found.desc?'<div style="font-size:14px;color:#666;margin-bottom:16px;line-height:1.5">'+esc(found.desc)+'</div>':'')
+      +'<div style="font-size:18px;font-weight:700;color:#8B6914;margin-bottom:20px">'+(price?'$'+price.toFixed(2)+' /lb':'Market price')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
+      +'<div style="display:flex;align-items:center;border:1.5px solid #ddd;border-radius:30px;overflow:hidden">'
+      +'<button onclick="bvmmQty(-1)" style="width:40px;height:40px;border:none;background:none;font-size:20px;cursor:pointer;color:#333">−</button>'
+      +'<span id="bvmm-qty" style="min-width:32px;text-align:center;font-weight:600;font-size:16px">1</span>'
+      +'<button onclick="bvmmQty(1)" style="width:40px;height:40px;border:none;background:none;font-size:20px;cursor:pointer;color:#333">+</button>'
+      +'</div>'
+      +'<span style="font-size:13px;color:#888">lbs</span>'
+      +'</div>'
+      +'<div style="font-size:13px;color:#666;margin-bottom:20px">Subtotal: <strong id="bvmm-subtotal">'+(price?'$'+price.toFixed(2):'—')+'</strong></div>'
+      +'<button onclick="bvmmAddToOrder(\''+esc(found.id)+'\',\''+esc(found.name)+'\','+price+')" style="width:100%;padding:16px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">Add to Order</button>'
+      +'</div>';
+    document.body.appendChild(pop);
+    pop.addEventListener('click',function(e){if(e.target===pop) pop.remove();});
+  };
+
+  var _qty=1;
+  window.bvmmQty=function(delta){
+    _qty=Math.max(1,Math.min(99,_qty+delta));
+    var el=document.getElementById('bvmm-qty');
+    if(el) el.textContent=_qty;
+    // Update subtotal
+    var priceEl=document.querySelector('#bvmm-popup [style*="8B6914"]');
+    if(priceEl){
+      var p=parseFloat(priceEl.textContent.replace(/[^0-9.]/g,''))||0;
+      var s=document.getElementById('bvmm-subtotal');
+      if(s&&p) s.textContent='$'+(p*_qty).toFixed(2);
+    }
+  };
+
+  window.bvmmAddToOrder=function(id,name,price){
+    _qty=1; // reset
+    var pop=document.getElementById('bvmm-popup');
+    if(pop) pop.remove();
+    // Hand off to existing order sheet
+    if(typeof openOrderSheet==='function'){
+      openOrderSheet(name,price,'','');
+    }
+  };
+
+  // ── Main rerender ─────────────────────────────────────────────
   function rerender(){
-    var mt=document.querySelector('.mtab.active'); if(mt) mt.click();
+    hideBTC();
     if(sqData) buildOG(sqData);
-    setTimeout(function(){document.querySelectorAll('.mgroup').forEach(function(g){g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';});},400);
+    setTimeout(function(){
+      document.querySelectorAll('.mgroup').forEach(function(g){
+        g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';
+      });
+    },400);
   }
+
+  // ── Intercept fetch ───────────────────────────────────────────
   var _f=window.fetch;
   window.fetch=function(){
     var p=_f.apply(this,arguments);
@@ -9717,7 +9859,11 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     }catch(e){}
     return p;
   };
+
+  // Reset qty when popup opens
+  document.addEventListener('click',function(){_qty=1;},true);
 })();
+
 </script>
 </body>
 </html>
