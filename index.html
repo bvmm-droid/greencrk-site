@@ -9622,5 +9622,26 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 <!-- ═══ END PHASE A ═══ -->
 
+
+<script id="_bvmm_race_fix">
+(function(){
+  var _f=window.fetch;
+  window.fetch=function(){
+    var p=_f.apply(this,arguments);
+    try{
+      var b=arguments[1]&&arguments[1].body;
+      if(b&&JSON.parse(b).action==='square-catalog'){
+        p.then(function(r){return r.clone().json();}).then(function(d){
+          if(d&&d.ok){setTimeout(function(){
+            var t=document.querySelector('.mtab.active');
+            if(t)t.click();
+          },120);}
+        }).catch(function(){});
+      }
+    }catch(e){}
+    return p;
+  };
+})();
+</script>
 </body>
 </html>
