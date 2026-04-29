@@ -1056,6 +1056,18 @@ async function doFixRaceCondition(env) {
   function setupAdminDeploy(){
     var nav=findAdminNav();
     if(!nav)return;
+    // Make nav scrollable on mobile
+    nav.style.overflowX='auto';
+    nav.style.flexWrap='nowrap';
+    nav.style.webkitOverflowScrolling='touch';
+    nav.style.scrollbarWidth='none';
+    nav.style.msOverflowStyle='none';
+    // Hide scrollbar visually but keep scroll
+    if(!document.getElementById('bvmm-nav-scroll-css')){
+      var ns=document.createElement('style');ns.id='bvmm-nav-scroll-css';
+      ns.textContent='#bvmm-pl-label,#bvmm-wd-label{flex-shrink:0}';
+      document.head.appendChild(ns);
+    }
 
     // ── Push Live (index.html) ──
     if(!document.getElementById('bvmm-pl-label')){
