@@ -845,14 +845,13 @@ async function doFixRaceCondition(env) {
   const fixScript = `
 <script id="_bvmm_race_fix">
 (function(){
-  // Hide item rows during Square load to prevent flash of hardcoded content
+  // Only hide .mgroup (item cards) during Square load — NOT .mpanel (popups)
   var _s=document.createElement('style');
-  _s.textContent='.bvmm-sq-loading .mgroup{visibility:hidden}.bvmm-sq-loading .mpanel{visibility:hidden}';
+  _s.textContent='.bvmm-sq-loading .mgroup{visibility:hidden}';
   document.head.appendChild(_s);
   document.documentElement.classList.add('bvmm-sq-loading');
   var _shown=false;
   function showAll(){if(_shown)return;_shown=true;document.documentElement.classList.remove('bvmm-sq-loading');}
-  // Failsafe: always show after 5s
   setTimeout(showAll,5000);
   var _f=window.fetch;
   window.fetch=function(){
@@ -865,11 +864,9 @@ async function doFixRaceCondition(env) {
           p.then(function(r){return r.clone().json();}).then(function(d){
             if(d&&d.ok){
               setTimeout(function(){
-                // Re-click active tab to render fresh Square data into original layout
                 var active=document.querySelector('.mtab.active');
                 if(active)active.click();
                 showAll();
-                // Hide empty category groups
                 setTimeout(function(){
                   document.querySelectorAll('.mgroup').forEach(function(g){
                     g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';
