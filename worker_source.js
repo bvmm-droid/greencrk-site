@@ -1126,6 +1126,17 @@ async function doFixRaceCondition(env) {
       }
       document.getElementById('bvmm-wd-input').onchange=onWdChange;
     }
+
+    // greencrk.com quick link
+    if(!document.getElementById('bvmm-site-link')){
+      var siteLink=document.createElement('a');
+      siteLink.id='bvmm-site-link';
+      siteLink.href='https://greencrk.com';
+      siteLink.target='_blank';
+      siteLink.style.cssText='cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;font-weight:600;color:#60a5fa;user-select:none;white-space:nowrap;text-decoration:none';
+      siteLink.textContent='View Site';
+      nav.appendChild(siteLink);
+    }
   }
   setTimeout(setupAdminDeploy,1000);
   setTimeout(setupAdminDeploy,3000);
