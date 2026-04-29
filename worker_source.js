@@ -1024,9 +1024,13 @@ async function doFixRaceCondition(env) {
   // ── Inject Push Live + Deploy Worker into admin top nav ─────────────────
   function findAdminNav(){
     var found=null;
-    document.querySelectorAll('button,a,[role="button"]').forEach(function(el){
+    document.querySelectorAll('button,a,[role="button"],span,div').forEach(function(el){
       var txt=(el.textContent||'').trim();
-      if(txt==='Cache'||txt==='Tools'){found=el.parentElement;}
+      if(txt.includes('Cache')||txt.includes('Tools')||txt.includes('Sections')||txt.includes('Links')){
+        var par=el.parentElement;
+        // Make sure parent has multiple children (it's a nav bar, not a single item)
+        if(par&&par.children.length>=2)found=par;
+      }
     });
     return found;
   }
