@@ -9735,6 +9735,8 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
   var WORKER='https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
@@ -9874,130 +9876,78 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     })
     .catch(function(e){alert('Error: '+e.message);if(btn){btn.textContent='Checkout →';btn.disabled=false;}});
   };
-  // ── Inject Push Live + Deploy Worker into admin top nav ─────────────────
-  function findAdminNav(){
-    var found=null;
-    document.querySelectorAll('button,a,[role="button"],span,div').forEach(function(el){
-      var txt=(el.textContent||'').trim();
-      if(txt.includes('Cache')||txt.includes('Tools')||txt.includes('Sections')||txt.includes('Links')){
-        var par=el.parentElement;
-        // Make sure parent has multiple children (it's a nav bar, not a single item)
-        if(par&&par.children.length>=2)found=par;
-      }
-    });
-    return found;
-  }
+  // ── Simple fixed admin toolbar ────────────────────────────────────────
+  function bvmmAdminBar(){
+    if(document.getElementById('bvmm-abar'))return;
+    var hasToken=false;
+    try{hasToken=!!sessionStorage.getItem('bvmm_token');}catch(_){}
+    var isAdmin=window.location.search.indexOf('admin')>-1||hasToken;
+    if(!isAdmin)return;
+    var bar=document.createElement('div');
+    bar.id='bvmm-abar';
+    bar.style.cssText='position:fixed;top:44px;left:0;right:0;z-index:99999;background:#1a1200;display:flex;align-items:center;gap:4px;padding:4px 8px;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;box-shadow:0 2px 8px rgba(0,0,0,.4)';
 
-  function makeNavBtn(id,icon,label,color){
-    var lbl=document.createElement('label');
-    lbl.id=id;
-    lbl.style.cssText='cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;font-weight:600;color:'+color+';user-select:none;white-space:nowrap';
-    lbl.setAttribute('data-default-html', icon+' '+label);
-    lbl.innerHTML=icon+' '+label;
-    return lbl;
-  }
-
-  function setNavBtnState(lbl,html,color,disabled){
-    lbl.innerHTML=html;
-    lbl.style.color=color;
-    lbl.style.opacity=disabled?'.5':'1';
-    lbl.style.pointerEvents=disabled?'none':'';
-  }
-
-  function resetNavBtn(lbl,inputId,onChangeFn){
-    lbl.innerHTML=lbl.getAttribute('data-default-html')+'<input id="'+inputId+'" type="file" style="display:none">';
-    lbl.style.color=lbl.style.color;lbl.style.opacity='1';lbl.style.pointerEvents='';
-    document.getElementById(inputId).onchange=onChangeFn;
-  }
-
-  function setupAdminDeploy(){
-    var nav=findAdminNav();
-    if(!nav)return;
-    // Make nav scrollable on mobile
-    nav.style.overflowX='auto';
-    nav.style.flexWrap='nowrap';
-    nav.style.webkitOverflowScrolling='touch';
-    nav.style.scrollbarWidth='none';
-    nav.style.msOverflowStyle='none';
-    // Hide scrollbar visually but keep scroll
-    if(!document.getElementById('bvmm-nav-scroll-css')){
-      var ns=document.createElement('style');ns.id='bvmm-nav-scroll-css';
-      ns.textContent='#bvmm-pl-label,#bvmm-wd-label{flex-shrink:0}';
-      document.head.appendChild(ns);
+    function mkBtn(id,label,color){
+      var lbl=document.createElement('label');
+      lbl.id=id;
+      lbl.style.cssText='cursor:pointer;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;color:'+color+';border:1px solid '+color+';background:transparent;display:inline-block;flex-shrink:0';
+      lbl.textContent=label;
+      return lbl;
     }
 
-    // ── Push Live (index.html) ──
-    if(!document.getElementById('bvmm-pl-label')){
-      var plLbl=makeNavBtn('bvmm-pl-label','🚀','Push Live','#4ade80');
-      plLbl.innerHTML+=('<input id="bvmm-pl-input" type="file" accept=".html" style="display:none">');
-      nav.appendChild(plLbl);
-      function onPlChange(ev){
-        var file=ev.target.files[0];if(!file)return;
-        var reader=new FileReader();
-        reader.onload=function(e){
-          var token=null;try{token=sessionStorage.getItem('bvmm_token');}catch(_){}
-          if(!token){alert('Please log in to the admin panel first.');return;}
-          setNavBtnState(plLbl,'⏳ Pushing...','#facc15',true);
-          var b64=btoa(unescape(encodeURIComponent(e.target.result)));
-          fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({action:'admin-deploy',content:b64,token:token,force:false})
-          }).then(function(r){return r.json();}).then(function(d){
-            if(d.ok){
-              setNavBtnState(plLbl,'✔ Live!','#4ade80',false);
-              setTimeout(function(){resetNavBtn(plLbl,'bvmm-pl-input',onPlChange);plLbl.style.color='#4ade80';},3000);
-            } else {
-              alert('Push error: '+(d.error||'Unknown'));
-              resetNavBtn(plLbl,'bvmm-pl-input',onPlChange);plLbl.style.color='#4ade80';
-            }
-          }).catch(function(e){alert('Error: '+e.message);resetNavBtn(plLbl,'bvmm-pl-input',onPlChange);plLbl.style.color='#4ade80';});
-        };
-        reader.readAsText(file);ev.target.value='';
-      }
-      document.getElementById('bvmm-pl-input').onchange=onPlChange;
-    }
+    // Push Live button
+    var plBtn=mkBtn('bvmm-abar-pl','🚀 Push Live','#4ade80');
+    var plIn=document.createElement('input');plIn.type='file';plIn.accept='.html';plIn.style.display='none';
+    plBtn.appendChild(plIn);
+    plIn.onchange=function(ev){
+      var file=ev.target.files[0];if(!file)return;
+      var r=new FileReader();r.onload=function(e){
+        var token=null;try{token=sessionStorage.getItem('bvmm_token');}catch(_){}
+        if(!token){alert('Log in to admin first');return;}
+        plBtn.textContent='⏳ Pushing...';plBtn.style.pointerEvents='none';
+        fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'admin-deploy',content:btoa(unescape(encodeURIComponent(e.target.result))),token:token,force:false})
+        }).then(function(r){return r.json();}).then(function(d){
+          plBtn.textContent=d.ok?'✅ Live!':'❌ Error';
+          setTimeout(function(){plBtn.textContent='🚀 Push Live';plBtn.style.pointerEvents='';},3000);
+        }).catch(function(){plBtn.textContent='❌ Error';setTimeout(function(){plBtn.textContent='🚀 Push Live';plBtn.style.pointerEvents='';},3000);});
+      };r.readAsText(file);ev.target.value='';
+    };
+    bar.appendChild(plBtn);
 
-    // ── Deploy Worker (.js) ──
-    if(!document.getElementById('bvmm-wd-label')){
-      var wdLbl=makeNavBtn('bvmm-wd-label','⚙️','Worker','#e8a83e');
-      wdLbl.innerHTML+=('<input id="bvmm-wd-input" type="file" accept=".js" style="display:none">');
-      nav.appendChild(wdLbl);
-      function onWdChange(ev){
-        var file=ev.target.files[0];if(!file)return;
-        var reader=new FileReader();
-        reader.onload=function(e){
-          var token=null;try{token=sessionStorage.getItem('bvmm_token');}catch(_){}
-          setNavBtnState(wdLbl,'⏳ Deploying...','#facc15',true);
-          fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({action:'cf-deploy-worker',script:e.target.result,token:token})
-          }).then(function(r){return r.json();}).then(function(d){
-            if(d.ok){
-              setNavBtnState(wdLbl,'✔ Deployed! Fixing...','#3dd68c',false);
-              setTimeout(function(){resetNavBtn(wdLbl,'bvmm-wd-input',onWdChange);wdLbl.style.color='#e8a83e';},5000);
-            } else {
-              alert('Deploy error: '+(d.error||'Unknown'));
-              resetNavBtn(wdLbl,'bvmm-wd-input',onWdChange);wdLbl.style.color='#e8a83e';
-            }
-          }).catch(function(e){alert('Error: '+e.message);resetNavBtn(wdLbl,'bvmm-wd-input',onWdChange);wdLbl.style.color='#e8a83e';});
-        };
-        reader.readAsText(file);ev.target.value='';
-      }
-      document.getElementById('bvmm-wd-input').onchange=onWdChange;
-    }
+    // Deploy Worker button
+    var wkBtn=mkBtn('bvmm-abar-wk','⚙️ Worker','#f59e0b');
+    var wkIn=document.createElement('input');wkIn.type='file';wkIn.accept='.js';wkIn.style.display='none';
+    wkBtn.appendChild(wkIn);
+    wkIn.onchange=function(ev){
+      var file=ev.target.files[0];if(!file)return;
+      var r=new FileReader();r.onload=function(e){
+        var token=null;try{token=sessionStorage.getItem('bvmm_token');}catch(_){}
+        wkBtn.textContent='⏳ Deploying...';wkBtn.style.pointerEvents='none';
+        fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'cf-deploy-worker',script:e.target.result,token:token})
+        }).then(function(r){return r.json();}).then(function(d){
+          wkBtn.textContent=d.ok?'✅ Deployed!':'❌ Error';
+          setTimeout(function(){wkBtn.textContent='⚙️ Worker';wkBtn.style.pointerEvents='';},4000);
+        }).catch(function(){wkBtn.textContent='❌ Error';setTimeout(function(){wkBtn.textContent='⚙️ Worker';wkBtn.style.pointerEvents='';},3000);});
+      };r.readAsText(file);ev.target.value='';
+    };
+    bar.appendChild(wkBtn);
 
-    // greencrk.com quick link
-    if(!document.getElementById('bvmm-site-link')){
-      var siteLink=document.createElement('a');
-      siteLink.id='bvmm-site-link';
-      siteLink.href='https://greencrk.com';
-      siteLink.target='_blank';
-      siteLink.style.cssText='cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;font-weight:600;color:#60a5fa;user-select:none;white-space:nowrap;text-decoration:none';
-      siteLink.textContent='View Site';
-      nav.appendChild(siteLink);
-    }
+    // View Site link
+    var siteA=document.createElement('a');
+    siteA.href='https://greencrk.com';siteA.target='_blank';
+    siteA.style.cssText='cursor:pointer;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;color:#60a5fa;border:1px solid #60a5fa;background:transparent;display:inline-block;flex-shrink:0;text-decoration:none';
+    siteA.textContent='🔗 View Site';
+    bar.appendChild(siteA);
+
+    document.body.appendChild(bar);
   }
-  setTimeout(setupAdminDeploy,1000);
-  setTimeout(setupAdminDeploy,3000);
+  setTimeout(bvmmAdminBar,800);
+  // Re-check after login
+  var _origFetchAdmin=window.fetch;
 
+  var _f=window.fetch;
   var _f=window.fetch;
   window.fetch=function(){
     var p=_f.apply(this,arguments);
