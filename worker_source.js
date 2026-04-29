@@ -1021,51 +1021,100 @@ async function doFixRaceCondition(env) {
     })
     .catch(function(e){alert('Error: '+e.message);if(btn){btn.textContent='Checkout \u2192';btn.disabled=false;}});
   };
-  // ── Inject Deploy Worker into admin top nav ──────────────────────────────
-  function setupAdminDeploy(){
-    if(document.getElementById('bvmm-wd-label'))return;
-    // Find admin nav — look for element containing "Cache" and "Tools" buttons
+  // ── Inject Push Live + Deploy Worker into admin top nav ─────────────────
+  function findAdminNav(){
     var found=null;
     document.querySelectorAll('button,a,[role="button"]').forEach(function(el){
-      if((el.textContent||'').trim()==='Cache'||(el.textContent||'').trim()==='Tools'){
-        found=el.parentElement;
-      }
+      var txt=(el.textContent||'').trim();
+      if(txt==='Cache'||txt==='Tools'){found=el.parentElement;}
     });
-    if(!found)return;
-    var lbl=document.createElement('label');
-    lbl.id='bvmm-wd-label';
-    lbl.title='Deploy Worker (auto-fixes site)';
-    lbl.style.cssText='cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;font-weight:600;color:#e8a83e;user-select:none';
-    lbl.innerHTML='\u2699\ufe0f Deploy<input id="bvmm-wd-input" type="file" accept=".js" style="display:none">';
-    found.appendChild(lbl);
-    document.getElementById('bvmm-wd-input').onchange=function(ev){
-      var file=ev.target.files[0];if(!file)return;
-      var reader=new FileReader();
-      reader.onload=function(e){
-        var token=null;try{token=sessionStorage.getItem('bvmm_token');}catch(_){}
-        lbl.style.opacity='.5';lbl.style.pointerEvents='none';
-        fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({action:'cf-deploy-worker',script:e.target.result,token:token})
-        }).then(function(r){return r.json();}).then(function(d){
-          if(d.ok){
-            lbl.innerHTML='\u2714 Deployed! Fixing...<input id="bvmm-wd-input" type="file" accept=".js" style="display:none">';
-            lbl.style.color='#3dd68c';
-            setTimeout(function(){
-              lbl.innerHTML='\u2699\ufe0f Deploy<input id="bvmm-wd-input" type="file" accept=".js" style="display:none">';
-              lbl.style.color='#e8a83e';lbl.style.opacity='1';lbl.style.pointerEvents='';
-              document.getElementById('bvmm-wd-input').onchange=arguments.callee;
-            },4000);
-          } else {
-            alert('Deploy error: '+(d.error||'Unknown'));
-            lbl.style.opacity='1';lbl.style.pointerEvents='';
-          }
-        }).catch(function(e){alert('Error: '+e.message);lbl.style.opacity='1';lbl.style.pointerEvents='';});
-      };
-      reader.readAsText(file);
-      ev.target.value='';
-    };
+    return found;
   }
-  // Try now and again after DOM changes settle
+
+  function makeNavBtn(id,icon,label,color){
+    var lbl=document.createElement('label');
+    lbl.id=id;
+    lbl.style.cssText='cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;font-weight:600;color:'+color+';user-select:none;white-space:nowrap';
+    lbl.setAttribute('data-default-html', icon+' '+label);
+    lbl.innerHTML=icon+' '+label;
+    return lbl;
+  }
+
+  function setNavBtnState(lbl,html,color,disabled){
+    lbl.innerHTML=html;
+    lbl.style.color=color;
+    lbl.style.opacity=disabled?'.5':'1';
+    lbl.style.pointerEvents=disabled?'none':'';
+  }
+
+  function resetNavBtn(lbl,inputId,onChangeFn){
+    lbl.innerHTML=lbl.getAttribute('data-default-html')+'<input id="'+inputId+'" type="file" style="display:none">';
+    lbl.style.color=lbl.style.color;lbl.style.opacity='1';lbl.style.pointerEvents='';
+    document.getElementById(inputId).onchange=onChangeFn;
+  }
+
+  function setupAdminDeploy(){
+    var nav=findAdminNav();
+    if(!nav)return;
+
+    // ── Push Live (index.html) ──
+    if(!document.getElementById('bvmm-pl-label')){
+      var plLbl=makeNavBtn('bvmm-pl-label','\ud83d\ude80','Push Live','#4ade80');
+      plLbl.innerHTML+=('<input id="bvmm-pl-input" type="file" accept=".html" style="display:none">');
+      nav.appendChild(plLbl);
+      function onPlChange(ev){
+        var file=ev.target.files[0];if(!file)return;
+        var reader=new FileReader();
+        reader.onload=function(e){
+          var token=null;try{token=sessionStorage.getItem('bvmm_token');}catch(_){}
+          if(!token){alert('Please log in to the admin panel first.');return;}
+          setNavBtnState(plLbl,'\u23f3 Pushing...','#facc15',true);
+          var b64=btoa(unescape(encodeURIComponent(e.target.result)));
+          fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'admin-deploy',content:b64,token:token,force:false})
+          }).then(function(r){return r.json();}).then(function(d){
+            if(d.ok){
+              setNavBtnState(plLbl,'\u2714 Live!','#4ade80',false);
+              setTimeout(function(){resetNavBtn(plLbl,'bvmm-pl-input',onPlChange);plLbl.style.color='#4ade80';},3000);
+            } else {
+              alert('Push error: '+(d.error||'Unknown'));
+              resetNavBtn(plLbl,'bvmm-pl-input',onPlChange);plLbl.style.color='#4ade80';
+            }
+          }).catch(function(e){alert('Error: '+e.message);resetNavBtn(plLbl,'bvmm-pl-input',onPlChange);plLbl.style.color='#4ade80';});
+        };
+        reader.readAsText(file);ev.target.value='';
+      }
+      document.getElementById('bvmm-pl-input').onchange=onPlChange;
+    }
+
+    // ── Deploy Worker (.js) ──
+    if(!document.getElementById('bvmm-wd-label')){
+      var wdLbl=makeNavBtn('bvmm-wd-label','\u2699\ufe0f','Worker','#e8a83e');
+      wdLbl.innerHTML+=('<input id="bvmm-wd-input" type="file" accept=".js" style="display:none">');
+      nav.appendChild(wdLbl);
+      function onWdChange(ev){
+        var file=ev.target.files[0];if(!file)return;
+        var reader=new FileReader();
+        reader.onload=function(e){
+          var token=null;try{token=sessionStorage.getItem('bvmm_token');}catch(_){}
+          setNavBtnState(wdLbl,'\u23f3 Deploying...','#facc15',true);
+          fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'cf-deploy-worker',script:e.target.result,token:token})
+          }).then(function(r){return r.json();}).then(function(d){
+            if(d.ok){
+              setNavBtnState(wdLbl,'\u2714 Deployed! Fixing...','#3dd68c',false);
+              setTimeout(function(){resetNavBtn(wdLbl,'bvmm-wd-input',onWdChange);wdLbl.style.color='#e8a83e';},5000);
+            } else {
+              alert('Deploy error: '+(d.error||'Unknown'));
+              resetNavBtn(wdLbl,'bvmm-wd-input',onWdChange);wdLbl.style.color='#e8a83e';
+            }
+          }).catch(function(e){alert('Error: '+e.message);resetNavBtn(wdLbl,'bvmm-wd-input',onWdChange);wdLbl.style.color='#e8a83e';});
+        };
+        reader.readAsText(file);ev.target.value='';
+      }
+      document.getElementById('bvmm-wd-input').onchange=onWdChange;
+    }
+  }
   setTimeout(setupAdminDeploy,1000);
   setTimeout(setupAdminDeploy,3000);
 
