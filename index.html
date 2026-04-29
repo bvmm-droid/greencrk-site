@@ -9697,6 +9697,8 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
 
 
 
+
+
 <script id="_bvmm_race_fix">
 (function(){
   var tabMap={
@@ -9721,11 +9723,22 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
   function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').slice(0,300);}
   function escQ(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").slice(0,200);}
   var sqData=null,pexCache={};
+
+  // Hide old template tab sections
+  function hideOldTabs(){
+    document.querySelectorAll('.mtab,.menu-tabs,.menu-tabs-wrap').forEach(function(el){
+      var sec=el.closest('section')||el.closest('.page-section');
+      if(sec)sec.style.display='none';else el.style.display='none';
+    });
+    document.querySelectorAll('.mgroup').forEach(function(g){g.style.display='none';});
+  }
+
   function loadPexels(name,img){
     if(pexCache[name]){img.src=pexCache[name];img.style.display='';if(img.nextElementSibling)img.nextElementSibling.style.display='none';return;}
     fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'pexels',query:name+' food',per_page:1})})
     .then(function(r){return r.json();}).then(function(d){var u=d.ok&&d.photos&&d.photos[0]?d.photos[0].src.large:null;if(u){pexCache[name]=u;img.src=u;img.style.display='';if(img.nextElementSibling)img.nextElementSibling.style.display='none';}}).catch(function(){});
   }
+
   function buildGrid(data){
     var grid=document.querySelector('.og-grid');if(!grid)return;
     var tabs=['Butcher','Deli','Catering','Other'];
@@ -9765,7 +9778,9 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
     });
     grid.innerHTML=html;
     grid.querySelectorAll('[data-pexels]').forEach(function(img){loadPexels(img.getAttribute('data-pexels'),img);});
+    hideOldTabs();
   }
+
   window.bvmmOpen=function(id){
     if(!sqData)return;
     var found=null,foundTab='';
@@ -9784,16 +9799,21 @@ body.admin-mode .bvmm-addcard-btn { display: block; }
   };
   window.bvmmQty=function(d){window._bvmmQty=Math.max(1,Math.min(99,(window._bvmmQty||1)+d));var q=document.getElementById('bvmm-qty');if(q)q.textContent=window._bvmmQty;var s=document.getElementById('bvmm-sub');if(s&&window._bvmmPrice)s.textContent='$'+(window._bvmmPrice*window._bvmmQty).toFixed(2);};
   window.bvmmAdd=function(id,name,price){var pop=document.getElementById('bvmm-popup');if(pop)pop.remove();if(typeof openOrderSheet==='function')openOrderSheet(name,price,'','');window._bvmmQty=1;};
-  var _s=document.createElement('style');_s.textContent='.bvmm-sq-loading .mgroup{visibility:hidden}';document.head.appendChild(_s);
+
+  // Hide old tabs immediately and keep hiding
+  var _s=document.createElement('style');
+  _s.textContent='.bvmm-sq-loading .mgroup{visibility:hidden}.bvmm-sq-loading .mtab{visibility:hidden}.bvmm-sq-loading .menu-tabs{visibility:hidden}.bvmm-sq-loading .menu-tabs-wrap{visibility:hidden}';
+  document.head.appendChild(_s);
   document.documentElement.classList.add('bvmm-sq-loading');
   var _shown=false;
-  function showAll(){if(_shown)return;_shown=true;document.documentElement.classList.remove('bvmm-sq-loading');}
+  function showAll(){if(_shown)return;_shown=true;document.documentElement.classList.remove('bvmm-sq-loading');hideOldTabs();}
   setTimeout(showAll,5000);
+
   var _f=window.fetch;
   window.fetch=function(){
     var p=_f.apply(this,arguments);
     try{var b=arguments[1]&&arguments[1].body;if(b){var parsed=JSON.parse(b);
-      if(parsed.action==='square-catalog'){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok){sqData=d;setTimeout(function(){buildGrid(d);showAll();setTimeout(function(){document.querySelectorAll('.mgroup').forEach(function(g){g.style.display=g.querySelector('.mrow,.wagyu-card')?'':'none';});},400);},150);}else{showAll();}}).catch(showAll);}
+      if(parsed.action==='square-catalog'){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok){sqData=d;setTimeout(function(){buildGrid(d);showAll();},150);}else{showAll();}}).catch(showAll);}
       if(parsed.action==='login'&&parsed.password){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok&&d.token){try{sessionStorage.setItem('bvmm_token',d.token);}catch(e){}}}).catch(function(){});}
     }}catch(e){}return p;
   };
