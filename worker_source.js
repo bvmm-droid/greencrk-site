@@ -68,6 +68,10 @@ export default {
         } catch(e) { return new Response('Error: '+e.message, {status:500, headers:CORS}); }
       }
 
+      if (url.pathname === '/thank-you') {
+        const tyHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Order Received</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,sans-serif;background:#faf8f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}.card{background:#fff;border-radius:20px;padding:40px 32px;max-width:420px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08)}.check{width:64px;height:64px;background:#e8f5e9;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:32px}h1{font-size:1.6rem;font-weight:700;color:#1a1a1a;margin-bottom:12px}p{font-size:.95rem;color:#666;line-height:1.6;margin-bottom:24px}.btn{display:inline-block;padding:14px 32px;background:#1a1a1a;color:#fff;border-radius:12px;text-decoration:none;font-weight:600}</style></head><body><div class="card"><div class="check">✓</div><h1>Order Received!</h1><p>Thank you — we got your order and we’ll have everything ready for pickup. You’ll receive a confirmation from Square shortly.</p><a href="https://greencrk.com" class="btn">Back to greencrk.com</a></div></body></html>`;
+        return new Response(tyHtml, { headers: { 'Content-Type': 'text/html;charset=utf-8', ...CORS } });
+      }
       // Serve index.html for all non-API GET requests (site hosting)
       const path = url.pathname;
       if (path === '/' || path === '/index.html' || (!path.startsWith('/fix') && !path.startsWith('/self-update') && !path.includes('.'))) {
@@ -134,6 +138,7 @@ export default {
         case 'kv-list':               result = await doKVList(body, env); break;
         case 'cf-deploy-worker':      result = await doCFDeployWorker(body, env); break;
         case 'square-payment-link':   result = await doSquarePaymentLink(body, env); break;
+        case 'square-order-create':   result = await doSquareOrderCreate(body, env); break;
         case 'square-catalog':        result = await doSquareCatalog(body, env); break;
         case 'square-img-upload':     result = await doSquareImgUpload(body, env); break;
         case 'square-item-update':    result = await doSquareItemUpdate(body, env, ctx); break;
@@ -310,6 +315,26 @@ async function doSquarePaymentLink(body, env) {
 //  SQUARE CATALOG — improved error surfacing
 // ==================================================================
 
+
+async function doSquareOrderCreate(body, env) {
+  if (!env.SQUARE_ACCESS_TOKEN) return { ok: false, error: 'Square not configured' };
+  const { items } = body;
+  if (!items || !items.length) return { ok: false, error: 'No items' };
+  const sqH = { 'Authorization': 'Bearer ' + env.SQUARE_ACCESS_TOKEN, 'Content-Type': 'application/json', 'Square-Version': '2025-01-23' };
+  const line_items = items.map(item => {
+    const li = { name: item.name, quantity: String(Math.max(0.01, parseFloat(item.quantity)||1)), base_price_money: { amount: Math.round((parseFloat(item.price)||0)*100), currency: 'USD' } };
+    if (item.unit === 'lb') li.quantity_unit = { measurement_unit: { custom_unit: { name: 'lb', abbreviation: 'lb' } }, precision: 2 };
+    return li;
+  });
+  const orderResp = await fetch(SQUARE_API_BASE + '/orders', { method: 'POST', headers: sqH, body: JSON.stringify({ idempotency_key: crypto.randomUUID(), order: { location_id: SQUARE_LOCATION_ID, line_items } }) });
+  const orderData = await orderResp.json();
+  if (!orderResp.ok) return { ok: false, error: orderData.errors?.[0]?.detail || 'Order failed', detail: orderData };
+  const linkResp = await fetch(SQUARE_API_BASE + '/online-checkout/payment-links', { method: 'POST', headers: sqH, body: JSON.stringify({ idempotency_key: crypto.randomUUID(), order_id: orderData.order.id, checkout_options: { redirect_url: 'https://greencrk.com/thank-you', ask_for_shipping_address: false } }) });
+  const linkData = await linkResp.json();
+  if (!linkResp.ok) return { ok: false, error: linkData.errors?.[0]?.detail || 'Link failed', detail: linkData };
+  return { ok: true, url: linkData.payment_link.url, orderId: orderData.order.id };
+}
+
 async function doSquareCatalog(body, env) {
   const CACHE_KEY = 'square_catalog_v3';
   if (env.BVMM_KV && !body.skipCache) {
@@ -387,7 +412,12 @@ async function doSquareCatalog(body, env) {
     const imageIds = item.image_ids || [];
     const firstVariation = variations[0] || {};
     const imageUrl = (imageIds.length > 0 && relatedImages[imageIds[0]]) ? relatedImages[imageIds[0]] : null;
-    const product = { id: obj.id, name, desc, category, price: firstVariation.price, sku: firstVariation.sku, variations, imageIds, imageUrl, updatedAt: obj.updated_at || '' };
+    const varData0 = (item.variations||[])[0]?.item_variation_data;
+    const hasMUnit = !!(varData0?.measurement_unit_id);
+    const vName0 = (varData0?.name||'').toLowerCase();
+    const isLb = hasMUnit||vName0.includes('lb')||vName0.includes('pound');
+    const unit = isLb ? 'lb' : 'each';
+    const product = { id: obj.id, name, desc, category, price: firstVariation.price, sku: firstVariation.sku, unit, variations, imageIds, imageUrl, updatedAt: obj.updated_at || '' };
     allItems.push(product);
     if (!grouped[category]) grouped[category] = [];
     grouped[category].push(product);
@@ -845,86 +875,97 @@ async function doFixRaceCondition(env) {
   const fixScript = `
 <script id="_bvmm_race_fix">
 (function(){
+  var WORKER='https://bvmm-proxy.babylonvillagemeatmarket.workers.dev';
   var tabMap={
-    'beef':'Butcher','pork & veal':'Butcher','lamb':'Butcher','poultry':'Butcher',
-    'seafood':'Butcher','wagyu':'Butcher','butcher':'Butcher',
-    'butcher - beef':'Butcher','butcher - pork':'Butcher','butcher - veal':'Butcher',
-    'butcher - lamb':'Butcher','butcher - poultry':'Butcher','butcher - seafood':'Butcher',
-    'prime beef':'Butcher','fish':'Butcher','frozen sea food':'Butcher',
-    'beef roast':'Butcher','steak':'Butcher','butcher shop':'Butcher',
-    'veal':'Butcher','veal & pork':'Butcher',
-    'deli':'Deli','cold salads':'Deli','cheese & deli':'Deli',
-    'deli meats & cheeses':'Deli','sandwiches':'Deli','heroes breads & wraps':'Deli',
-    'paninis':'Deli','lunch':'Deli','soups':'Deli',
+    'beef':'Butcher','pork & veal':'Butcher','lamb':'Butcher','poultry':'Butcher','seafood':'Butcher',
+    'wagyu':'Butcher','butcher':'Butcher','butcher - beef':'Butcher','butcher - pork':'Butcher',
+    'butcher - veal':'Butcher','butcher - lamb':'Butcher','butcher - poultry':'Butcher',
+    'butcher - seafood':'Butcher','prime beef':'Butcher','fish':'Butcher','frozen sea food':'Butcher',
+    'beef roast':'Butcher','steak':'Butcher','butcher shop':'Butcher','veal':'Butcher','veal & pork':'Butcher',
+    'chicken':'Butcher','turkey':'Butcher','berkshire pork':'Butcher','shellfish':'Butcher',
+    'deli':'Deli','cold salads':'Deli','cheese & deli':'Deli','deli meats & cheeses':'Deli',
+    'sandwiches':'Deli','heroes breads & wraps':'Deli','paninis':'Deli','lunch':'Deli','soups':'Deli',
     'catering':'Catering','all catering':'Catering','quick catering':'Catering','market place':'Catering',
-    'prepared':'Other','prepared foods':'Other','family dinners':'Other',
-    'pasta & eggplant':'Other','vegetables potatoes & rice':'Other',
-    'appetizers':'Other','desserts':'Other','coffee':'Other',
-    'specials':'Other','special orders':'Other','dartagnan':'Other',
-    'gear':'Other','the regulars':'Other','drinks':'Other','other':'Other'
+    'prepared':'Other','prepared foods':'Other','family dinners':'Other','pasta & eggplant':'Other',
+    'vegetables potatoes & rice':'Other','appetizers':'Other','desserts':'Other','coffee':'Other',
+    'specials':'Other','special orders':'Other','dartagnan':'Other','gear':'Other',
+    'the regulars':'Other','drinks':'Other','other':'Other'
   };
   function mapTab(c){return tabMap[(c||'').toLowerCase()]||'Other';}
   function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').slice(0,300);}
   function escQ(s){return(s||'').replace(/\\\\/g,'\\\\\\\\').replace(/'/g,"\\\\'").slice(0,200);}
-  var sqData=null,pexCache={};
-
-  // Hide old template tab sections
-  function hideOldTabs(){
-    document.querySelectorAll('.mtab,.menu-tabs,.menu-tabs-wrap').forEach(function(el){
-      var sec=el.closest('section')||el.closest('.page-section');
-      if(sec)sec.style.display='none';else el.style.display='none';
-    });
-    document.querySelectorAll('.mgroup').forEach(function(g){g.style.display='none';});
+  var sqData=null,pexCache={},_rebuilding=false,_observer=null;
+  var cart=[];
+  function cartTotal(){return cart.reduce(function(s,c){return s+(parseFloat(c.price)||0)*c.qty;},0);}
+  function cartCount(){return cart.reduce(function(s,c){return s+c.qty;},0);}
+  function updateCartUI(){
+    var badge=document.getElementById('bvmm-cart-count');
+    if(badge)badge.textContent=cart.length>0?cartCount():'';
+    var bar=document.getElementById('bvmm-cart-bar');
+    if(bar)bar.style.display=cart.length>0?'flex':'none';
+    if(bar){
+      var tot=bar.querySelector('.bvmm-bar-total');if(tot)tot.textContent='$'+cartTotal().toFixed(2);
+      var cnt=bar.querySelector('.bvmm-bar-count');if(cnt)cnt.textContent=cart.length+' item'+(cart.length!==1?'s':'');
+    }
   }
-
+  function injectCartBar(){
+    if(document.getElementById('bvmm-cart-bar'))return;
+    var bar=document.createElement('div');bar.id='bvmm-cart-bar';
+    bar.style.cssText='display:none;position:fixed;bottom:0;left:0;right:0;z-index:8000;background:#1a1a1a;color:#fff;padding:14px 20px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 16px rgba(0,0,0,.2)';
+    bar.innerHTML='<div><div class="bvmm-bar-count" style="font-size:13px;opacity:.7"></div><div class="bvmm-bar-total" style="font-size:20px;font-weight:700"></div></div><button onclick="bvmmCheckout()" style="padding:12px 28px;background:#fff;color:#1a1a1a;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Checkout \u2192</button>';
+    document.body.appendChild(bar);
+  }
   function loadPexels(name,img){
     if(pexCache[name]){img.src=pexCache[name];img.style.display='';if(img.nextElementSibling)img.nextElementSibling.style.display='none';return;}
-    fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'pexels',query:name+' food',per_page:1})})
+    fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'pexels',query:name+' food',per_page:1})})
     .then(function(r){return r.json();}).then(function(d){var u=d.ok&&d.photos&&d.photos[0]?d.photos[0].src.large:null;if(u){pexCache[name]=u;img.src=u;img.style.display='';if(img.nextElementSibling)img.nextElementSibling.style.display='none';}}).catch(function(){});
   }
-
-  function buildGrid(data){
-    var grid=document.querySelector('.og-grid');if(!grid)return;
+  function applyMyTabs(data){
+    var fe=document.querySelector('.og-filter');var grid=document.querySelector('.og-grid');
+    if(!fe||!grid)return;
+    injectCartBar();
     var tabs=['Butcher','Deli','Catering','Other'];
     var grouped={};tabs.forEach(function(t){grouped[t]=[];});
     var all=[];
     Object.keys(data.grouped||{}).forEach(function(cat){
       (data.grouped[cat]||[]).forEach(function(item){var t=mapTab(cat);grouped[t].push(item);all.push({item:item,tab:t});});
     });
-    if(!document.getElementById('bvmm-og-css')){
-      var s=document.createElement('style');s.id='bvmm-og-css';
-      s.textContent='.og-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}.og-tab{padding:8px 20px;border-radius:40px;border:1.5px solid #d4cfc8;background:#fff;font-size:13px;font-weight:500;cursor:pointer;color:#555}.og-tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}.og-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}.bvmm-card{background:#fff;border-radius:12px;border:1px solid #e8e4de;overflow:hidden;cursor:pointer;position:relative;display:flex;flex-direction:column}.bvmm-card-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}.bvmm-card-ph{width:100%;aspect-ratio:4/3;background:#f0ede8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;letter-spacing:1px;text-transform:uppercase}.bvmm-card-body{padding:12px 14px 14px;flex:1;display:flex;flex-direction:column}.bvmm-card-cat{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 5px}.bvmm-card-name{font-size:15px;font-weight:600;color:#1a1a1a;margin:0 0 6px;line-height:1.3}.bvmm-card-desc{font-size:12px;color:#777;margin:0 0 10px;line-height:1.5;flex:1}.bvmm-card-price{font-size:15px;font-weight:600;color:#1a1a1a;margin:0}';
-      document.head.appendChild(s);
-    }
-    var fe=document.querySelector('.og-filter');
-    if(fe){
-      var fh='<button class="og-tab active" data-tab="all">All Items</button>';
-      tabs.forEach(function(t){if(grouped[t].length>0)fh+='<button class="og-tab" data-tab="'+t+'">'+t+'</button>';});
-      fe.innerHTML=fh;
-      fe.querySelectorAll('.og-tab').forEach(function(btn){
-        btn.onclick=function(){
-          fe.querySelectorAll('.og-tab').forEach(function(b){b.classList.remove('active');});
-          btn.classList.add('active');
-          var tab=btn.getAttribute('data-tab');
-          grid.querySelectorAll('.bvmm-card').forEach(function(c){c.style.display=(tab==='all'||c.getAttribute('data-tab')===tab)?'':'none';});
-        };
-      });
-    }
+    if(_observer){_observer.disconnect();}_rebuilding=true;
+    var fh='<button class="bvmm5-tab active" data-tab="all" style="display:inline-flex;align-items:center;gap:5px;padding:9px 20px;border-radius:40px;border:1.5px solid #1a1a1a;background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">\u2022 ALL ITEMS</button>';
+    tabs.forEach(function(t){if(grouped[t].length>0)fh+='<button class="bvmm5-tab" data-tab="'+t+'" style="display:inline-flex;align-items:center;gap:5px;padding:9px 20px;border-radius:40px;border:1.5px solid #c8c3bc;background:transparent;color:#555;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">\u2022 '+t+'</button>';});
+    fe.innerHTML=fh;
+    fe.querySelectorAll('.bvmm5-tab').forEach(function(btn){
+      btn.onclick=function(){
+        fe.querySelectorAll('.bvmm5-tab').forEach(function(b){b.style.background='transparent';b.style.color='#555';b.style.borderColor='#c8c3bc';b.style.fontWeight='500';});
+        btn.style.background='#1a1a1a';btn.style.color='#fff';btn.style.borderColor='#1a1a1a';btn.style.fontWeight='600';
+        var tab=btn.getAttribute('data-tab');
+        grid.querySelectorAll('.bvmm5-card').forEach(function(c){c.style.display=(tab==='all'||c.getAttribute('data-tab')===tab)?'':'none';});
+      };
+    });
     var html='';
     all.forEach(function(e){
       var i=e.item,t=e.tab;
-      var price=i.price?'$'+parseFloat(i.price).toFixed(2)+' /lb':'';
+      var priceNum=parseFloat(i.price)||0;
+      var unitLabel=i.unit==='lb'?'/lb':'/each';
+      var priceStr=priceNum>0?('$'+priceNum.toFixed(2)+' '+unitLabel):'';
       var desc=(i.desc&&i.desc!=='NEEDS_REVIEW')?i.desc:'';
       var imgHtml=i.imageUrl
-        ?'<img class="bvmm-card-img" src="'+esc(i.imageUrl)+'" loading="lazy" alt="'+esc(i.name)+'">'
-        :'<img class="bvmm-card-img" data-pexels="'+esc(i.name)+'" style="display:none" alt="'+esc(i.name)+'"><div class="bvmm-card-ph">'+esc(t)+'</div>';
-      html+='<div class="bvmm-card" data-tab="'+esc(t)+'" onclick="bvmmOpen(\''+escQ(i.id)+'\')">'+imgHtml+'<div class="bvmm-card-body"><p class="bvmm-card-cat">'+esc(t)+'</p><p class="bvmm-card-name">'+esc(i.name)+'</p>'+(desc?'<p class="bvmm-card-desc">'+esc(desc)+'</p>':'')+'<p class="bvmm-card-price">'+price+'</p></div></div>';
+        ?'<img src="'+esc(i.imageUrl)+'" loading="lazy" alt="'+esc(i.name)+'" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block">'
+        :'<img data-pexels="'+esc(i.name)+'" style="display:none" alt="'+esc(i.name)+'"><div style="width:100%;aspect-ratio:4/3;background:#f0ede8;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;letter-spacing:1px;text-transform:uppercase">'+esc(t)+'</div>';
+      html+='<div class="bvmm5-card" data-tab="'+esc(t)+'" onclick="bvmmOpen(\''+escQ(i.id)+'\')" style="background:#fff;border-radius:12px;border:1px solid #e8e4de;overflow:hidden;cursor:pointer;display:flex;flex-direction:column">'+imgHtml+'<div style="padding:12px 14px 14px;flex:1;display:flex;flex-direction:column"><p style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 5px">'+esc(t)+'</p><p style="font-size:15px;font-weight:600;color:#1a1a1a;margin:0 0 6px;line-height:1.3">'+esc(i.name)+'</p>'+(desc?'<p style="font-size:12px;color:#777;margin:0 0 10px;line-height:1.5;flex:1">'+esc(desc)+'</p>':'')+'<p style="font-size:15px;font-weight:600;color:#1a1a1a;margin:0">'+priceStr+'</p></div></div>';
     });
     grid.innerHTML=html;
     grid.querySelectorAll('[data-pexels]').forEach(function(img){loadPexels(img.getAttribute('data-pexels'),img);});
-    hideOldTabs();
+    setTimeout(function(){
+      _rebuilding=false;
+      _observer=new MutationObserver(function(){
+        if(_rebuilding||!sqData)return;
+        var allBtns=fe.querySelectorAll('button'),ourBtns=fe.querySelectorAll('.bvmm5-tab');
+        if(allBtns.length!==ourBtns.length){applyMyTabs(sqData);}
+      });
+      _observer.observe(fe,{childList:true,subtree:true});
+    },100);
   }
-
   window.bvmmOpen=function(id){
     if(!sqData)return;
     var found=null,foundTab='';
@@ -932,32 +973,50 @@ async function doFixRaceCondition(env) {
     if(!found)return;
     var ex=document.getElementById('bvmm-popup');if(ex)ex.remove();
     var price=found.price?parseFloat(found.price):0;
+    var isLb=found.unit==='lb';
+    var unitLabel=isLb?'lbs':'qty';
+    var priceStr=price?(isLb?'$'+price.toFixed(2)+' /lb':'$'+price.toFixed(2)+' each'):'Price on request';
     var pop=document.createElement('div');pop.id='bvmm-popup';
     pop.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
-    var img=found.imageUrl?'<img src="'+esc(found.imageUrl)+'" style="width:100%;height:220px;object-fit:cover;border-radius:20px 20px 0 0;display:block">':'';
+    var imgHtml=found.imageUrl?'<img src="'+esc(found.imageUrl)+'" style="width:100%;height:220px;object-fit:cover;border-radius:20px 20px 0 0;display:block">':'';
     var desc=(found.desc&&found.desc!=='NEEDS_REVIEW')?'<p style="font-size:14px;color:#666;line-height:1.6;margin:0 0 16px">'+esc(found.desc)+'</p>':'';
-    pop.innerHTML='<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto">'+img+'<div style="padding:20px 20px 36px"><button onclick="document.getElementById(\'bvmm-popup\').remove()" style="float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#aaa">&times;</button><p style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 6px">'+esc(foundTab)+'</p><p style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px;line-height:1.2">'+esc(found.name)+'</p>'+desc+'<p style="font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 20px">'+(price?'$'+price.toFixed(2)+' /lb':'Price on request')+'</p><div style="display:flex;align-items:center;gap:16px;margin-bottom:16px"><div style="display:flex;align-items:center;border:2px solid #e0e0e0;border-radius:40px"><button onclick="bvmmQty(-1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer">&#8722;</button><span id="bvmm-qty" style="min-width:32px;text-align:center;font-size:18px;font-weight:700">1</span><button onclick="bvmmQty(1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer">+</button></div><span style="font-size:13px;color:#888">lbs</span><span id="bvmm-sub" style="margin-left:auto;font-size:16px;font-weight:700;color:#1a1a1a">'+(price?'$'+price.toFixed(2):'')+'</span></div><button onclick="bvmmAdd(\''+escQ(found.id)+'\',\''+escQ(found.name)+'\','+price+')" style="width:100%;padding:16px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">Add to Order</button></div></div>';
+    pop.innerHTML='<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto">'+imgHtml+'<div style="padding:20px 20px 36px"><button onclick="document.getElementById(\'bvmm-popup\').remove()" style="float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#aaa">&times;</button><p style="font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#999;margin:0 0 6px">'+esc(foundTab)+'</p><p style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px;line-height:1.2">'+esc(found.name)+'</p>'+desc+'<p style="font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 20px">'+priceStr+'</p><div style="display:flex;align-items:center;gap:16px;margin-bottom:16px"><div style="display:flex;align-items:center;border:2px solid #e0e0e0;border-radius:40px"><button onclick="bvmmQty(-1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer">&#8722;</button><span id="bvmm-qty" style="min-width:32px;text-align:center;font-size:18px;font-weight:700">1</span><button onclick="bvmmQty(1)" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer">+</button></div><span style="font-size:13px;color:#888">'+unitLabel+'</span><span id="bvmm-sub" style="margin-left:auto;font-size:16px;font-weight:700;color:#1a1a1a">'+(price?'$'+price.toFixed(2):'')+'</span></div><button onclick="bvmmAdd(\''+escQ(found.id)+'\',\''+escQ(found.name)+'\','+price+',\''+found.unit+'\')" style="width:100%;padding:16px;background:#1a1a1a;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer">Add to Order</button></div></div>';
     document.body.appendChild(pop);
     pop.addEventListener('click',function(e){if(e.target===pop)pop.remove();});
-    window._bvmmPrice=price;window._bvmmQty=1;
+    window._bvmmPrice=price;window._bvmmQty=1;window._bvmmIsLb=isLb;
   };
-  window.bvmmQty=function(d){window._bvmmQty=Math.max(1,Math.min(99,(window._bvmmQty||1)+d));var q=document.getElementById('bvmm-qty');if(q)q.textContent=window._bvmmQty;var s=document.getElementById('bvmm-sub');if(s&&window._bvmmPrice)s.textContent='$'+(window._bvmmPrice*window._bvmmQty).toFixed(2);};
-  window.bvmmAdd=function(id,name,price){var pop=document.getElementById('bvmm-popup');if(pop)pop.remove();if(typeof openOrderSheet==='function')openOrderSheet(name,price,'','');window._bvmmQty=1;};
-
-  // Hide old tabs immediately and keep hiding
-  var _s=document.createElement('style');
-  _s.textContent='.bvmm-sq-loading .mgroup{visibility:hidden}.bvmm-sq-loading .mtab{visibility:hidden}.bvmm-sq-loading .menu-tabs{visibility:hidden}.bvmm-sq-loading .menu-tabs-wrap{visibility:hidden}';
-  document.head.appendChild(_s);
-  document.documentElement.classList.add('bvmm-sq-loading');
-  var _shown=false;
-  function showAll(){if(_shown)return;_shown=true;document.documentElement.classList.remove('bvmm-sq-loading');hideOldTabs();}
-  setTimeout(showAll,5000);
-
+  window.bvmmQty=function(d){
+    var step=window._bvmmIsLb?0.5:1;var min=window._bvmmIsLb?0.5:1;
+    window._bvmmQty=Math.max(min,Math.round((window._bvmmQty+d*step)*10)/10);
+    var q=document.getElementById('bvmm-qty');if(q)q.textContent=window._bvmmQty;
+    var s=document.getElementById('bvmm-sub');if(s&&window._bvmmPrice)s.textContent='$'+(window._bvmmPrice*window._bvmmQty).toFixed(2);
+  };
+  window.bvmmAdd=function(id,name,price,unit){
+    var qty=window._bvmmQty||1;
+    var pop=document.getElementById('bvmm-popup');if(pop)pop.remove();
+    var existing=null;for(var k=0;k<cart.length;k++){if(cart[k].id===id){existing=cart[k];break;}}
+    if(existing){existing.qty=Math.round((existing.qty+qty)*10)/10;}
+    else{cart.push({id:id,name:name,price:price,qty:qty,unit:unit||'each'});}
+    updateCartUI();window._bvmmQty=1;
+  };
+  window.bvmmCheckout=function(){
+    if(!cart.length)return;
+    var btn=document.querySelector('#bvmm-cart-bar button');
+    if(btn){btn.textContent='Processing...';btn.disabled=true;}
+    var items=cart.map(function(c){return{name:c.name,price:c.price,quantity:c.qty,unit:c.unit};});
+    fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'square-order-create',items:items})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok&&d.url){window.location.href=d.url;}
+      else{alert('Checkout error: '+(d.error||'Unknown'));if(btn){btn.textContent='Checkout \u2192';btn.disabled=false;}}
+    })
+    .catch(function(e){alert('Error: '+e.message);if(btn){btn.textContent='Checkout \u2192';btn.disabled=false;}});
+  };
   var _f=window.fetch;
   window.fetch=function(){
     var p=_f.apply(this,arguments);
     try{var b=arguments[1]&&arguments[1].body;if(b){var parsed=JSON.parse(b);
-      if(parsed.action==='square-catalog'){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok){sqData=d;setTimeout(function(){buildGrid(d);showAll();},150);}else{showAll();}}).catch(showAll);}
+      if(parsed.action==='square-catalog'){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok){sqData=d;setTimeout(function(){applyMyTabs(d);},400);}}).catch(function(){});}
       if(parsed.action==='login'&&parsed.password){p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok&&d.token){try{sessionStorage.setItem('bvmm_token',d.token);}catch(e){}}}).catch(function(){});}
     }}catch(e){}return p;
   };
