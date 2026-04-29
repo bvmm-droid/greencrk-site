@@ -136,7 +136,7 @@ export default {
         case 'kv-set':                result = await doKVSet(body, env); break;
         case 'kv-get':                result = await doKVGet(body, env); break;
         case 'kv-list':               result = await doKVList(body, env); break;
-        case 'cf-deploy-worker':      result = await doCFDeployWorker(body, env); break;
+        case 'cf-deploy-worker':      result = await doCFDeployWorker(body, env, ctx); break;
         case 'square-payment-link':   result = await doSquarePaymentLink(body, env); break;
         case 'square-order-create':   result = await doSquareOrderCreate(body, env); break;
         case 'square-catalog':        result = await doSquareCatalog(body, env); break;
@@ -805,7 +805,7 @@ async function doCFDebug(body, env) {
   return { ok: true, tokenExists: true, rawLength: t.length, trimmedLength: trimmed.length, hasLeadingOrTrailingWhitespace: t.length !== trimmed.length, firstCharCode: firstChar, lastCharCode: lastChar, looksLikeBearerToken: /^[A-Za-z0-9_\-]+$/.test(trimmed) };
 }
 
-async function doCFDeployWorker(body, env) {
+async function doCFDeployWorker(body, env, ctx) {
   const { script } = body;
   if (!script) return { ok: false, error: 'Missing script' };
   const authed = (body.auth === env.BVMM_TOOL) || await verifySessionToken(body.token, env);
@@ -833,7 +833,16 @@ async function doCFDeployWorker(body, env) {
   let data;
   try { data = await resp.json(); } catch { return { ok: false, error: 'Cloudflare returned non-JSON', status: resp.status }; }
   if (!data.success) return { ok: false, error: JSON.stringify(data.errors), status: resp.status };
-  return { ok: true, id: data.result?.id };
+  // Auto-run /fix in background so the new fix script is injected immediately
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    ctx.waitUntil((async () => {
+      try {
+        await new Promise(r => setTimeout(r, 3000)); // wait for worker to propagate
+        await fetch('https://bvmm-proxy.babylonvillagemeatmarket.workers.dev/fix');
+      } catch(_) {}
+    })());
+  }
+  return { ok: true, id: data.result?.id, autoFix: true };
 }
 
 async function purgeCloudflareCache(env) {
@@ -1012,6 +1021,54 @@ async function doFixRaceCondition(env) {
     })
     .catch(function(e){alert('Error: '+e.message);if(btn){btn.textContent='Checkout \u2192';btn.disabled=false;}});
   };
+  // ── Inject Deploy Worker into admin top nav ──────────────────────────────
+  function setupAdminDeploy(){
+    if(document.getElementById('bvmm-wd-label'))return;
+    // Find admin nav — look for element containing "Cache" and "Tools" buttons
+    var found=null;
+    document.querySelectorAll('button,a,[role="button"]').forEach(function(el){
+      if((el.textContent||'').trim()==='Cache'||(el.textContent||'').trim()==='Tools'){
+        found=el.parentElement;
+      }
+    });
+    if(!found)return;
+    var lbl=document.createElement('label');
+    lbl.id='bvmm-wd-label';
+    lbl.title='Deploy Worker (auto-fixes site)';
+    lbl.style.cssText='cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;font-weight:600;color:#e8a83e;user-select:none';
+    lbl.innerHTML='\u2699\ufe0f Deploy<input id="bvmm-wd-input" type="file" accept=".js" style="display:none">';
+    found.appendChild(lbl);
+    document.getElementById('bvmm-wd-input').onchange=function(ev){
+      var file=ev.target.files[0];if(!file)return;
+      var reader=new FileReader();
+      reader.onload=function(e){
+        var token=null;try{token=sessionStorage.getItem('bvmm_token');}catch(_){}
+        lbl.style.opacity='.5';lbl.style.pointerEvents='none';
+        fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'cf-deploy-worker',script:e.target.result,token:token})
+        }).then(function(r){return r.json();}).then(function(d){
+          if(d.ok){
+            lbl.innerHTML='\u2714 Deployed! Fixing...<input id="bvmm-wd-input" type="file" accept=".js" style="display:none">';
+            lbl.style.color='#3dd68c';
+            setTimeout(function(){
+              lbl.innerHTML='\u2699\ufe0f Deploy<input id="bvmm-wd-input" type="file" accept=".js" style="display:none">';
+              lbl.style.color='#e8a83e';lbl.style.opacity='1';lbl.style.pointerEvents='';
+              document.getElementById('bvmm-wd-input').onchange=arguments.callee;
+            },4000);
+          } else {
+            alert('Deploy error: '+(d.error||'Unknown'));
+            lbl.style.opacity='1';lbl.style.pointerEvents='';
+          }
+        }).catch(function(e){alert('Error: '+e.message);lbl.style.opacity='1';lbl.style.pointerEvents='';});
+      };
+      reader.readAsText(file);
+      ev.target.value='';
+    };
+  }
+  // Try now and again after DOM changes settle
+  setTimeout(setupAdminDeploy,1000);
+  setTimeout(setupAdminDeploy,3000);
+
   var _f=window.fetch;
   window.fetch=function(){
     var p=_f.apply(this,arguments);
